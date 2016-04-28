@@ -69,4 +69,4 @@ jobs:
         params:
           manifest: blog-api-repo/manifest.yml
           path: output/app.jar
-          current_app_name: blog-article-api
+          current_app_name: blog-api
