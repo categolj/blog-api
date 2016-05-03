@@ -6,6 +6,7 @@ applications:
     path: target/blog-api.jar
     buildpack: java_buildpack_offline
     services:
+      - config-service
       - eureka-service
       - blog-shared-redis
       - blog-es

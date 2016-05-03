@@ -5,6 +5,11 @@ resources:
     source:
       uri: https://github.com/categolj/blog-api
       branch: master
+  - name: config-server-repo
+    type: git
+    source:
+      uri: https://github.com/categolj/config-server
+      branch: master
   - name: cf
     type: cf
     source:
@@ -24,6 +29,7 @@ jobs:
     plan:
       - get: blog-api-repo
         trigger: true
+      - get: config-server-repo
       - get: m2
       - task: unit
         config:
@@ -32,10 +38,11 @@ jobs:
             type: docker-image
             source:
               repository: java
-              tag: 8-jdk-alpine 
+              tag: 8-jdk
           inputs:
             - name: blog-api-repo
               path: repo
+            - name: config-server-repo
             - name: m2  
           run:
             path: sh
