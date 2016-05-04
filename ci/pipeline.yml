@@ -70,3 +70,30 @@ jobs:
           manifest: blog-api-repo/manifest.yml
           path: output/app.jar
           current_app_name: blog-api
+  - name: blog-api-publish-to-maven-repo
+    plan:
+      - get: blog-api-repo
+        trigger: true
+        passed: [ blog-api-unit ]
+      - get: m2
+      - task: publish
+        config:
+          platform: linux
+          image_resource:
+            type: docker-image
+            source:
+              repository: java
+              tag: 8-jdk-alpine
+          inputs:
+            - name: blog-api-repo
+              path: repo
+            - name: m2
+          outputs:
+            - name: output
+          run:
+            path: sh
+            args:
+            - repo/ci/tasks/publish-to-maven-repo.sh
+          params:
+            SONATYPE_USERNAME: {{sonatype-username}}
+            SONATYPE_PASSWORD: {{sonatype-password}}
