@@ -41,6 +41,8 @@ jobs:
             path: sh
             args:
             - repo/ci/tasks/unit.sh
+          params:
+            _JAVA_OPTIONS: -Duser.timezone=Asia/Tokyo -Duser.language=ja -Duser.country=JP -Djava.security.egd=file:/dev/./urandom
   - name: blog-api-deploy
     plan:
       - get: blog-api-repo

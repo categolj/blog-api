@@ -27,10 +27,6 @@ import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 
 public class MvcTest {
-    static {
-        System.setProperty("user.timezone", "Asia/Tokyo");
-    }
-
     OffsetDateTime now = OffsetDateTime.now();
     List<Entry> mockEntries = Arrays.asList(
             Entry.builder()
