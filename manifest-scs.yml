@@ -6,7 +6,7 @@ applications:
     path: target/blog-api.jar
     buildpack: java_buildpack_offline
     env:
-      SPRING_ACTIVE_PROFILES: scs
+      SPRING_PROFILES_ACTIVE: scs
     services:
       - p-config-service
       - p-eureka-service
