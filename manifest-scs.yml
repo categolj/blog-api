@@ -1,0 +1,16 @@
+---
+applications:
+  - name: blog-api
+    memory: 1G
+    instances: 2
+    path: target/blog-api.jar
+    buildpack: java_buildpack_offline
+    env:
+      SPRING_ACTIVE_PROFILES: scs
+    services:
+      - p-config-service
+      - p-eureka-service
+      - p-hystrix-dashboard-service
+      - blog-shared-redis
+      - blog-es
+      - blog-api-log
