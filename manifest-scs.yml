@@ -13,4 +13,4 @@ applications:
       - p-hystrix-dashboard-service
       - blog-shared-redis
       - blog-es
-      - blog-api-log
+      - blog-logstash
