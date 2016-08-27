@@ -2,7 +2,7 @@
 applications:
   - name: blog-api
     memory: 1G
-    instances: 2
+    instances: 1
     path: target/blog-api.jar
     buildpack: java_buildpack_offline
     env:
