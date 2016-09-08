@@ -4,7 +4,7 @@ applications:
     memory: 1G
     instances: 1
     path: target/blog-api.jar
-    buildpack: java_buildpack_offline
+    buildpack: https://github.com/cloudfoundry#v3.8.1
     env:
       SPRING_PROFILES_ACTIVE: scs
     services:
