@@ -8,9 +8,9 @@ applications:
     env:
       SPRING_PROFILES_ACTIVE: scs
     services:
-      - blog-config-server
-      - blog-eureka
-      - blog-hystrix-dashboard
+      - config-service
+      - eureka-service
+      - hystrix-dashboard-service
       - blog-shared-redis
       - blog-es
       - blog-logstash
