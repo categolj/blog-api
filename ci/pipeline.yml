@@ -1,130 +1,317 @@
 ---
+resource_types:
+- name: slack-notification
+  type: docker-image
+  source:
+    repository: cfcommunity/slack-notification-resource
+    tag: v1.1.3
 resources:
-  - name: blog-api-repo
+  - name: repo-prod
     type: git
     source:
-      uri: https://github.com/categolj/blog-api
+      uri: git@github.com:categolj/blog-api.git
       branch: master
-  - name: cf
+      private_key: {{github-private-key}}
+  - name: repo-dev
+    type: git
+    source:
+      uri: git@github.com:categolj/blog-api.git
+      branch: develop
+      private_key: {{github-private-key}}
+  - name: repo-version
+    type: semver
+    source:
+      uri: git@github.com:categolj/blog-api-version.git
+      branch: master
+      private_key: {{github-private-key}}
+      file: version
+      driver: git
+  - name: utils
+    type: git
+    source:
+      uri: https://github.com/maki-home/concourse-utils
+      branch: master
+  - name: cf-prod
     type: cf
     source:
       api: {{cf-api}}
       username: {{cf-username}}
       password: {{cf-password}}
       organization: {{cf-org}}
-      space: {{cf-space}}
+      space: blog
+      skip_cert_check: true
+  - name: cf-dev
+    type: cf
+    source:
+      api: api.run.pivotal.io
+      username: {{pws-username}}
+      password: {{pws-password}}
+      organization: APJ
+      space: staging
       skip_cert_check: true
   - name: m2
     type: docker-image
     source:
-      repository: {{docker-repo}}
-
+      repository: making/blog-m2
+  - name: slack-alert
+    type: slack-notification
+    source:
+      url: {{slack-webhook-url}}
 jobs:
-  - name: blog-api-unit
+  ### Dev
+  - name: unit-test-dev
     plan:
-      - get: blog-api-repo
-        trigger: true
-      - get: m2
+      - aggregate:
+        - get: repo
+          resource: repo-dev
+          trigger: true
+        - get: utils
+        - get: m2
       - task: unit
-        config:
-          platform: linux
-          image_resource:
-            type: docker-image
-            source:
-              repository: java
-              tag: 8-jdk-alpine
-          inputs:
-            - name: blog-api-repo
-              path: repo
-            - name: m2
-          run:
-            path: sh
-            args:
-            - repo/ci/tasks/unit.sh
+        file: utils/tasks/unit-test.yml
+        on_failure:
+          put: slack-alert
           params:
-            _JAVA_OPTIONS: -Duser.timezone=Asia/Tokyo -Duser.language=ja -Duser.country=JP -Djava.security.egd=file:/dev/./urandom
-  - name: blog-api-deploy
+            channel: '#concourse'
+            text: |
+              <!here> :rotating_light: *$BUILD_PIPELINE_NAME/$BUILD_JOB_NAME* failed with build <$ATC_EXTERNAL_URL/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME|$BUILD_NAME>!
+  - name: deploy-to-nexus-dev
     plan:
-      - get: blog-api-repo
-        # trigger: true
-        passed: [ blog-api-unit ]
-      - get: m2
-      - task: package
-        config:
-          platform: linux
-          image_resource:
-            type: docker-image
-            source:
-              repository: java
-              tag: 8-jdk-alpine
-          inputs:
-            - name: blog-api-repo
-              path: repo
-            - name: m2
-          outputs:
-            - name: output
-          run:
-            path: sh
-            args:
-            - repo/ci/tasks/package.sh
-      - put: cf
+      - aggregate:
+        - get: repo
+          resource: repo-dev
+          trigger: true
+          passed:
+          - unit-test-dev
+        - get: utils
+        - get: m2
+      - task: deploy
+        file: utils/tasks/deploy-to-nexus.yml
+        on_failure:
+          put: slack-alert
+          params:
+            channel: '#concourse'
+            text: |
+              <!here> :rotating_light: *$BUILD_PIPELINE_NAME/$BUILD_JOB_NAME* failed with build <$ATC_EXTERNAL_URL/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME|$BUILD_NAME>!
         params:
-          manifest: blog-api-repo/manifest.yml
+          NEXUS_USERNAME: {{nexus-username}}
+          NEXUS_PASSWORD: {{nexus-password}}
+  - name: deploy-to-cf-dev
+    plan:
+      - aggregate:
+        - get: repo
+          resource: repo-dev
+          trigger: true
+          passed:
+          - deploy-to-nexus-dev
+        - get: repo-version
+        - get: utils
+      - task: download
+        file: utils/tasks/download-snapshot.yml
+        params:
+          GROUP_ID: am.ik.blog
+          ARTIFACT_ID: blog-api
+      - put: cf-dev
+        params:
+          manifest: repo/manifest-dev.yml
+          path: output/app.jar
+          current_app_name: blog-api-dev
+        on_success:
+          put: slack-alert
+          params:
+            channel: '#concourse'
+            text: |
+              <!here> :white_check_mark: *$BUILD_PIPELINE_NAME/$BUILD_JOB_NAME* succeeded with build <$ATC_EXTERNAL_URL/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME|$BUILD_NAME>!
+        on_failure:
+          put: slack-alert
+          params:
+            channel: '#concourse'
+            text: |
+              <!here> :rotating_light: *$BUILD_PIPELINE_NAME/$BUILD_JOB_NAME* failed with build <$ATC_EXTERNAL_URL/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME|$BUILD_NAME>!
+  ### Prod
+  - name: merge-develop-to-master
+    plan:
+      - aggregate:
+        - get: repo-other
+          resource: repo-prod
+        - get: repo-dev
+          passed:
+          - deploy-to-cf-dev
+        - get: utils
+      - task: merge-develop-to-master
+        file: utils/tasks/merge-develop-to-other.yml
+        on_failure:
+          put: slack-alert
+          params:
+            channel: '#concourse'
+            text: |
+              <!here> :rotating_light: *$BUILD_PIPELINE_NAME/$BUILD_JOB_NAME* failed with build <$ATC_EXTERNAL_URL/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME|$BUILD_NAME>!
+        params:
+          GIT_EMAIL: {{git-email}}
+          GIT_NAME: {{git-name}}
+      - put: repo-prod
+        params:
+          repository: other-out
+        on_failure:
+          put: slack-alert
+          params:
+            channel: '#concourse'
+            text: |
+              <!here> :rotating_light: *$BUILD_PIPELINE_NAME/$BUILD_JOB_NAME* failed with build <$ATC_EXTERNAL_URL/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME|$BUILD_NAME>!
+  - name: unit-test-prod
+    plan:
+      - aggregate:
+        - get: repo
+          resource: repo-prod
+          trigger: true
+          passed:
+          - merge-develop-to-master
+        - get: utils
+        - get: m2
+      - task: unit
+        file: utils/tasks/unit-test.yml
+        on_failure:
+          put: slack-alert
+          params:
+            channel: '#concourse'
+            text: |
+              <!here> :rotating_light: *$BUILD_PIPELINE_NAME/$BUILD_JOB_NAME* failed with build <$ATC_EXTERNAL_URL/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME|$BUILD_NAME>!
+  - name: tag-master
+    plan:
+      - aggregate:
+        - get: repo-prod
+          passed:
+          - unit-test-prod
+          trigger: true
+        - get: repo-version
+        - get: utils
+        - get: m2
+      - task: bump-to-release-version
+        file: utils/tasks/bump-to-release-version.yml
+        on_failure:
+          put: slack-alert
+          params:
+            channel: '#concourse'
+            text: |
+              <!here> :rotating_light: *$BUILD_PIPELINE_NAME/$BUILD_JOB_NAME* failed with build <$ATC_EXTERNAL_URL/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME|$BUILD_NAME>!
+        params:
+          GIT_EMAIL: {{git-email}}
+          GIT_NAME: {{git-name}}
+      - put: repo-prod
+        params:
+          repository: master-out
+          tag: repo-version/number
+        on_failure:
+          put: slack-alert
+          params:
+            channel: '#concourse'
+            text: |
+              <!here> :rotating_light: *$BUILD_PIPELINE_NAME/$BUILD_JOB_NAME* failed with build <$ATC_EXTERNAL_URL/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME|$BUILD_NAME>!
+  - name: deploy-to-nexus-prod
+    plan:
+      - aggregate:
+        - get: repo
+          resource: repo-prod
+          trigger: true
+          passed:
+          - tag-master
+        - get: utils
+        - get: m2
+      - task: deploy
+        file: utils/tasks/deploy-to-nexus.yml
+        on_failure:
+          put: slack-alert
+          params:
+            channel: '#concourse'
+            text: |
+              <!here> :rotating_light: *$BUILD_PIPELINE_NAME/$BUILD_JOB_NAME* failed with build <$ATC_EXTERNAL_URL/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME|$BUILD_NAME>!
+        params:
+          NEXUS_USERNAME: {{nexus-username}}
+          NEXUS_PASSWORD: {{nexus-password}}
+  - name: deploy-to-cf-prod
+    plan:
+      - aggregate:
+        - get: repo
+          resource: repo-prod
+          trigger: true
+          passed:
+          - deploy-to-nexus-prod
+        - get: repo-version
+        - get: utils
+      - task: download
+        file: utils/tasks/download-release.yml
+        on_failure:
+          put: slack-alert
+          params:
+            channel: '#concourse'
+            text: |
+              <!here> :rotating_light: *$BUILD_PIPELINE_NAME/$BUILD_JOB_NAME* failed with build <$ATC_EXTERNAL_URL/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME|$BUILD_NAME>!
+        params:
+          GROUP_ID: am.ik.blog
+          ARTIFACT_ID: blog-api
+      - put: cf-prod
+        params:
+          manifest: repo/manifest-scs.yml
           path: output/app.jar
           current_app_name: blog-api
-  - name: blog-api-deploy-scs
-    plan:
-      - get: blog-api-repo
-        trigger: true
-        passed: [ blog-api-unit ]
-      - get: m2
-      - task: package
-        config:
-          platform: linux
-          image_resource:
-            type: docker-image
-            source:
-              repository: java
-              tag: 8-jdk-alpine
-          inputs:
-            - name: blog-api-repo
-              path: repo
-            - name: m2
-          outputs:
-            - name: output
-          run:
-            path: sh
-            args:
-            - repo/ci/tasks/package.sh
-      - put: cf
-        params:
-          manifest: blog-api-repo/manifest-scs.yml
-          path: output/app.jar
-          current_app_name: blog-api
-  - name: blog-api-publish-to-maven-repo
-    plan:
-      - get: blog-api-repo
-        trigger: true
-        passed: [ blog-api-unit ]
-      - get: m2
-      - task: publish
-        config:
-          platform: linux
-          image_resource:
-            type: docker-image
-            source:
-              repository: java
-              tag: 8-jdk-alpine
-          inputs:
-            - name: blog-api-repo
-              path: repo
-            - name: m2
-          outputs:
-            - name: output
-          run:
-            path: sh
-            args:
-            - repo/ci/tasks/publish-to-maven-repo.sh
+        on_success:
+          put: slack-alert
           params:
-            SONATYPE_USERNAME: {{sonatype-username}}
-            SONATYPE_PASSWORD: {{sonatype-password}}
+            channel: '#concourse'
+            text: |
+              <!here> :white_check_mark: *$BUILD_PIPELINE_NAME/$BUILD_JOB_NAME* succeeded with build <$ATC_EXTERNAL_URL/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME|$BUILD_NAME>!
+        on_failure:
+          put: slack-alert
+          params:
+            channel: '#concourse'
+            text: |
+              <!here> :rotating_light: *$BUILD_PIPELINE_NAME/$BUILD_JOB_NAME* failed with build <$ATC_EXTERNAL_URL/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME|$BUILD_NAME>!
+  - name: bump-to-next-minor-version
+    plan:
+      - aggregate:
+        - get: repo-staging
+          resource: repo-dev
+        - get: repo-prod
+          passed:
+          - deploy-to-cf-prod
+          trigger: true
+        - get: repo-version
+          params:
+            bump: minor
+        - get: utils
+        - get: m2
+      - task: bump-to-next-minor-version
+        file: utils/tasks/bump-to-next-develop-version.yml
+        on_failure:
+          put: slack-alert
+          params:
+            channel: '#concourse'
+            text: |
+              <!here> :rotating_light: *$BUILD_PIPELINE_NAME/$BUILD_JOB_NAME* failed with build <$ATC_EXTERNAL_URL/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME|$BUILD_NAME>!
+        params:
+          GIT_EMAIL: {{git-email}}
+          GIT_NAME: {{git-name}}
+      - put: repo-dev
+        params:
+          repository: release-out
+        on_success:
+          put: slack-alert
+          params:
+            channel: '#concourse'
+            text: |
+              <!here> :white_check_mark: *$BUILD_PIPELINE_NAME/$BUILD_JOB_NAME* succeeded with build <$ATC_EXTERNAL_URL/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME|$BUILD_NAME>!
+        on_failure:
+          put: slack-alert
+          params:
+            channel: '#concourse'
+            text: |
+              <!here> :rotating_light: *$BUILD_PIPELINE_NAME/$BUILD_JOB_NAME* failed with build <$ATC_EXTERNAL_URL/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME|$BUILD_NAME>!
+      - put: repo-version
+        params:
+          file: repo-version/number
+        on_failure:
+          put: slack-alert
+          params:
+            channel: '#concourse'
+            text: |
+              <!here> :rotating_light: *$BUILD_PIPELINE_NAME/$BUILD_JOB_NAME* failed with build <$ATC_EXTERNAL_URL/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME|$BUILD_NAME>!
