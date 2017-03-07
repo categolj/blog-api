@@ -2,7 +2,7 @@
 applications:
   - name: blog-api
     memory: 1G
-    instances: 1
+    instances: 2
     path: target/blog-api.jar
     buildpack: java_buildpack_offline
     health-check-type: http
