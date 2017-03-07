@@ -72,9 +72,7 @@ jobs:
         on_failure:
           put: slack-alert
           params:
-            channel: '#concourse'
-            text: |
-              <!here> :rotating_light: *$BUILD_PIPELINE_NAME/$BUILD_JOB_NAME* failed with build <$ATC_EXTERNAL_URL/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME|$BUILD_NAME>!
+            <<: *SLACK_FAILURE
   - name: deploy-to-nexus-dev
     plan:
       - aggregate:
@@ -90,9 +88,7 @@ jobs:
         on_failure:
           put: slack-alert
           params:
-            channel: '#concourse'
-            text: |
-              <!here> :rotating_light: *$BUILD_PIPELINE_NAME/$BUILD_JOB_NAME* failed with build <$ATC_EXTERNAL_URL/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME|$BUILD_NAME>!
+            <<: *SLACK_FAILURE
         params:
           NEXUS_USERNAME: {{nexus-username}}
           NEXUS_PASSWORD: {{nexus-password}}
@@ -118,13 +114,13 @@ jobs:
           current_app_name: blog-api-dev
         on_success:
           put: slack-alert
-          params:
+          params: &SLACK_SUCCESS
             channel: '#concourse'
             text: |
               <!here> :white_check_mark: *$BUILD_PIPELINE_NAME/$BUILD_JOB_NAME* succeeded with build <$ATC_EXTERNAL_URL/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME|$BUILD_NAME>!
         on_failure:
           put: slack-alert
-          params:
+          params: &SLACK_FAILURE
             channel: '#concourse'
             text: |
               <!here> :rotating_light: *$BUILD_PIPELINE_NAME/$BUILD_JOB_NAME* failed with build <$ATC_EXTERNAL_URL/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME|$BUILD_NAME>!
@@ -143,9 +139,7 @@ jobs:
         on_failure:
           put: slack-alert
           params:
-            channel: '#concourse'
-            text: |
-              <!here> :rotating_light: *$BUILD_PIPELINE_NAME/$BUILD_JOB_NAME* failed with build <$ATC_EXTERNAL_URL/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME|$BUILD_NAME>!
+            <<: *SLACK_FAILURE
         params:
           GIT_EMAIL: {{git-email}}
           GIT_NAME: {{git-name}}
@@ -155,9 +149,7 @@ jobs:
         on_failure:
           put: slack-alert
           params:
-            channel: '#concourse'
-            text: |
-              <!here> :rotating_light: *$BUILD_PIPELINE_NAME/$BUILD_JOB_NAME* failed with build <$ATC_EXTERNAL_URL/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME|$BUILD_NAME>!
+            <<: *SLACK_FAILURE
   - name: unit-test-prod
     plan:
       - aggregate:
@@ -173,9 +165,7 @@ jobs:
         on_failure:
           put: slack-alert
           params:
-            channel: '#concourse'
-            text: |
-              <!here> :rotating_light: *$BUILD_PIPELINE_NAME/$BUILD_JOB_NAME* failed with build <$ATC_EXTERNAL_URL/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME|$BUILD_NAME>!
+            <<: *SLACK_FAILURE
   - name: tag-master
     plan:
       - aggregate:
@@ -191,9 +181,7 @@ jobs:
         on_failure:
           put: slack-alert
           params:
-            channel: '#concourse'
-            text: |
-              <!here> :rotating_light: *$BUILD_PIPELINE_NAME/$BUILD_JOB_NAME* failed with build <$ATC_EXTERNAL_URL/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME|$BUILD_NAME>!
+            <<: *SLACK_FAILURE
         params:
           GIT_EMAIL: {{git-email}}
           GIT_NAME: {{git-name}}
@@ -204,9 +192,7 @@ jobs:
         on_failure:
           put: slack-alert
           params:
-            channel: '#concourse'
-            text: |
-              <!here> :rotating_light: *$BUILD_PIPELINE_NAME/$BUILD_JOB_NAME* failed with build <$ATC_EXTERNAL_URL/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME|$BUILD_NAME>!
+            <<: *SLACK_FAILURE
   - name: deploy-to-nexus-prod
     plan:
       - aggregate:
@@ -222,9 +208,7 @@ jobs:
         on_failure:
           put: slack-alert
           params:
-            channel: '#concourse'
-            text: |
-              <!here> :rotating_light: *$BUILD_PIPELINE_NAME/$BUILD_JOB_NAME* failed with build <$ATC_EXTERNAL_URL/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME|$BUILD_NAME>!
+            <<: *SLACK_FAILURE
         params:
           NEXUS_USERNAME: {{nexus-username}}
           NEXUS_PASSWORD: {{nexus-password}}
@@ -243,9 +227,7 @@ jobs:
         on_failure:
           put: slack-alert
           params:
-            channel: '#concourse'
-            text: |
-              <!here> :rotating_light: *$BUILD_PIPELINE_NAME/$BUILD_JOB_NAME* failed with build <$ATC_EXTERNAL_URL/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME|$BUILD_NAME>!
+            <<: *SLACK_FAILURE
         params:
           GROUP_ID: am.ik.blog
           ARTIFACT_ID: blog-api
@@ -257,15 +239,11 @@ jobs:
         on_success:
           put: slack-alert
           params:
-            channel: '#concourse'
-            text: |
-              <!here> :white_check_mark: *$BUILD_PIPELINE_NAME/$BUILD_JOB_NAME* succeeded with build <$ATC_EXTERNAL_URL/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME|$BUILD_NAME>!
+            <<: *SLACK_SUCCESS
         on_failure:
           put: slack-alert
           params:
-            channel: '#concourse'
-            text: |
-              <!here> :rotating_light: *$BUILD_PIPELINE_NAME/$BUILD_JOB_NAME* failed with build <$ATC_EXTERNAL_URL/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME|$BUILD_NAME>!
+            <<: *SLACK_FAILURE
   - name: bump-to-next-minor-version
     plan:
       - aggregate:
@@ -285,9 +263,7 @@ jobs:
         on_failure:
           put: slack-alert
           params:
-            channel: '#concourse'
-            text: |
-              <!here> :rotating_light: *$BUILD_PIPELINE_NAME/$BUILD_JOB_NAME* failed with build <$ATC_EXTERNAL_URL/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME|$BUILD_NAME>!
+            <<: *SLACK_FAILURE
         params:
           GIT_EMAIL: {{git-email}}
           GIT_NAME: {{git-name}}
@@ -297,21 +273,15 @@ jobs:
         on_success:
           put: slack-alert
           params:
-            channel: '#concourse'
-            text: |
-              <!here> :white_check_mark: *$BUILD_PIPELINE_NAME/$BUILD_JOB_NAME* succeeded with build <$ATC_EXTERNAL_URL/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME|$BUILD_NAME>!
+            <<: *SLACK_SUCCESS
         on_failure:
           put: slack-alert
           params:
-            channel: '#concourse'
-            text: |
-              <!here> :rotating_light: *$BUILD_PIPELINE_NAME/$BUILD_JOB_NAME* failed with build <$ATC_EXTERNAL_URL/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME|$BUILD_NAME>!
+            <<: *SLACK_FAILURE
       - put: repo-version
         params:
           file: repo-version/number
         on_failure:
           put: slack-alert
           params:
-            channel: '#concourse'
-            text: |
-              <!here> :rotating_light: *$BUILD_PIPELINE_NAME/$BUILD_JOB_NAME* failed with build <$ATC_EXTERNAL_URL/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME|$BUILD_NAME>!
+            <<: *SLACK_FAILURE
