@@ -4,7 +4,7 @@ applications:
     memory: 1G
     instances: 1
     path: target/blog-api.jar
-    buildpack: java_buildpack
+    # buildpack: java_buildpack
     health-check-type: http
     health-check-http-endpoint: /health
     env:
