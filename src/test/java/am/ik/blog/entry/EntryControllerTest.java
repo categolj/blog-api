@@ -6,13 +6,10 @@ import static org.hamcrest.Matchers.*;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.embedded.LocalServerPort;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.context.junit4.SpringRunner;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.restassured.RestAssured;
 
@@ -22,8 +19,6 @@ import io.restassured.RestAssured;
 public class EntryControllerTest {
 	@LocalServerPort
 	int port;
-	@Autowired
-	ObjectMapper objectMapper;
 
 	@Before
 	public void setUp() throws Exception {
