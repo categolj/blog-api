@@ -28,7 +28,9 @@ public class EntryController {
 	@GetMapping(path = "entries", params = "q")
 	Page<Entry> searchEntries(@PageableDefault Pageable pageable, @RequestParam String q,
 			@RequestParam(defaultValue = "true") boolean excludeContent) {
-		throw new UnsupportedOperationException("TODO: Not Implemented Yet");
+		SearchCriteria criteria = SearchCriteria.builder().excludeContent(excludeContent)
+				.keyword(q).build();
+		return entryMapper.findPage(criteria, pageable);
 	}
 
 	@GetMapping(path = "users/{createdBy}/entries")
