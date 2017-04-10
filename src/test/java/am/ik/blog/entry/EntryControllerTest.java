@@ -353,45 +353,45 @@ public class EntryControllerTest {
 	@Test
 	public void getEntry99999() throws Exception {
 		Entry entry = given().log().all().get("/api/entries/{entryId}", 99999).then()
-				.log().all().extract().as(Entry.class);
+				.log().all().assertThat().statusCode(200).extract().as(Entry.class);
 		assertEntry99999(entry).assertThatContentIsNotSet();
 	}
 
 	@Test
 	public void getEntry99998() throws Exception {
 		Entry entry = given().log().all().get("/api/entries/{entryId}", 99998).then()
-				.log().all().extract().as(Entry.class);
+				.log().all().assertThat().statusCode(200).extract().as(Entry.class);
 		assertEntry99998(entry).assertThatContentIsNotSet();
 	}
 
 	@Test
 	public void getEntry99997() throws Exception {
 		Entry entry = given().log().all().get("/api/entries/{entryId}", 99997).then()
-				.log().all().extract().as(Entry.class);
+				.log().all().assertThat().statusCode(200).extract().as(Entry.class);
 		assertEntry99997(entry).assertThatContentIsNotSet();
 	}
 
 	@Test
 	public void getEntry99999_includeContent() throws Exception {
 		Entry entry = given().log().all().queryParam("excludeContent", "false")
-				.get("/api/entries/{entryId}", 99999).then().log().all().extract()
-				.as(Entry.class);
+				.get("/api/entries/{entryId}", 99999).then().log().all().assertThat()
+				.statusCode(200).extract().as(Entry.class);
 		assertEntry99999(entry).assertContent();
 	}
 
 	@Test
 	public void getEntry99998_includeContent() throws Exception {
 		Entry entry = given().log().all().queryParam("excludeContent", "false")
-				.get("/api/entries/{entryId}", 99998).then().log().all().extract()
-				.as(Entry.class);
+				.get("/api/entries/{entryId}", 99998).then().log().all().assertThat()
+				.statusCode(200).extract().as(Entry.class);
 		assertEntry99998(entry).assertContent();
 	}
 
 	@Test
 	public void getEntry99997_includeContent() throws Exception {
 		Entry entry = given().log().all().queryParam("excludeContent", "false")
-				.get("/api/entries/{entryId}", 99997).then().log().all().extract()
-				.as(Entry.class);
+				.get("/api/entries/{entryId}", 99997).then().log().all().assertThat()
+				.statusCode(200).extract().as(Entry.class);
 		assertEntry99997(entry).assertContent();
 	}
 }
