@@ -16,10 +16,11 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class EntryController {
 	private final EntryMapper entryMapper;
+	private static final String DEFAULT_EXCLUDE_CONTENT = "false";
 
 	@GetMapping(path = "entries")
 	Page<Entry> getEntries(@PageableDefault Pageable pageable,
-			@RequestParam(defaultValue = "true") boolean excludeContent) {
+			@RequestParam(defaultValue = DEFAULT_EXCLUDE_CONTENT) boolean excludeContent) {
 		SearchCriteria criteria = SearchCriteria.builder().excludeContent(excludeContent)
 				.build();
 		return entryMapper.findPage(criteria, pageable);
@@ -27,7 +28,7 @@ public class EntryController {
 
 	@GetMapping(path = "entries", params = "q")
 	Page<Entry> searchEntries(@PageableDefault Pageable pageable, @RequestParam String q,
-			@RequestParam(defaultValue = "true") boolean excludeContent) {
+			@RequestParam(defaultValue = DEFAULT_EXCLUDE_CONTENT) boolean excludeContent) {
 		SearchCriteria criteria = SearchCriteria.builder().excludeContent(excludeContent)
 				.keyword(q).build();
 		return entryMapper.findPage(criteria, pageable);
@@ -36,7 +37,7 @@ public class EntryController {
 	@GetMapping(path = "users/{createdBy}/entries")
 	Page<Entry> getEntriesByCreatedBy(@PageableDefault Pageable pageable,
 			@PathVariable Name createdBy,
-			@RequestParam(defaultValue = "true") boolean excludeContent) {
+			@RequestParam(defaultValue = DEFAULT_EXCLUDE_CONTENT) boolean excludeContent) {
 		SearchCriteria criteria = SearchCriteria.builder().createdBy(createdBy)
 				.excludeContent(excludeContent).build();
 		return entryMapper.findPage(criteria, pageable);
@@ -45,7 +46,7 @@ public class EntryController {
 	@GetMapping(path = "users/{updatedBy}/entries", params = "updated")
 	Page<Entry> getEntriesByUpdatedBy(@PageableDefault Pageable pageable,
 			@PathVariable Name updatedBy,
-			@RequestParam(defaultValue = "true") boolean excludeContent) {
+			@RequestParam(defaultValue = DEFAULT_EXCLUDE_CONTENT) boolean excludeContent) {
 		SearchCriteria criteria = SearchCriteria.builder().lastModifiedBy(updatedBy)
 				.excludeContent(excludeContent).build();
 		return entryMapper.findPage(criteria, pageable);
@@ -53,7 +54,7 @@ public class EntryController {
 
 	@GetMapping(path = "tags/{tag}/entries")
 	Page<Entry> getEntriesByTag(@PageableDefault Pageable pageable, @PathVariable Tag tag,
-			@RequestParam(defaultValue = "true") boolean excludeContent) {
+			@RequestParam(defaultValue = DEFAULT_EXCLUDE_CONTENT) boolean excludeContent) {
 		SearchCriteria criteria = SearchCriteria.builder().tag(tag)
 				.excludeContent(excludeContent).build();
 		return entryMapper.findPage(criteria, pageable);
@@ -62,7 +63,7 @@ public class EntryController {
 	@GetMapping(path = "categories/{categories}/entries")
 	Page<Entry> getEntriesByCategories(@PageableDefault Pageable pageable,
 			@PathVariable List<Category> categories,
-			@RequestParam(defaultValue = "true") boolean excludeContent) {
+			@RequestParam(defaultValue = DEFAULT_EXCLUDE_CONTENT) boolean excludeContent) {
 		int order = categories.size() - 1;
 		Category category = categories.get(order);
 		SearchCriteria criteria = SearchCriteria.builder()
@@ -73,7 +74,7 @@ public class EntryController {
 
 	@GetMapping(path = "entries/{entryId}")
 	Entry getEntry(@PathVariable EntryId entryId,
-			@RequestParam(defaultValue = "true") boolean excludeContent) {
+			@RequestParam(defaultValue = DEFAULT_EXCLUDE_CONTENT) boolean excludeContent) {
 		return entryMapper.findOne(entryId, excludeContent);
 	}
 }

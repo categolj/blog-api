@@ -2,7 +2,8 @@ package am.ik.blog.entry;
 
 import static am.ik.blog.entry.Asserts.*;
 import static io.restassured.RestAssured.given;
-import static org.hamcrest.Matchers.*;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.hasSize;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -34,7 +35,7 @@ public class EntryControllerTest {
 				.body("numberOfElements", equalTo(3)).body("first", equalTo(true))
 				.body("last", equalTo(true)).body("content", hasSize(3))
 				.body("content[0].entryId", equalTo(99999))
-				.body("content[0].content", isEmptyString())
+				.body("content[0].content", equalTo("This is a test data."))
 				.body("content[0].created.name", equalTo("making"))
 				.body("content[0].created.date", equalTo("2017-04-01T01:00:00+09:00"))
 				.body("content[0].updated.name", equalTo("making"))
@@ -49,7 +50,7 @@ public class EntryControllerTest {
 				.body("content[0].frontMatter.tags[1]", equalTo("test2"))
 				.body("content[0].frontMatter.tags[2]", equalTo("test3"))
 				.body("content[1].entryId", equalTo(99998))
-				.body("content[1].content", isEmptyString())
+				.body("content[1].content", equalTo("This is a test data."))
 				.body("content[1].created.name", equalTo("making"))
 				.body("content[1].created.date", equalTo("2017-04-01T00:00:00+09:00"))
 				.body("content[1].updated.name", equalTo("making"))
@@ -63,7 +64,7 @@ public class EntryControllerTest {
 				.body("content[1].frontMatter.tags[0]", equalTo("test1"))
 				.body("content[1].frontMatter.tags[1]", equalTo("test2"))
 				.body("content[2].entryId", equalTo(99997))
-				.body("content[2].content", isEmptyString())
+				.body("content[2].content", equalTo("This is a test data."))
 				.body("content[2].created.name", equalTo("admin"))
 				.body("content[2].created.date", equalTo("2017-03-31T00:00:00+09:00"))
 				.body("content[2].updated.name", equalTo("making"))
@@ -85,7 +86,7 @@ public class EntryControllerTest {
 				.body("totalElements", equalTo(3)).body("numberOfElements", equalTo(3))
 				.body("first", equalTo(true)).body("last", equalTo(true))
 				.body("content", hasSize(3)).body("content[0].entryId", equalTo(99999))
-				.body("content[0].content", isEmptyString())
+				.body("content[0].content", equalTo("This is a test data."))
 				.body("content[0].created.name", equalTo("making"))
 				.body("content[0].created.date", equalTo("2017-04-01T01:00:00+09:00"))
 				.body("content[0].updated.name", equalTo("making"))
@@ -100,7 +101,7 @@ public class EntryControllerTest {
 				.body("content[0].frontMatter.tags[1]", equalTo("test2"))
 				.body("content[0].frontMatter.tags[2]", equalTo("test3"))
 				.body("content[1].entryId", equalTo(99998))
-				.body("content[1].content", isEmptyString())
+				.body("content[1].content", equalTo("This is a test data."))
 				.body("content[1].created.name", equalTo("making"))
 				.body("content[1].created.date", equalTo("2017-04-01T00:00:00+09:00"))
 				.body("content[1].updated.name", equalTo("making"))
@@ -114,7 +115,7 @@ public class EntryControllerTest {
 				.body("content[1].frontMatter.tags[0]", equalTo("test1"))
 				.body("content[1].frontMatter.tags[1]", equalTo("test2"))
 				.body("content[2].entryId", equalTo(99997))
-				.body("content[2].content", isEmptyString())
+				.body("content[2].content", equalTo("This is a test data."))
 				.body("content[2].created.name", equalTo("admin"))
 				.body("content[2].created.date", equalTo("2017-03-31T00:00:00+09:00"))
 				.body("content[2].updated.name", equalTo("making"))
@@ -137,7 +138,7 @@ public class EntryControllerTest {
 				.body("totalElements", equalTo(2)).body("numberOfElements", equalTo(2))
 				.body("first", equalTo(true)).body("last", equalTo(true))
 				.body("content", hasSize(2)).body("content[0].entryId", equalTo(99999))
-				.body("content[0].content", isEmptyString())
+				.body("content[0].content", equalTo("This is a test data."))
 				.body("content[0].created.name", equalTo("making"))
 				.body("content[0].created.date", equalTo("2017-04-01T01:00:00+09:00"))
 				.body("content[0].updated.name", equalTo("making"))
@@ -152,7 +153,7 @@ public class EntryControllerTest {
 				.body("content[0].frontMatter.tags[1]", equalTo("test2"))
 				.body("content[0].frontMatter.tags[2]", equalTo("test3"))
 				.body("content[1].entryId", equalTo(99997))
-				.body("content[1].content", isEmptyString())
+				.body("content[1].content", equalTo("This is a test data."))
 				.body("content[1].created.name", equalTo("admin"))
 				.body("content[1].created.date", equalTo("2017-03-31T00:00:00+09:00"))
 				.body("content[1].updated.name", equalTo("making"))
@@ -174,7 +175,7 @@ public class EntryControllerTest {
 				.body("totalElements", equalTo(2)).body("numberOfElements", equalTo(2))
 				.body("first", equalTo(true)).body("last", equalTo(true))
 				.body("content", hasSize(2)).body("content[0].entryId", equalTo(99999))
-				.body("content[0].content", isEmptyString())
+				.body("content[0].content", equalTo("This is a test data."))
 				.body("content[0].created.name", equalTo("making"))
 				.body("content[0].created.date", equalTo("2017-04-01T01:00:00+09:00"))
 				.body("content[0].updated.name", equalTo("making"))
@@ -189,7 +190,7 @@ public class EntryControllerTest {
 				.body("content[0].frontMatter.tags[1]", equalTo("test2"))
 				.body("content[0].frontMatter.tags[2]", equalTo("test3"))
 				.body("content[1].entryId", equalTo(99998))
-				.body("content[1].content", isEmptyString())
+				.body("content[1].content", equalTo("This is a test data."))
 				.body("content[1].created.name", equalTo("making"))
 				.body("content[1].created.date", equalTo("2017-04-01T00:00:00+09:00"))
 				.body("content[1].updated.name", equalTo("making"))
@@ -213,7 +214,7 @@ public class EntryControllerTest {
 				.body("totalElements", equalTo(3)).body("numberOfElements", equalTo(3))
 				.body("first", equalTo(true)).body("last", equalTo(true))
 				.body("content", hasSize(3)).body("content[0].entryId", equalTo(99999))
-				.body("content[0].content", isEmptyString())
+				.body("content[0].content", equalTo("This is a test data."))
 				.body("content[0].created.name", equalTo("making"))
 				.body("content[0].created.date", equalTo("2017-04-01T01:00:00+09:00"))
 				.body("content[0].updated.name", equalTo("making"))
@@ -228,7 +229,7 @@ public class EntryControllerTest {
 				.body("content[0].frontMatter.tags[1]", equalTo("test2"))
 				.body("content[0].frontMatter.tags[2]", equalTo("test3"))
 				.body("content[1].entryId", equalTo(99998))
-				.body("content[1].content", isEmptyString())
+				.body("content[1].content", equalTo("This is a test data."))
 				.body("content[1].created.name", equalTo("making"))
 				.body("content[1].created.date", equalTo("2017-04-01T00:00:00+09:00"))
 				.body("content[1].updated.name", equalTo("making"))
@@ -242,7 +243,7 @@ public class EntryControllerTest {
 				.body("content[1].frontMatter.tags[0]", equalTo("test1"))
 				.body("content[1].frontMatter.tags[1]", equalTo("test2"))
 				.body("content[2].entryId", equalTo(99997))
-				.body("content[2].content", isEmptyString())
+				.body("content[2].content", equalTo("This is a test data."))
 				.body("content[2].created.name", equalTo("admin"))
 				.body("content[2].created.date", equalTo("2017-03-31T00:00:00+09:00"))
 				.body("content[2].updated.name", equalTo("making"))
@@ -264,7 +265,7 @@ public class EntryControllerTest {
 				.body("totalElements", equalTo(2)).body("numberOfElements", equalTo(2))
 				.body("first", equalTo(true)).body("last", equalTo(true))
 				.body("content", hasSize(2)).body("content[0].entryId", equalTo(99999))
-				.body("content[0].content", isEmptyString())
+				.body("content[0].content", equalTo("This is a test data."))
 				.body("content[0].created.name", equalTo("making"))
 				.body("content[0].created.date", equalTo("2017-04-01T01:00:00+09:00"))
 				.body("content[0].updated.name", equalTo("making"))
@@ -279,7 +280,7 @@ public class EntryControllerTest {
 				.body("content[0].frontMatter.tags[1]", equalTo("test2"))
 				.body("content[0].frontMatter.tags[2]", equalTo("test3"))
 				.body("content[1].entryId", equalTo(99997))
-				.body("content[1].content", isEmptyString())
+				.body("content[1].content", equalTo("This is a test data."))
 				.body("content[1].created.name", equalTo("admin"))
 				.body("content[1].created.date", equalTo("2017-03-31T00:00:00+09:00"))
 				.body("content[1].updated.name", equalTo("making"))
@@ -301,7 +302,7 @@ public class EntryControllerTest {
 				.body("totalElements", equalTo(2)).body("numberOfElements", equalTo(2))
 				.body("first", equalTo(true)).body("last", equalTo(true))
 				.body("content", hasSize(2)).body("content[0].entryId", equalTo(99999))
-				.body("content[0].content", isEmptyString())
+				.body("content[0].content", equalTo("This is a test data."))
 				.body("content[0].created.name", equalTo("making"))
 				.body("content[0].created.date", equalTo("2017-04-01T01:00:00+09:00"))
 				.body("content[0].updated.name", equalTo("making"))
@@ -316,7 +317,7 @@ public class EntryControllerTest {
 				.body("content[0].frontMatter.tags[1]", equalTo("test2"))
 				.body("content[0].frontMatter.tags[2]", equalTo("test3"))
 				.body("content[1].entryId", equalTo(99997))
-				.body("content[1].content", isEmptyString())
+				.body("content[1].content", equalTo("This is a test data."))
 				.body("content[1].created.name", equalTo("admin"))
 				.body("content[1].created.date", equalTo("2017-03-31T00:00:00+09:00"))
 				.body("content[1].updated.name", equalTo("making"))
@@ -334,7 +335,8 @@ public class EntryControllerTest {
 	public void getEntry() throws Exception {
 		given().log().all().get("/api/entries/{entryId}", 99999).then().log().all()
 				.assertThat().statusCode(200).body("entryId", equalTo(99999))
-				.body("content", isEmptyString()).body("created.name", equalTo("making"))
+				.body("content", equalTo("This is a test data."))
+				.body("created.name", equalTo("making"))
 				.body("created.date", equalTo("2017-04-01T01:00:00+09:00"))
 				.body("updated.name", equalTo("making"))
 				.body("updated.date", equalTo("2017-04-01T02:00:00+09:00"))
@@ -352,22 +354,25 @@ public class EntryControllerTest {
 
 	@Test
 	public void getEntry99999() throws Exception {
-		Entry entry = given().log().all().get("/api/entries/{entryId}", 99999).then()
-				.log().all().assertThat().statusCode(200).extract().as(Entry.class);
+		Entry entry = given().log().all().queryParam("excludeContent", "true")
+				.get("/api/entries/{entryId}", 99999).then().log().all().assertThat()
+				.statusCode(200).extract().as(Entry.class);
 		assertEntry99999(entry).assertThatContentIsNotSet();
 	}
 
 	@Test
 	public void getEntry99998() throws Exception {
-		Entry entry = given().log().all().get("/api/entries/{entryId}", 99998).then()
-				.log().all().assertThat().statusCode(200).extract().as(Entry.class);
+		Entry entry = given().log().all().queryParam("excludeContent", "true")
+				.get("/api/entries/{entryId}", 99998).then().log().all().assertThat()
+				.statusCode(200).extract().as(Entry.class);
 		assertEntry99998(entry).assertThatContentIsNotSet();
 	}
 
 	@Test
 	public void getEntry99997() throws Exception {
-		Entry entry = given().log().all().get("/api/entries/{entryId}", 99997).then()
-				.log().all().assertThat().statusCode(200).extract().as(Entry.class);
+		Entry entry = given().log().all().queryParam("excludeContent", "true")
+				.get("/api/entries/{entryId}", 99997).then().log().all().assertThat()
+				.statusCode(200).extract().as(Entry.class);
 		assertEntry99997(entry).assertThatContentIsNotSet();
 	}
 
