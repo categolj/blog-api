@@ -1,6 +1,9 @@
 package am.ik.blog.entry;
 
+import static am.ik.blog.exception.ResourceNotFoundException.defer;
+
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -75,6 +78,7 @@ public class EntryController {
 	@GetMapping(path = "entries/{entryId}")
 	Entry getEntry(@PathVariable EntryId entryId,
 			@RequestParam(defaultValue = DEFAULT_EXCLUDE_CONTENT) boolean excludeContent) {
-		return entryMapper.findOne(entryId, excludeContent);
+		return Optional.ofNullable(entryMapper.findOne(entryId, excludeContent))
+				.orElseThrow(defer("entry " + entryId + " is not found."));
 	}
 }

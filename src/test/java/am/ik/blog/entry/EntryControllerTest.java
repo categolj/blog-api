@@ -353,6 +353,20 @@ public class EntryControllerTest {
 	}
 
 	@Test
+	public void nonExistingEntryShouldReturn404() throws Exception {
+		given().log().all().get("/api/entries/{entryId}", 100000).then().log().all()
+				.assertThat().statusCode(404)
+				.body("message", equalTo("entry 100000 is not found."));
+	}
+
+	@Test
+	public void invalidEntryIdShouldReturn400() throws Exception {
+		given().log().all().get("/api/entries/{entryId}", "foo").then().log().all()
+				.assertThat().statusCode(400)
+				.body("message", equalTo("The given request (entryId = foo) is not valid."));
+	}
+
+	@Test
 	public void getEntry99999() throws Exception {
 		Entry entry = given().log().all().queryParam("excludeContent", "true")
 				.get("/api/entries/{entryId}", 99999).then().log().all().assertThat()
