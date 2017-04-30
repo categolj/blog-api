@@ -1,0 +1,348 @@
+---
+resource_types:
+- name: slack-notification
+  type: docker-image
+  source:
+    repository: cfcommunity/slack-notification-resource
+    tag: v1.1.3
+resources:
+  - name: repo-prod
+    type: git
+    source:
+      uri: git@github.com:categolj/blog-api.git
+      branch: master
+      private_key: {{github-private-key}}
+  - name: repo-dev
+    type: git
+    source:
+      uri: git@github.com:categolj/blog-api.git
+      branch: develop
+      private_key: {{github-private-key}}
+  - name: repo-version
+    type: semver
+    source:
+      uri: git@github.com:categolj/blog-api-version.git
+      branch: master
+      private_key: {{github-private-key}}
+      file: version
+      driver: git
+      initial_version: 4.0.0
+  - name: utils
+    type: git
+    source:
+      uri: https://github.com/maki-home/concourse-utils
+      branch: master
+  - name: cf-prod
+    type: cf
+    source:
+      api: {{cf-api}}
+      username: {{cf-username}}
+      password: {{cf-password}}
+      organization: {{cf-org}}
+      space: blog
+      skip_cert_check: true
+  - name: cf-dev
+    type: cf
+    source:
+      api: {{cf-api}}
+      username: {{cf-username}}
+      password: {{cf-password}}
+      organization: {{cf-org}}
+      space: blog-dev
+      skip_cert_check: true
+  - name: m2
+    type: docker-image
+    source:
+      repository: docker-192-168-11-210.sslip.io/making/blog-m2
+      username: {{nexus-username}}
+      password: {{nexus-password}}
+  - name: mysql
+    type: docker-image
+    source:
+      repository: docker-192-168-11-210.sslip.io/mariadb
+      username: {{nexus-username}}
+      password: {{nexus-password}}
+      tag: "10.0.30"
+  - name: dcind-jdk
+    type: docker-image
+    source:
+      repository: docker-192-168-11-210.sslip.io/making/dcind-jdk
+      username: {{nexus-username}}
+      password: {{nexus-password}}
+  - name: slack-alert
+    type: slack-notification
+    source:
+      url: {{slack-webhook-url}}
+jobs:
+  ### Dev
+  - name: unit-test-dev
+    plan:
+      - aggregate:
+        - get: repo
+          resource: repo-dev
+          trigger: true
+        - get: utils
+        - get: m2
+        - get: dcind-jdk
+        - get: mysql
+          params:
+            save: true
+      - task: unit
+        privileged: true
+        image: dcind-jdk
+        params:
+          _JAVA_OPTIONS: -Duser.timezone=Asia/Tokyo -Duser.language=ja -Duser.country=JP -Djava.security.egd=file:/dev/./urandom
+        config: &UNIT_TEST
+          platform: linux
+          inputs:
+          - name: repo
+          - name: mysql
+          - name: m2
+          - name: utils
+          run:
+            path: sh
+            args:
+            - -c
+            - |
+              set -e
+              BASE_DIR=`pwd`
+              M2_REPO=${BASE_DIR}/m2/rootfs/opt/m2
+              source /docker-lib.sh
+              start_docker
+              docker load -i mysql/image
+              docker tag "$(cat mysql/image-id)" "$(cat mysql/repository):$(cat mysql/tag)"
+              docker images
+              ${BASE_DIR}/utils/scripts/add-repos-in-pom-xml.sh repo
+              cd repo
+              docker-compose up -d
+              ${BASE_DIR}/utils/scripts/wait-until-port-available.sh localhost 3306
+              mvn test -Dmaven.repo.local=${M2_REPO}
+              docker-compose down
+        on_failure:
+          put: slack-alert
+          params:
+            <<: *SLACK_FAILURE
+  - name: deploy-to-nexus-dev
+    plan:
+      - aggregate:
+        - get: repo
+          resource: repo-dev
+          trigger: true
+          passed:
+          - unit-test-dev
+        - get: utils
+        - get: m2
+      - task: deploy
+        file: utils/tasks/deploy-to-nexus.yml
+        on_failure:
+          put: slack-alert
+          params:
+            <<: *SLACK_FAILURE
+        params:
+          NEXUS_USERNAME: {{nexus-username}}
+          NEXUS_PASSWORD: {{nexus-password}}
+  - name: deploy-to-cf-dev
+    plan:
+      - aggregate:
+        - get: repo
+          resource: repo-dev
+          trigger: true
+          passed:
+          - deploy-to-nexus-dev
+        - get: repo-version
+        - get: utils
+      - task: download
+        file: utils/tasks/download-snapshot.yml
+        params:
+          GROUP_ID: am.ik.blog
+          ARTIFACT_ID: blog-api
+      - put: cf-dev
+        params:
+          manifest: repo/manifest-dev.yml
+          path: output/app.jar
+          current_app_name: blog-api-dev
+          environment_variables:
+            SECURITY_USER_NAME: {{ops-username}}
+            SECURITY_USER_PASSWORD: {{ops-password}}
+        on_success:
+          put: slack-alert
+          params: &SLACK_SUCCESS
+            channel: '#concourse'
+            text: |
+              <!here> :white_check_mark: *$BUILD_PIPELINE_NAME/$BUILD_JOB_NAME* succeeded with build <$ATC_EXTERNAL_URL/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME|$BUILD_NAME>!
+        on_failure:
+          put: slack-alert
+          params: &SLACK_FAILURE
+            channel: '#concourse'
+            text: |
+              <!here> :rotating_light: *$BUILD_PIPELINE_NAME/$BUILD_JOB_NAME* failed with build <$ATC_EXTERNAL_URL/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME|$BUILD_NAME>!
+  ### Prod
+  - name: merge-develop-to-master
+    plan:
+      - aggregate:
+        - get: repo-other
+          resource: repo-prod
+        - get: repo-dev
+          passed:
+          - deploy-to-cf-dev
+        - get: utils
+      - task: merge-develop-to-master
+        file: utils/tasks/merge-develop-to-other.yml
+        on_failure:
+          put: slack-alert
+          params:
+            <<: *SLACK_FAILURE
+        params:
+          GIT_EMAIL: {{git-email}}
+          GIT_NAME: {{git-name}}
+      - put: repo-prod
+        params:
+          repository: other-out
+        on_failure:
+          put: slack-alert
+          params:
+            <<: *SLACK_FAILURE
+  - name: unit-test-prod
+    plan:
+      - aggregate:
+        - get: repo
+          resource: repo-prod
+          trigger: true
+          passed:
+          - merge-develop-to-master
+        - get: utils
+        - get: m2
+        - get: dcind-jdk
+        - get: mysql
+          params:
+            save: true
+      - task: unit
+        privileged: true
+        image: dcind-jdk
+        params:
+          _JAVA_OPTIONS: -Duser.timezone=Asia/Tokyo -Duser.language=ja -Duser.country=JP -Djava.security.egd=file:/dev/./urandom
+        config:
+          <<: *UNIT_TEST
+        on_failure:
+          put: slack-alert
+          params:
+            <<: *SLACK_FAILURE
+  - name: tag-master
+    plan:
+      - aggregate:
+        - get: repo-prod
+          passed:
+          - unit-test-prod
+          trigger: true
+        - get: repo-version
+        - get: utils
+        - get: m2
+      - task: bump-to-release-version
+        file: utils/tasks/bump-to-release-version.yml
+        on_failure:
+          put: slack-alert
+          params:
+            <<: *SLACK_FAILURE
+        params:
+          GIT_EMAIL: {{git-email}}
+          GIT_NAME: {{git-name}}
+      - put: repo-prod
+        params:
+          repository: master-out
+          tag: repo-version/number
+        on_failure:
+          put: slack-alert
+          params:
+            <<: *SLACK_FAILURE
+  - name: deploy-to-nexus-prod
+    plan:
+      - aggregate:
+        - get: repo
+          resource: repo-prod
+          trigger: true
+          passed:
+          - tag-master
+        - get: utils
+        - get: m2
+      - task: deploy
+        file: utils/tasks/deploy-to-nexus.yml
+        on_failure:
+          put: slack-alert
+          params:
+            <<: *SLACK_FAILURE
+        params:
+          NEXUS_USERNAME: {{nexus-username}}
+          NEXUS_PASSWORD: {{nexus-password}}
+  - name: deploy-to-cf-prod
+    plan:
+      - aggregate:
+        - get: repo
+          resource: repo-prod
+          trigger: true
+          passed:
+          - deploy-to-nexus-prod
+        - get: repo-version
+        - get: utils
+      - task: download
+        file: utils/tasks/download-release.yml
+        on_failure:
+          put: slack-alert
+          params:
+            <<: *SLACK_FAILURE
+        params:
+          GROUP_ID: am.ik.blog
+          ARTIFACT_ID: blog-api
+      - put: cf-prod
+        params:
+          manifest: repo/manifest.yml
+          path: output/app.jar
+          current_app_name: blog-api
+        on_success:
+          put: slack-alert
+          params:
+            <<: *SLACK_SUCCESS
+        on_failure:
+          put: slack-alert
+          params:
+            <<: *SLACK_FAILURE
+  - name: bump-to-next-minor-version
+    plan:
+      - aggregate:
+        - get: repo-staging
+          resource: repo-dev
+        - get: repo-prod
+          passed:
+          - deploy-to-cf-prod
+          trigger: true
+        - get: repo-version
+          params:
+            bump: minor
+        - get: utils
+        - get: m2
+      - task: bump-to-next-minor-version
+        file: utils/tasks/bump-to-next-develop-version.yml
+        on_failure:
+          put: slack-alert
+          params:
+            <<: *SLACK_FAILURE
+        params:
+          GIT_EMAIL: {{git-email}}
+          GIT_NAME: {{git-name}}
+      - put: repo-dev
+        params:
+          repository: release-out
+        on_success:
+          put: slack-alert
+          params:
+            <<: *SLACK_SUCCESS
+        on_failure:
+          put: slack-alert
+          params:
+            <<: *SLACK_FAILURE
+      - put: repo-version
+        params:
+          file: repo-version/number
+        on_failure:
+          put: slack-alert
+          params:
+            <<: *SLACK_FAILURE
