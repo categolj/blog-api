@@ -1,0 +1,11 @@
+version: "2"
+
+services:
+  db:
+    image: mariadb:10.0.30
+    container_name: mysql
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_DATABASE: blog_test
+      MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
