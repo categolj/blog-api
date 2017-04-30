@@ -23,13 +23,14 @@
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 		<java.version>1.8</java.version>
 		<flyway.version>4.1.2</flyway.version>
+		<blog-mapper.version>4.1.0</blog-mapper.version>
 	</properties>
 
 	<dependencies>
 		<dependency>
 			<groupId>am.ik.blog</groupId>
 			<artifactId>blog-mapper</artifactId>
-			<version>4.0.0-SNAPSHOT</version>
+			<version>${blog-mapper.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>io.pivotal.spring.cloud</groupId>
@@ -84,7 +85,7 @@
 		<dependency>
 			<groupId>am.ik.blog</groupId>
 			<artifactId>blog-mapper</artifactId>
-			<version>4.0.0-SNAPSHOT</version>
+			<version>${blog-mapper.version}</version>
 			<classifier>tests</classifier>
 			<scope>test</scope>
 		</dependency>
@@ -92,7 +93,7 @@
 			<groupId>org.springframework.restdocs</groupId>
 			<artifactId>spring-restdocs-restassured</artifactId>
 			<scope>test</scope>
-			<version>1.2.0.RC1</version>
+			<version>1.2.0.RELEASE</version>
 		</dependency>
 		<dependency>
 			<groupId>io.rest-assured</groupId>
