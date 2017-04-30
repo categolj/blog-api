@@ -1,5 +1,5 @@
 applications:
-- name: blog-api
+- name: blog-api-dev
   memory: 1g
   path: target/blog-api-0.0.1-SNAPSHOT.jar
   services:
