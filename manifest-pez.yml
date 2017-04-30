@@ -1,0 +1,16 @@
+applications:
+- name: blog-api
+  buildpack: java_buildpack_offline
+  memory: 2g
+  instances: 2
+  domains:
+  - ik.am
+  - pezapp.io
+  path: target/blog-api-0.0.1-SNAPSHOT.jar
+  services:
+  - blog-db
+  - blog-config
+  - blog-eureka
+  env:
+    SECURITY_USER_NAME: user
+    SECURITY_USER_PASSWORD: password
