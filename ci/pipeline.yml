@@ -12,12 +12,16 @@ resources:
       uri: git@github.com:categolj/blog-api.git
       branch: master
       private_key: {{github-private-key}}
+    webhook_token: {{webhook-token}}
+    check_every: 10000h
   - name: repo-dev
     type: git
     source:
       uri: git@github.com:categolj/blog-api.git
       branch: develop
       private_key: {{github-private-key}}
+    webhook_token: {{webhook-token}}
+    check_every: 10000h
   - name: repo-version
     type: semver
     source:
