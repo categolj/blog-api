@@ -6,6 +6,7 @@ applications:
   - blog-db
   - blog-config
   - blog-eureka
+  - zipkin-rabbit
   env:
     SECURITY_USER_NAME: user
     SECURITY_USER_PASSWORD: password
