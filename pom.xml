@@ -23,7 +23,7 @@
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 		<java.version>1.8</java.version>
 		<flyway.version>4.1.2</flyway.version>
-		<blog-mapper.version>4.1.0</blog-mapper.version>
+		<blog-mapper.version>4.3.0</blog-mapper.version>
 	</properties>
 
 	<dependencies>
