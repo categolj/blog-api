@@ -26,18 +26,16 @@ public class EntryController {
 	private static final String DEFAULT_EXCLUDE_CONTENT = "false";
 
 	@GetMapping(path = "entries")
-	Page<Entry> getEntries(@PageableDefault Pageable pageable,
-			@RequestParam(defaultValue = DEFAULT_EXCLUDE_CONTENT) boolean excludeContent) {
-		SearchCriteria criteria = SearchCriteria.builder().excludeContent(excludeContent)
-				.build();
+	Page<Entry> getEntries(@PageableDefault Pageable pageable) {
+		SearchCriteria criteria = SearchCriteria.builder().excludeContent(true).build();
 		return entryMapper.findPage(criteria, pageable);
 	}
 
 	@GetMapping(path = "entries", params = "q")
-	Page<Entry> searchEntries(@PageableDefault Pageable pageable, @RequestParam String q,
-			@RequestParam(defaultValue = DEFAULT_EXCLUDE_CONTENT) boolean excludeContent) {
-		SearchCriteria criteria = SearchCriteria.builder().excludeContent(excludeContent)
-				.keyword(q).build();
+	Page<Entry> searchEntries(@PageableDefault Pageable pageable,
+			@RequestParam String q) {
+		SearchCriteria criteria = SearchCriteria.builder().excludeContent(true).keyword(q)
+				.build();
 		return entryMapper.findPage(criteria, pageable);
 	}
 
@@ -52,30 +50,28 @@ public class EntryController {
 
 	@GetMapping(path = "users/{updatedBy}/entries", params = "updated")
 	Page<Entry> getEntriesByUpdatedBy(@PageableDefault Pageable pageable,
-			@PathVariable Name updatedBy,
-			@RequestParam(defaultValue = DEFAULT_EXCLUDE_CONTENT) boolean excludeContent) {
+			@PathVariable Name updatedBy) {
 		SearchCriteria criteria = SearchCriteria.builder().lastModifiedBy(updatedBy)
-				.excludeContent(excludeContent).build();
+				.excludeContent(true).build();
 		return entryMapper.findPage(criteria, pageable);
 	}
 
 	@GetMapping(path = "tags/{tag}/entries")
-	Page<Entry> getEntriesByTag(@PageableDefault Pageable pageable, @PathVariable Tag tag,
-			@RequestParam(defaultValue = DEFAULT_EXCLUDE_CONTENT) boolean excludeContent) {
-		SearchCriteria criteria = SearchCriteria.builder().tag(tag)
-				.excludeContent(excludeContent).build();
+	Page<Entry> getEntriesByTag(@PageableDefault Pageable pageable,
+			@PathVariable Tag tag) {
+		SearchCriteria criteria = SearchCriteria.builder().tag(tag).excludeContent(true)
+				.build();
 		return entryMapper.findPage(criteria, pageable);
 	}
 
 	@GetMapping(path = "categories/{categories}/entries")
 	Page<Entry> getEntriesByCategories(@PageableDefault Pageable pageable,
-			@PathVariable List<Category> categories,
-			@RequestParam(defaultValue = DEFAULT_EXCLUDE_CONTENT) boolean excludeContent) {
+			@PathVariable List<Category> categories) {
 		int order = categories.size() - 1;
 		Category category = categories.get(order);
 		SearchCriteria criteria = SearchCriteria.builder()
 				.categoryOrders(new CategoryOrders().add(category, order) /* TODO */)
-				.excludeContent(excludeContent).build();
+				.excludeContent(true).build();
 		return entryMapper.findPage(criteria, pageable);
 	}
 
@@ -86,7 +82,7 @@ public class EntryController {
 		Optional<Entry> entry = Optional
 				.ofNullable(entryMapper.findOne(entryId, excludeContent));
 		return entry.map(x -> {
-			if (x.isPremium()) {
+			if (!excludeContent && x.isPremium()) {
 				throw new PremiumRedirectException(builder
 						.pathSegment("api", "p", "entries", entryId.toString())
 						.queryParam("excludeContent", excludeContent).build().toUri());
@@ -101,7 +97,9 @@ public class EntryController {
 		Optional<Entry> entry = Optional
 				.ofNullable(entryMapper.findOne(entryId, excludeContent));
 		return entry.map(x -> {
-			pointService.checkIfSubscribed(x);
+			if (!excludeContent) {
+				pointService.checkIfSubscribed(x);
+			}
 			return x;
 		}).orElseThrow(defer("entry " + entryId + " is not found."));
 	}
