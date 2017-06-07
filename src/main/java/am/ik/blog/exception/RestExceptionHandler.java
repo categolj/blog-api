@@ -33,8 +33,8 @@ public class RestExceptionHandler {
 		return new SimpleExceptionMessage(e.getMessage());
 	}
 
-	@ExceptionHandler(PremiumException.class)
-	ResponseEntity<Void> handlePremiumException(PremiumException e) {
+	@ExceptionHandler(PremiumRedirectException.class)
+	ResponseEntity<Void> handlePremiumException(PremiumRedirectException e) {
 		return ResponseEntity.status(HttpStatus.SEE_OTHER).location(e.premiumUri())
 				.build();
 	}

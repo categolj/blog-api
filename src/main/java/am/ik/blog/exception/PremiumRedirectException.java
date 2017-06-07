@@ -2,10 +2,10 @@ package am.ik.blog.exception;
 
 import java.net.URI;
 
-public class PremiumException extends RuntimeException {
+public class PremiumRedirectException extends RuntimeException {
 	private final URI premiumUri;
 
-	public PremiumException(URI premiumUri) {
+	public PremiumRedirectException(URI premiumUri) {
 		this.premiumUri = premiumUri;
 	}
 

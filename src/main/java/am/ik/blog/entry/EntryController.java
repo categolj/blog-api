@@ -13,7 +13,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import am.ik.blog.entry.criteria.CategoryOrders;
 import am.ik.blog.entry.criteria.SearchCriteria;
-import am.ik.blog.exception.PremiumException;
+import am.ik.blog.exception.PremiumRedirectException;
 import am.ik.blog.point.PointService;
 import lombok.RequiredArgsConstructor;
 
@@ -87,7 +87,7 @@ public class EntryController {
 				.ofNullable(entryMapper.findOne(entryId, excludeContent));
 		return entry.map(x -> {
 			if (x.isPremium()) {
-				throw new PremiumException(builder
+				throw new PremiumRedirectException(builder
 						.pathSegment("api", "p", "entries", entryId.toString())
 						.queryParam("excludeContent", excludeContent).build().toUri());
 			}
