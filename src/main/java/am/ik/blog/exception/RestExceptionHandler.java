@@ -7,6 +7,7 @@ import org.springframework.context.MessageSource;
 import org.springframework.context.support.MessageSourceAccessor;
 import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -28,7 +29,19 @@ public class RestExceptionHandler {
 
 	@ExceptionHandler(ResourceNotFoundException.class)
 	@ResponseStatus(HttpStatus.NOT_FOUND)
-	SimpleExceptionMessage handleException(ResourceNotFoundException e) {
+	SimpleExceptionMessage handleResourceNotFoundException(ResourceNotFoundException e) {
+		return new SimpleExceptionMessage(e.getMessage());
+	}
+
+	@ExceptionHandler(PremiumException.class)
+	ResponseEntity<Void> handlePremiumException(PremiumException e) {
+		return ResponseEntity.status(HttpStatus.SEE_OTHER).location(e.premiumUri())
+				.build();
+	}
+
+	@ExceptionHandler(NotSubscribedException.class)
+	@ResponseStatus(HttpStatus.PAYMENT_REQUIRED)
+	SimpleExceptionMessage handleNotSubscribedException(NotSubscribedException e) {
 		return new SimpleExceptionMessage(e.getMessage());
 	}
 

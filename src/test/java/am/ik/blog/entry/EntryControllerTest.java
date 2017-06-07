@@ -2,16 +2,33 @@ package am.ik.blog.entry;
 
 import static am.ik.blog.entry.Asserts.*;
 import static io.restassured.RestAssured.given;
+import static java.util.Arrays.asList;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasSize;
+import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo;
+import static org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess;
 
+import java.util.LinkedHashMap;
+import java.util.Map;
+
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.embedded.LocalServerPort;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.security.oauth2.client.OAuth2RestTemplate;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.web.client.MockRestServiceServer;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.restassured.RestAssured;
 
@@ -21,10 +38,28 @@ import io.restassured.RestAssured;
 public class EntryControllerTest {
 	@LocalServerPort
 	int port;
+	UserInfoServer userInfoServer;
+	MockRestServiceServer mockServer;
+	@Autowired
+	OAuth2RestTemplate restTemplate;
+	@Autowired
+	ObjectMapper objectMapper;
 
 	@Before
 	public void setUp() throws Exception {
 		RestAssured.port = port;
+		userInfoServer = new UserInfoServer(34539);
+		userInfoServer.start();
+		setupMock();
+	}
+
+	void setupMock() throws Exception {
+		mockServer = MockRestServiceServer.bindTo(restTemplate).build();
+	}
+
+	@After
+	public void tearDown() {
+		userInfoServer.shutdown();
 	}
 
 	@Test
@@ -75,7 +110,8 @@ public class EntryControllerTest {
 				.body("content[2].frontMatter.categories[1]", equalTo("y"))
 				.body("content[2].frontMatter.tags", hasSize(2))
 				.body("content[2].frontMatter.tags[0]", equalTo("test1"))
-				.body("content[2].frontMatter.tags[1]", equalTo("test3"));
+				.body("content[2].frontMatter.tags[1]", equalTo("test3"))
+				.body("content[2].frontMatter.point", equalTo(50));
 	}
 
 	@Test
@@ -126,7 +162,8 @@ public class EntryControllerTest {
 				.body("content[2].frontMatter.categories[1]", equalTo("y"))
 				.body("content[2].frontMatter.tags", hasSize(2))
 				.body("content[2].frontMatter.tags[0]", equalTo("test1"))
-				.body("content[2].frontMatter.tags[1]", equalTo("test3"));
+				.body("content[2].frontMatter.tags[1]", equalTo("test3"))
+				.body("content[2].frontMatter.point", equalTo(50));
 	}
 
 	@Test
@@ -164,7 +201,8 @@ public class EntryControllerTest {
 				.body("content[1].frontMatter.categories[1]", equalTo("y"))
 				.body("content[1].frontMatter.tags", hasSize(2))
 				.body("content[1].frontMatter.tags[0]", equalTo("test1"))
-				.body("content[1].frontMatter.tags[1]", equalTo("test3"));
+				.body("content[1].frontMatter.tags[1]", equalTo("test3"))
+				.body("content[1].frontMatter.point", equalTo(50));
 	}
 
 	@Test
@@ -254,7 +292,8 @@ public class EntryControllerTest {
 				.body("content[2].frontMatter.categories[1]", equalTo("y"))
 				.body("content[2].frontMatter.tags", hasSize(2))
 				.body("content[2].frontMatter.tags[0]", equalTo("test1"))
-				.body("content[2].frontMatter.tags[1]", equalTo("test3"));
+				.body("content[2].frontMatter.tags[1]", equalTo("test3"))
+				.body("content[2].frontMatter.point", equalTo(50));
 	}
 
 	@Test
@@ -291,7 +330,8 @@ public class EntryControllerTest {
 				.body("content[1].frontMatter.categories[1]", equalTo("y"))
 				.body("content[1].frontMatter.tags", hasSize(2))
 				.body("content[1].frontMatter.tags[0]", equalTo("test1"))
-				.body("content[1].frontMatter.tags[1]", equalTo("test3"));
+				.body("content[1].frontMatter.tags[1]", equalTo("test3"))
+				.body("content[1].frontMatter.point", equalTo(50));
 	}
 
 	@Test
@@ -328,7 +368,8 @@ public class EntryControllerTest {
 				.body("content[1].frontMatter.categories[1]", equalTo("y"))
 				.body("content[1].frontMatter.tags", hasSize(2))
 				.body("content[1].frontMatter.tags[0]", equalTo("test1"))
-				.body("content[1].frontMatter.tags[1]", equalTo("test3"));
+				.body("content[1].frontMatter.tags[1]", equalTo("test3"))
+				.body("content[1].frontMatter.point", equalTo(50));
 	}
 
 	@Test
@@ -362,8 +403,8 @@ public class EntryControllerTest {
 	@Test
 	public void invalidEntryIdShouldReturn400() throws Exception {
 		given().log().all().get("/api/entries/{entryId}", "foo").then().log().all()
-				.assertThat().statusCode(400)
-				.body("message", equalTo("The given request (entryId = foo) is not valid."));
+				.assertThat().statusCode(400).body("message",
+						equalTo("The given request (entryId = foo) is not valid."));
 	}
 
 	@Test
@@ -384,10 +425,26 @@ public class EntryControllerTest {
 
 	@Test
 	public void getEntry99997() throws Exception {
-		Entry entry = given().log().all().queryParam("excludeContent", "true")
-				.get("/api/entries/{entryId}", 99997).then().log().all().assertThat()
-				.statusCode(200).extract().as(Entry.class);
+		Map<String, Object> response = new LinkedHashMap<>();
+		response.put("pint", 100);
+		response.put("entryIds", asList(99997, 99998));
+		mockServer.expect(requestTo("http://blog-point.example.com:80/v1/user"))
+				.andRespond(withSuccess(objectMapper.writeValueAsString(response),
+						MediaType.APPLICATION_JSON_UTF8));
+
+		Entry entry = given().log().all()
+				.header(HttpHeaders.AUTHORIZATION, "Bearer test-user-1")
+				.queryParam("excludeContent", "true").get("/api/entries/{entryId}", 99997)
+				.then().log().all().assertThat().statusCode(200).extract()
+				.as(Entry.class);
 		assertEntry99997(entry).assertThatContentIsNotSet();
+	}
+
+	@Test
+	public void getEntry99997_noToken() throws Exception {
+		given().log().all().queryParam("excludeContent", "true")
+				.get("/api/entries/{entryId}", 99997).then().log().all().assertThat()
+				.statusCode(401);
 	}
 
 	@Test
@@ -407,10 +464,54 @@ public class EntryControllerTest {
 	}
 
 	@Test
-	public void getEntry99997_includeContent() throws Exception {
-		Entry entry = given().log().all().queryParam("excludeContent", "false")
+	public void getEntry99997_includeContent_subscribed() throws Exception {
+		Map<String, Object> response = new LinkedHashMap<>();
+		response.put("point", 100);
+		response.put("entryIds", asList(99997, 99998));
+		mockServer.expect(requestTo("http://blog-point.example.com:80/v1/user"))
+				.andRespond(withSuccess(objectMapper.writeValueAsString(response),
+						MediaType.APPLICATION_JSON_UTF8));
+
+		Entry entry = given().log().all()
+				.header(HttpHeaders.AUTHORIZATION, "Bearer test-user-1")
+				.queryParam("excludeContent", "false")
 				.get("/api/entries/{entryId}", 99997).then().log().all().assertThat()
 				.statusCode(200).extract().as(Entry.class);
 		assertEntry99997(entry).assertContent();
+	}
+
+	@Test
+	public void getEntry99997_includeContent_not_subscribed() throws Exception {
+		Map<String, Object> response = new LinkedHashMap<>();
+		response.put("point", 100);
+		response.put("entryIds", asList(99998));
+		mockServer.expect(requestTo("http://blog-point.example.com:80/v1/user"))
+				.andRespond(withSuccess(objectMapper.writeValueAsString(response),
+						MediaType.APPLICATION_JSON_UTF8));
+
+		JsonNode error = given().log().all()
+				.header(HttpHeaders.AUTHORIZATION, "Bearer test-user-1")
+				.queryParam("excludeContent", "false")
+				.get("/api/entries/{entryId}", 99997).then().log().all().assertThat()
+				.statusCode(HttpStatus.PAYMENT_REQUIRED.value()).extract()
+				.as(JsonNode.class);
+		assertThat(error.get("message").asText()).isEqualTo("entry 99997 is not subscribed.");
+	}
+
+	@Test
+	public void getEntry99997_includeContent_noToken() throws Exception {
+		given().log().all().queryParam("excludeContent", "false")
+				.get("/api/entries/{entryId}", 99997).then().log().all().assertThat()
+				.statusCode(401);
+	}
+
+	@Test
+	public void getPremiumEntry_notFound() throws Exception {
+		JsonNode error = given().log().all()
+				.header(HttpHeaders.AUTHORIZATION, "Bearer test-user-1")
+				.queryParam("excludeContent", "false")
+				.get("/api/p/entries/{entryId}", 99990).then().log().all().assertThat()
+				.statusCode(404).extract().as(JsonNode.class);
+		assertThat(error.get("message").asText()).isEqualTo("entry 99990 is not found.");
 	}
 }

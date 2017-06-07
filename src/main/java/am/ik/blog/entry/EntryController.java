@@ -9,9 +9,12 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import am.ik.blog.entry.criteria.CategoryOrders;
 import am.ik.blog.entry.criteria.SearchCriteria;
+import am.ik.blog.exception.PremiumException;
+import am.ik.blog.point.PointService;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -19,6 +22,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class EntryController {
 	private final EntryMapper entryMapper;
+	private final PointService pointService;
 	private static final String DEFAULT_EXCLUDE_CONTENT = "false";
 
 	@GetMapping(path = "entries")
@@ -77,8 +81,28 @@ public class EntryController {
 
 	@GetMapping(path = "entries/{entryId}")
 	Entry getEntry(@PathVariable EntryId entryId,
+			@RequestParam(defaultValue = DEFAULT_EXCLUDE_CONTENT) boolean excludeContent,
+			UriComponentsBuilder builder) {
+		Optional<Entry> entry = Optional
+				.ofNullable(entryMapper.findOne(entryId, excludeContent));
+		return entry.map(x -> {
+			if (x.isPremium()) {
+				throw new PremiumException(builder
+						.pathSegment("api", "p", "entries", entryId.toString())
+						.queryParam("excludeContent", excludeContent).build().toUri());
+			}
+			return x;
+		}).orElseThrow(defer("entry " + entryId + " is not found."));
+	}
+
+	@GetMapping(path = "p/entries/{entryId}")
+	Entry getPremiumEntry(@PathVariable EntryId entryId,
 			@RequestParam(defaultValue = DEFAULT_EXCLUDE_CONTENT) boolean excludeContent) {
-		return Optional.ofNullable(entryMapper.findOne(entryId, excludeContent))
-				.orElseThrow(defer("entry " + entryId + " is not found."));
+		Optional<Entry> entry = Optional
+				.ofNullable(entryMapper.findOne(entryId, excludeContent));
+		return entry.map(x -> {
+			pointService.checkIfSubscribed(x);
+			return x;
+		}).orElseThrow(defer("entry " + entryId + " is not found."));
 	}
 }
