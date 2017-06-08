@@ -6,6 +6,8 @@ import java.util.Collections;
 import java.util.Set;
 import java.util.stream.StreamSupport;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.oauth2.client.OAuth2RestTemplate;
 import org.springframework.stereotype.Component;
 
@@ -19,6 +21,7 @@ import am.ik.blog.exception.NotSubscribedException;
 
 @Component
 public class PointService {
+	private static final Logger log = LoggerFactory.getLogger(PointService.class);
 	private final OAuth2RestTemplate oauth2RestTemplate;
 	private final BlogProperties props;
 
@@ -39,11 +42,17 @@ public class PointService {
 		return Collections.emptySet();
 	}
 
+	@HystrixCommand(fallbackMethod = "checkIfSubscribedFallback")
 	public void checkIfSubscribed(Entry entry) {
 		Set<EntryId> entryIds = subscribedIds();
 		EntryId entryId = entry.entryId();
 		if (!entryIds.contains(entryId)) {
 			throw new NotSubscribedException("entry " + entryId + " is not subscribed.");
 		}
+	}
+
+	public void checkIfSubscribedFallback(Entry entry) {
+		throw new NotSubscribedException(
+				"Point service is down. Sorry for inconvenience.");
 	}
 }
