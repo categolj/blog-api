@@ -8,6 +8,7 @@ applications:
   - blog-db
   - blog-config
   - blog-eureka
+  - blog-hystrix-dashboard
   - zipkin-rabbit
   env:
     SECURITY_USER_NAME: user
