@@ -71,6 +71,7 @@ resources:
     type: docker-image
     source:
       repository: docker-192-168-11-210.sslip.io/making/dcind-jdk
+      tag: support-overlay
       username: {{nexus-username}}
       password: {{nexus-password}}
   - name: slack-alert
