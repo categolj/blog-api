@@ -42,7 +42,7 @@ public class PointService {
 		return Collections.emptySet();
 	}
 
-	@HystrixCommand(fallbackMethod = "checkIfSubscribedFallback")
+	@HystrixCommand(fallbackMethod = "checkIfSubscribedFallback", ignoreExceptions = NotSubscribedException.class)
 	public void checkIfSubscribed(Entry entry) {
 		Set<EntryId> entryIds = subscribedIds();
 		EntryId entryId = entry.entryId();
