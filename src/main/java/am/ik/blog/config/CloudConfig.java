@@ -22,8 +22,8 @@ public class CloudConfig extends AbstractCloudConfig {
 				new ConnectionConfig("allowMultiQueries=true")));
 	}
 
-	@Bean
-	ConnectionFactory rabbitConnectionFactory() {
-		return connectionFactory().rabbitConnectionFactory();
-	}
+	// @Bean
+	// ConnectionFactory rabbitConnectionFactory() {
+	// 	return connectionFactory().rabbitConnectionFactory();
+	// }
 }
