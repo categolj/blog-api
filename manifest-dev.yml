@@ -7,7 +7,7 @@ applications:
   - blog-config
   - blog-eureka
   - blog-hystrix-dashboard
-  - zipkin-rabbit
+  #- zipkin-rabbit
   env:
     SECURITY_USER_NAME: user
     SECURITY_USER_PASSWORD: password
