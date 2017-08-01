@@ -10,6 +10,7 @@ applications:
   - blog-eureka
   - blog-hystrix-dashboard
   - metrics-forwarder
+  - syslog-drain
   env:
     SECURITY_USER_NAME: user
     SECURITY_USER_PASSWORD: password
