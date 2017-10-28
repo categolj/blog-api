@@ -1,8 +1,6 @@
 applications:
 - name: blog-api
   buildpack: java_buildpack
-  domain: sslip.io
-  host: blog-api-202-241-169-198
   memory: 1g
   instances: 2
   path: target/blog-api-4.6.1-SNAPSHOT.jar
@@ -11,7 +9,7 @@ applications:
   - blog-config
   - blog-eureka
   #  - blog-hystrix-dashboard
-  #  - metrics-forwarder
+  - blog-metrics-forwarder
   #  - syslog-drain
   env:
     SECURITY_USER_NAME: user

@@ -32,14 +32,14 @@
 			<artifactId>blog-mapper</artifactId>
 			<version>${blog-mapper.version}</version>
 		</dependency>
-		<!--<dependency>-->
-			<!--<groupId>io.pivotal.spring.cloud</groupId>-->
-			<!--<artifactId>spring-cloud-services-starter-config-client</artifactId>-->
-		<!--</dependency>-->
-		<!--<dependency>-->
-			<!--<groupId>io.pivotal.spring.cloud</groupId>-->
-			<!--<artifactId>spring-cloud-services-starter-service-registry</artifactId>-->
-		<!--</dependency>-->
+		<dependency>
+			<groupId>io.pivotal.spring.cloud</groupId>
+			<artifactId>spring-cloud-services-starter-config-client</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>io.pivotal.spring.cloud</groupId>
+			<artifactId>spring-cloud-services-starter-service-registry</artifactId>
+		</dependency>
 		<!--<dependency>-->
 			<!--<groupId>io.pivotal.spring.cloud</groupId>-->
 			<!--<artifactId>spring-cloud-services-starter-circuit-breaker</artifactId>-->
