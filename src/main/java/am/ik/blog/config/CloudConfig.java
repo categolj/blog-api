@@ -2,7 +2,6 @@ package am.ik.blog.config;
 
 import javax.sql.DataSource;
 
-import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.cloud.config.java.AbstractCloudConfig;
 import org.springframework.cloud.service.relational.DataSourceConfig;
