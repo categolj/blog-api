@@ -24,6 +24,7 @@
 		<java.version>1.8</java.version>
 		<flyway.version>4.1.2</flyway.version>
 		<blog-mapper.version>4.4.1</blog-mapper.version>
+		<micrometer.version>1.0.0-rc.3</micrometer.version>
 	</properties>
 
 	<dependencies>
@@ -41,8 +42,8 @@
 			<artifactId>spring-cloud-services-starter-service-registry</artifactId>
 		</dependency>
 		<!--<dependency>-->
-			<!--<groupId>io.pivotal.spring.cloud</groupId>-->
-			<!--<artifactId>spring-cloud-services-starter-circuit-breaker</artifactId>-->
+		<!--<groupId>io.pivotal.spring.cloud</groupId>-->
+		<!--<artifactId>spring-cloud-services-starter-circuit-breaker</artifactId>-->
 		<!--</dependency>-->
 		<dependency>
 			<groupId>org.springframework.cloud</groupId>
@@ -69,6 +70,21 @@
 			<artifactId>spring-boot-starter-actuator</artifactId>
 		</dependency>
 		<dependency>
+			<groupId>io.micrometer</groupId>
+			<artifactId>micrometer-spring-legacy</artifactId>
+			<version>${micrometer.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>io.micrometer</groupId>
+			<artifactId>micrometer-registry-prometheus</artifactId>
+			<version>${micrometer.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>io.micrometer</groupId>
+			<artifactId>micrometer-registry-jmx</artifactId>
+			<version>${micrometer.version}</version>
+		</dependency>
+		<dependency>
 			<groupId>com.fasterxml.jackson.datatype</groupId>
 			<artifactId>jackson-datatype-jsr310</artifactId>
 		</dependency>
@@ -84,7 +100,7 @@
 			<groupId>org.springframework.cloud</groupId>
 			<artifactId>spring-cloud-starter-sleuth</artifactId>
 		</dependency>
-		
+
 		<dependency>
 			<groupId>org.apache.httpcomponents</groupId>
 			<artifactId>httpclient</artifactId>
