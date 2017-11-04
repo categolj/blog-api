@@ -40,7 +40,7 @@ resources:
       username: ((pws-username))
       password: ((pws-password))
       organization: ((pws-org))
-      space: development
+      space: production
       skip_cert_check: true
   - name: cf-develop
     type: cf
