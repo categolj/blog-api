@@ -36,11 +36,11 @@ resources:
   - name: cf-master
     type: cf
     source:
-      api: ((cf-api))
-      username: ((cf-username))
-      password: ((cf-password))
-      organization: ((cf-org))
-      space: blog
+      api: ((pws-api))
+      username: ((pws-username))
+      password: ((pws-password))
+      organization: ((pws-org))
+      space: development
       skip_cert_check: true
   - name: cf-develop
     type: cf
