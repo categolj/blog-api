@@ -20,7 +20,7 @@ metadata:
   labels:
     app: blog-api
 spec:
-  replicas: 1
+  replicas: 2
   revisionHistoryLimit: 4
   strategy:
     rollingUpdate:
@@ -36,7 +36,7 @@ spec:
     spec:
       containers:
       - name: blog-api
-        image: asia.gcr.io/fe-tmaki/blog-api:latest
+        image: asia.gcr.io/fe-tmaki/blog-api:4.6.5
         imagePullPolicy: Always
         ports:
         - containerPort: 8080
