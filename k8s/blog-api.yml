@@ -1,0 +1,90 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: blog-api-service
+  labels:
+    app: blog-api
+spec:
+  selector:
+    app: blog-api
+  ports:
+  - protocol: TCP
+    port: 8080
+    nodePort: 30084
+  type: NodePort
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: blog-api-deployment
+  labels:
+    app: blog-api
+spec:
+  replicas: 1
+  revisionHistoryLimit: 4
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: blog-api
+      annotations:
+        kubernetes.io/change-cause: "FIXME"
+    spec:
+      containers:
+      - name: blog-api
+        image: asia.gcr.io/fe-tmaki/blog-api:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8080
+        env:
+        - name: PORT
+          value: "8080"
+        - name: SPRING_PROFILES_ACTIVE
+          value: cloud,kubernetes
+        - name: JAVA_OPTS
+          value: "-Xmx304M -Xss1M -XX:MaxMetaspaceSize=145M -XX:ReservedCodeCacheSize=240M -XX:CompressedClassSpaceSize=24M -XX:MaxDirectMemorySize=10M -XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap -XX:MaxRAMFraction=1"
+        - name: SECURITY_USER_NAME
+          valueFrom:
+            configMapKeyRef:
+              name: blog-config
+              key: ops-username
+        - name: SECURITY_USER_PASSWORD
+          valueFrom:
+            configMapKeyRef:
+              name: blog-config
+              key: ops-password
+        - name: VCAP_APPLICATION
+          valueFrom:
+            configMapKeyRef:
+              name: blog-api-config
+              key: vcap-application.json
+        - name: VCAP_SERVICES
+          valueFrom:
+            configMapKeyRef:
+              name: blog-api-config
+              key: vcap-services.json
+        resources:
+          limits:
+            memory: "1024Mi"
+          requests:
+            memory: "1024Mi"
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 15
+          timeoutSeconds: 3
+          periodSeconds: 10
+          failureThreshold: 3
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 180
+          timeoutSeconds: 3
+          periodSeconds: 10
+          failureThreshold: 3

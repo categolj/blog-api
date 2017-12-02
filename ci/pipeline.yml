@@ -10,6 +10,11 @@ resource_types:
   source:
     repository: pivotalpa/maven-resource
     tag: 1.3.4
+- name: kubernetes
+  type: docker-image
+  source:
+    repository: zlabjp/kubernetes-resource
+    tag: "1.8"
 
 resources:
   - name: repo-master
@@ -33,24 +38,34 @@ resources:
       file: version
       driver: git
       initial_version: 4.0.0
-  - name: cf-master
-    type: cf
+#  - name: cf-master
+#    type: cf
+#    source:
+#      api: ((pws-api))
+#      username: ((pws-username))
+#      password: ((pws-password))
+#      organization: ((pws-org))
+#      space: production
+#      skip_cert_check: true
+#  - name: cf-develop
+#    type: cf
+#    source:
+#      api: ((cf-api))
+#      username: ((cf-username))
+#      password: ((cf-password))
+#      organization: ((cf-org))
+#      space: blog-dev
+#      skip_cert_check: true
+  - name: docker
+    type: docker-image
     source:
-      api: ((pws-api))
-      username: ((pws-username))
-      password: ((pws-password))
-      organization: ((pws-org))
-      space: production
-      skip_cert_check: true
-  - name: cf-develop
-    type: cf
+      repository: asia.gcr.io/fe-tmaki/blog-api
+      username: _json_key
+      password: ((gcr-key))
+  - name: k8s-master
+    type: kubernetes
     source:
-      api: ((cf-api))
-      username: ((cf-username))
-      password: ((cf-password))
-      organization: ((cf-org))
-      space: blog-dev
-      skip_cert_check: true
+      kubeconfig: ((kubeconfig))
   - name: nexus
     type: maven
     source:
@@ -160,24 +175,70 @@ jobs:
         put: slack-alert
         params:
           <<: *SLACK_FAILURE
-- name: deploy-develop
+#- name: deploy-develop
+#  plan:
+#  - get: repo
+#    resource: repo-develop
+#    passed:
+#    - upload-to-nexus-snapshots
+#    trigger: true
+#  - get: nexus
+#    passed:
+#    - upload-to-nexus-snapshots
+#  - put: cf-develop
+#    params:
+#      manifest: repo/manifest-dev.yml
+#      path: nexus/*.jar
+#      current_app_name: blog-api-dev
+#      environment_variables:
+#        SECURITY_USER_NAME: ((ops-username))
+#        SECURITY_USER_PASSWORD: ((ops-password))
+#    on_failure:
+#      put: slack-alert
+#      params:
+#        <<: *SLACK_FAILURE
+#    on_success:
+#      put: slack-alert
+#      params:
+#        <<: *SLACK_SUCCESS
+- name: docker-push-develop
   plan:
-  - get: repo
-    resource: repo-develop
-    passed:
-    - upload-to-nexus-snapshots
-    trigger: true
-  - get: nexus
-    passed:
-    - upload-to-nexus-snapshots
-  - put: cf-develop
-    params:
-      manifest: repo/manifest-dev.yml
-      path: nexus/*.jar
-      current_app_name: blog-api-dev
-      environment_variables:
-        SECURITY_USER_NAME: ((ops-username))
-        SECURITY_USER_PASSWORD: ((ops-password))
+  - aggregate:
+    - get: repo
+      resource: repo-develop
+      passed:
+      - upload-to-nexus-snapshots
+      trigger: true
+    - get: repo-version
+    - get: nexus
+      passed:
+      - upload-to-nexus-snapshots
+  - task: update-docker
+    config: &COPY_DOCKERFILE
+      platform: linux
+      image_resource:
+        type: docker-image
+        source:
+          repository: ubuntu
+      inputs:
+      - name: repo
+      - name: nexus
+      outputs:
+      - name: updated
+      run:
+        path: bash
+        args:
+        - -c
+        - |
+          set -e
+          mv nexus/*.jar updated/app.jar
+          cp repo/Dockerfile updated/Dockerfile
+          cat updated/Dockerfile
+  - put: docker
+    params: &DOCKER_PUSH
+      build: updated
+      build_args:
+        JAR_FILE: app.jar
     on_failure:
       put: slack-alert
       params:
@@ -193,7 +254,8 @@ jobs:
     - get: repo-src
       resource: repo-develop
       passed:
-      - deploy-develop
+#      - deploy-develop
+      - docker-push-develop
     - get: repo-dest
       resource: repo-master
   - task: merge-develop-to-master
@@ -335,21 +397,94 @@ jobs:
       put: slack-alert
       params:
         <<: *SLACK_FAILURE
-- name: deploy-master
+#- name: deploy-master
+#  plan:
+#  - get: repo
+#    resource: repo-master
+#    passed:
+#    - upload-to-nexus-releases
+#    trigger: true
+#  - get: nexus
+#    passed:
+#    - upload-to-nexus-releases
+#  - put: cf-master
+#    params:
+#      manifest: repo/manifest.yml
+#      path: nexus/*.jar
+#      current_app_name: blog-api
+#      environment_variables:
+#        SECURITY_USER_NAME: ((ops-username))
+#        SECURITY_USER_PASSWORD: ((ops-password))
+#    on_failure:
+#      put: slack-alert
+#      params:
+#        <<: *SLACK_FAILURE
+#    on_success:
+#      put: slack-alert
+#      params:
+#        <<: *SLACK_SUCCESS
+- name: docker-push-master
   plan:
-  - get: repo
-    resource: repo-master
-    passed:
-    - upload-to-nexus-releases
-    trigger: true
-  - get: nexus
-    passed:
-    - upload-to-nexus-releases
-  - put: cf-master
+  - aggregate:
+    - get: repo
+      resource: repo-master
+      passed:
+      - upload-to-nexus-releases
+      trigger: true
+    - get: repo-version
+    - get: nexus
+      passed:
+      - upload-to-nexus-releases
+  - task: update-docker
+    config:
+      <<: *COPY_DOCKERFILE
+  - put: docker
     params:
-      manifest: repo/manifest.yml
-      path: nexus/*.jar
-      current_app_name: blog-api
+      <<: *DOCKER_PUSH
+      tag: repo-version/number
+      tag_as_latest: true
+    on_failure:
+      put: slack-alert
+      params:
+        <<: *SLACK_FAILURE
+    on_success:
+      put: slack-alert
+      params:
+        <<: *SLACK_SUCCESS
+- name: deploy-k8s-master
+  plan:
+  - aggregate:
+    - get: repo
+      resource: repo-master
+      passed:
+      - docker-push-master
+      trigger: true
+    - get: repo-version
+  - task: update-k8s-manifest
+    config:
+      platform: linux
+      image_resource:
+        type: docker-image
+        source:
+          repository: ubuntu
+      inputs:
+      - name: repo
+      - name: repo-version
+      outputs:
+      - name: updated
+      run:
+        path: bash
+        args:
+        - -c
+        - |
+          set -e
+          VERSION=`cat repo-version/number`
+          sed "s/latest/${VERSION}/g" repo/k8s/blog-api.yml | sed "s/FIXME/Bump to ${VERSION}/g" > updated/blog-api.yml
+  - put: k8s-master
+    params:
+      kubectl: apply -f updated/blog-api.yml
+      wait_until_ready: 120
+      wait_until_ready_selector: app=blog-api
     on_failure:
       put: slack-alert
       params:
@@ -364,7 +499,8 @@ jobs:
     - get: repo-src
       resource: repo-master
       passed:
-      - deploy-master
+#      - deploy-master
+      - deploy-k8s-master
       trigger: true
     - get: repo-dest
       resource: repo-develop
