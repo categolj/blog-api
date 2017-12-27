@@ -36,7 +36,7 @@ spec:
     spec:
       containers:
       - name: blog-api
-        image: asia.gcr.io/fe-tmaki/blog-api:4.6.5
+        image: asia.gcr.io/fe-tmaki/blog-api:latest
         imagePullPolicy: Always
         ports:
         - containerPort: 8080
