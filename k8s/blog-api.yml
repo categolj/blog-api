@@ -16,7 +16,7 @@ spec:
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
-  name: blog-api-deployment
+  name: blog-api
   labels:
     app: blog-api
 spec:
@@ -45,8 +45,8 @@ spec:
           value: "8080"
         - name: SPRING_PROFILES_ACTIVE
           value: cloud,kubernetes
-        - name: JAVA_OPTS
-          value: "-Xmx304M -Xss1M -XX:MaxMetaspaceSize=145M -XX:ReservedCodeCacheSize=240M -XX:CompressedClassSpaceSize=24M -XX:MaxDirectMemorySize=10M -XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap -XX:MaxRAMFraction=1"
+        - name: _JAVA_OPTIONS
+          value: "-Xmx304M -Xss1M -XX:MaxMetaspaceSize=145M -XX:ReservedCodeCacheSize=240M -XX:CompressedClassSpaceSize=24M -XX:MaxDirectMemorySize=10M -XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap -XX:MaxRAMFraction=1 -Duser.timezone=Asia/Tokyo -Duser.language=ja -Duser.country=JP"
         - name: SECURITY_USER_NAME
           valueFrom:
             configMapKeyRef:
