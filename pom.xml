@@ -5,7 +5,7 @@
 
 	<groupId>am.ik.blog</groupId>
 	<artifactId>blog-api</artifactId>
-	<version>4.6.6</version>
+	<version>4.6.7-SNAPSHOT</version>
 	<packaging>jar</packaging>
 
 	<name>blog-api</name>
