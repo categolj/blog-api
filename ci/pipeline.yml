@@ -47,7 +47,11 @@ resources:
   - name: k8s-master
     type: kubernetes
     source:
-      kubeconfig: ((kubeconfig))
+      kubeconfig: ((kubeconfig-master))
+  - name: k8s-develop
+    type: kubernetes
+    source:
+      kubeconfig: ((kubeconfig-develop))
   - name: nexus
     type: maven
     source:
@@ -203,6 +207,50 @@ jobs:
       put: slack-alert
       params:
         <<: *SLACK_SUCCESS
+- name: deploy-k8s-develop
+  plan:
+  - aggregate:
+    - get: repo
+      resource: repo-develop
+      passed:
+      - docker-push-develop
+      trigger: true
+    - get: docker
+      passed:
+      - docker-push-develop
+  - task: update-k8s-manifest
+    config:
+      platform: linux
+      image_resource:
+        type: docker-image
+        source:
+          repository: ubuntu
+      inputs:
+      - name: repo
+      - name: docker
+      outputs:
+      - name: updated
+      run:
+        path: bash
+        args:
+        - -c
+        - |
+          set -e
+          VERSION=`cat docker/digest`
+          sed "s/:latest/@${VERSION}/g" repo/k8s/blog-api.yml | sed "s/FIXME/Bump to ${VERSION}/g" > updated/blog-api.yml
+  - put: k8s-develop
+    params:
+      kubectl: apply -f updated/blog-api.yml
+      wait_until_ready: 120
+      wait_until_ready_selector: app=blog-api
+    on_failure:
+      put: slack-alert
+      params:
+        <<: *SLACK_FAILURE
+    on_success:
+      put: slack-alert
+      params:
+        <<: *SLACK_SUCCESS
 ### Prod
 - name: merge-develop-to-master
   plan:
@@ -210,8 +258,7 @@ jobs:
     - get: repo-src
       resource: repo-develop
       passed:
-#      - deploy-develop
-      - docker-push-develop
+      - deploy-k8s-develop
     - get: repo-dest
       resource: repo-master
   - task: merge-develop-to-master
@@ -429,7 +476,6 @@ jobs:
     - get: repo-src
       resource: repo-master
       passed:
-#      - deploy-master
       - deploy-k8s-master
       trigger: true
     - get: repo-dest
