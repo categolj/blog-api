@@ -38,24 +38,6 @@ resources:
       file: version
       driver: git
       initial_version: 4.0.0
-#  - name: cf-master
-#    type: cf
-#    source:
-#      api: ((pws-api))
-#      username: ((pws-username))
-#      password: ((pws-password))
-#      organization: ((pws-org))
-#      space: production
-#      skip_cert_check: true
-#  - name: cf-develop
-#    type: cf
-#    source:
-#      api: ((cf-api))
-#      username: ((cf-username))
-#      password: ((cf-password))
-#      organization: ((cf-org))
-#      space: blog-dev
-#      skip_cert_check: true
   - name: docker
     type: docker-image
     source:
@@ -175,32 +157,6 @@ jobs:
         put: slack-alert
         params:
           <<: *SLACK_FAILURE
-#- name: deploy-develop
-#  plan:
-#  - get: repo
-#    resource: repo-develop
-#    passed:
-#    - upload-to-nexus-snapshots
-#    trigger: true
-#  - get: nexus
-#    passed:
-#    - upload-to-nexus-snapshots
-#  - put: cf-develop
-#    params:
-#      manifest: repo/manifest-dev.yml
-#      path: nexus/*.jar
-#      current_app_name: blog-api-dev
-#      environment_variables:
-#        SECURITY_USER_NAME: ((ops-username))
-#        SECURITY_USER_PASSWORD: ((ops-password))
-#    on_failure:
-#      put: slack-alert
-#      params:
-#        <<: *SLACK_FAILURE
-#    on_success:
-#      put: slack-alert
-#      params:
-#        <<: *SLACK_SUCCESS
 - name: docker-push-develop
   plan:
   - aggregate:
@@ -397,32 +353,6 @@ jobs:
       put: slack-alert
       params:
         <<: *SLACK_FAILURE
-#- name: deploy-master
-#  plan:
-#  - get: repo
-#    resource: repo-master
-#    passed:
-#    - upload-to-nexus-releases
-#    trigger: true
-#  - get: nexus
-#    passed:
-#    - upload-to-nexus-releases
-#  - put: cf-master
-#    params:
-#      manifest: repo/manifest.yml
-#      path: nexus/*.jar
-#      current_app_name: blog-api
-#      environment_variables:
-#        SECURITY_USER_NAME: ((ops-username))
-#        SECURITY_USER_PASSWORD: ((ops-password))
-#    on_failure:
-#      put: slack-alert
-#      params:
-#        <<: *SLACK_FAILURE
-#    on_success:
-#      put: slack-alert
-#      params:
-#        <<: *SLACK_SUCCESS
 - name: docker-push-master
   plan:
   - aggregate:
