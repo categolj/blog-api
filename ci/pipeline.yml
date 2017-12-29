@@ -237,7 +237,7 @@ jobs:
         - |
           set -e
           DIGEST=`cat docker/digest`
-          sed "s/:latest/@${DIGEST}/g" repo/k8s/blog-api.yml | sed "s/FIXME/Bump to ${DIGEST}/g" | sed "s/_INFO_DOCKER_DIGEST/${DIGEST}/g" > updated/blog-api.yml
+          sed "s/:latest/@${DIGEST}/g" repo/k8s/blog-api.yml | sed "s/FIXME/Bump to ${DIGEST}/g" | sed "s/INFO_DOCKER_DIGEST/${DIGEST}/g" > updated/blog-api.yml
   - put: k8s-develop
     params:
       kubectl: apply -f updated/blog-api.yml
@@ -461,7 +461,7 @@ jobs:
           set -e
           VERSION=`cat repo-version/number`
           DIGEST=`cat docker/digest`
-          sed "s/latest/${VERSION}/g" repo/k8s/blog-api.yml | sed "s/FIXME/Bump to ${VERSION}/g" | sed "s/_INFO_DOCKER_DIGEST/${DIGEST}/g" > updated/blog-api.yml
+          sed "s/latest/${VERSION}/g" repo/k8s/blog-api.yml | sed "s/FIXME/Bump to ${VERSION}/g" | sed "s/INFO_DOCKER_DIGEST/${DIGEST}/g" > updated/blog-api.yml
   - put: k8s-master
     params:
       kubectl: apply -f updated/blog-api.yml
