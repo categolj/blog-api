@@ -411,7 +411,7 @@ public class EntryControllerTest {
 		Map<String, Object> response = new LinkedHashMap<>();
 		response.put("pint", 100);
 		response.put("entryIds", asList(99997, 99998));
-		mockServer.expect(requestTo("http://blog-point.example.com:80/v1/user"))
+		mockServer.expect(requestTo("http://blog-point/v1/user"))
 				.andRespond(withSuccess(objectMapper.writeValueAsString(response),
 						MediaType.APPLICATION_JSON_UTF8));
 
@@ -452,7 +452,7 @@ public class EntryControllerTest {
 		Map<String, Object> response = new LinkedHashMap<>();
 		response.put("point", 100);
 		response.put("entryIds", asList(99997, 99998));
-		mockServer.expect(requestTo("http://blog-point.example.com:80/v1/user"))
+		mockServer.expect(requestTo("http://blog-point/v1/user"))
 				.andRespond(withSuccess(objectMapper.writeValueAsString(response),
 						MediaType.APPLICATION_JSON_UTF8));
 
@@ -469,7 +469,7 @@ public class EntryControllerTest {
 		Map<String, Object> response = new LinkedHashMap<>();
 		response.put("point", 100);
 		response.put("entryIds", asList(99998));
-		mockServer.expect(requestTo("http://blog-point.example.com:80/v1/user"))
+		mockServer.expect(requestTo("http://blog-point/v1/user"))
 				.andRespond(withSuccess(objectMapper.writeValueAsString(response),
 						MediaType.APPLICATION_JSON_UTF8));
 
