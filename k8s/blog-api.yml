@@ -81,6 +81,8 @@ spec:
             secretKeyRef:
               name: config-server-secret
               key: config-server-password
+        - name: INFO_DOCKER_DIGEST
+          value: "_INFO_DOCKER_DIGEST"
         resources:
           limits:
             memory: "1024Mi"

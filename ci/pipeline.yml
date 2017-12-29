@@ -236,8 +236,8 @@ jobs:
         - -c
         - |
           set -e
-          VERSION=`cat docker/digest`
-          sed "s/:latest/@${VERSION}/g" repo/k8s/blog-api.yml | sed "s/FIXME/Bump to ${VERSION}/g" > updated/blog-api.yml
+          DIGEST=`cat docker/digest`
+          sed "s/:latest/@${DIGEST}/g" repo/k8s/blog-api.yml | sed "s/FIXME/Bump to ${DIGEST}/g" | sed "s/_INFO_DOCKER_DIGEST/${DIGEST}/g" > updated/blog-api.yml
   - put: k8s-develop
     params:
       kubectl: apply -f updated/blog-api.yml
@@ -437,6 +437,9 @@ jobs:
       - docker-push-master
       trigger: true
     - get: repo-version
+    - get: docker
+      passed:
+      - docker-push-master
   - task: update-k8s-manifest
     config:
       platform: linux
@@ -447,6 +450,7 @@ jobs:
       inputs:
       - name: repo
       - name: repo-version
+      - name: docker
       outputs:
       - name: updated
       run:
@@ -456,7 +460,8 @@ jobs:
         - |
           set -e
           VERSION=`cat repo-version/number`
-          sed "s/latest/${VERSION}/g" repo/k8s/blog-api.yml | sed "s/FIXME/Bump to ${VERSION}/g" > updated/blog-api.yml
+          DIGEST=`cat docker/digest`
+          sed "s/latest/${VERSION}/g" repo/k8s/blog-api.yml | sed "s/FIXME/Bump to ${VERSION}/g" | sed "s/_INFO_DOCKER_DIGEST/${DIGEST}/g" > updated/blog-api.yml
   - put: k8s-master
     params:
       kubectl: apply -f updated/blog-api.yml
