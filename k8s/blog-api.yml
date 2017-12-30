@@ -49,6 +49,11 @@ spec:
           value: kubernetes
         - name: _JAVA_OPTIONS
           value: "-Xmx304M -Xss1M -XX:MaxMetaspaceSize=145M -XX:ReservedCodeCacheSize=240M -XX:CompressedClassSpaceSize=24M -XX:MaxDirectMemorySize=10M -XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap -XX:MaxRAMFraction=1 -Duser.timezone=Asia/Tokyo -Duser.language=ja -Duser.country=JP -Dinfo.docker.digest=INFO_DOCKER_DIGEST"
+        - name: SPRING_DATASOURCE_URL
+          valueFrom:
+            secretKeyRef:
+              name: blog-db-secret
+              key: mysql-jdbc-url
         - name: SPRING_DATASOURCE_USERNAME
           valueFrom:
             secretKeyRef:
@@ -70,7 +75,10 @@ spec:
               name: blog-config-secret
               key: ops-password
         - name: SPRING_CLOUD_CONFIG_URI
-          value: http://config-server-service:8888
+          valueFrom:
+            secretKeyRef:
+              name: config-server-secret
+              key: config-server-uri
         - name: SPRING_CLOUD_CONFIG_USERNAME
           valueFrom:
             secretKeyRef:
