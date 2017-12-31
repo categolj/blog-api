@@ -380,11 +380,15 @@ jobs:
         <<: *SLACK_FAILURE 
 - name: upload-to-nexus-releases
   plan:
-  - get: repo
-    resource: repo-master
-    passed:
-    - tag-master
-    trigger: true
+  - aggregate:
+    - get: repo
+      resource: repo-master
+      passed:
+      - tag-master
+      trigger: true
+    - get: repo-version
+      passed:
+      - tag-master
   - task: mvn-package
     config:
       <<: *NEXUS_PACKAGE_CONFIG
@@ -409,6 +413,8 @@ jobs:
       - upload-to-nexus-releases
       trigger: true
     - get: repo-version
+      passed:
+      - upload-to-nexus-releases
     - get: nexus
       passed:
       - upload-to-nexus-releases
@@ -437,6 +443,8 @@ jobs:
       - docker-push-master
       trigger: true
     - get: repo-version
+      passed:
+      - docker-push-master
     - get: docker
       passed:
       - docker-push-master
@@ -486,6 +494,8 @@ jobs:
     - get: repo-dest
       resource: repo-develop
     - get: repo-version
+      passed:
+      - deploy-k8s-master
       params:
         bump: patch
   - task: merge-master-to-develop
