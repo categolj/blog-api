@@ -73,6 +73,7 @@ resources:
 jobs:
 ### Dev
 - name: unit-test-develop
+  build_logs_to_retain: 5
   plan:
     - aggregate:
       - get: repo
@@ -301,6 +302,7 @@ jobs:
       params:
         <<: *SLACK_FAILURE
 - name: unit-test-master
+  build_logs_to_retain: 5
   plan:
   - aggregate:
     - get: repo
