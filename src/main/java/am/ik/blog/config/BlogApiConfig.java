@@ -9,10 +9,10 @@ import org.springframework.security.oauth2.client.OAuth2RestTemplate;
 import org.springframework.security.oauth2.client.resource.OAuth2ProtectedResourceDetails;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
-import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 @Configuration
-public class BlogApiConfig extends WebMvcConfigurerAdapter {
+public class BlogApiConfig implements WebMvcConfigurer {
 	@Bean
 	@LoadBalanced
 	RestTemplate restTemplate(RestTemplateBuilder builder) {
