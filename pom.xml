@@ -22,7 +22,7 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 		<java.version>1.8</java.version>
-		<blog-mapper.version>4.4.1</blog-mapper.version>
+		<blog-mapper.version>4.5.0</blog-mapper.version>
 		<maven-surefire-plugin.version>2.18.1</maven-surefire-plugin.version>
 	</properties>
 
@@ -31,16 +31,6 @@
 			<groupId>am.ik.blog</groupId>
 			<artifactId>blog-mapper</artifactId>
 			<version>${blog-mapper.version}</version>
-			<exclusions>
-				<exclusion>
-					<groupId>org.springframework.cloud</groupId>
-					<artifactId>spring-cloud-spring-service-connector</artifactId>
-				</exclusion>
-				<exclusion>
-					<groupId>org.springframework.cloud</groupId>
-					<artifactId>spring-cloud-cloudfoundry-connector</artifactId>
-				</exclusion>
-			</exclusions>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.cloud</groupId>
