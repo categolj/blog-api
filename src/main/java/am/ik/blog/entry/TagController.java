@@ -17,7 +17,7 @@ public class TagController {
 	private final TagMapper tagMapper;
 
 	@GetMapping
-	List<String> getTags() {
+	public List<String> getTags() {
 		return tagMapper.findOrderByTagNameAsc().stream().map(Tag::getValue)
 				.collect(toList());
 	}

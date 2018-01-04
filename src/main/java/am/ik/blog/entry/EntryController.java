@@ -26,13 +26,13 @@ public class EntryController {
 	private static final String DEFAULT_EXCLUDE_CONTENT = "false";
 
 	@GetMapping(path = "entries")
-	Page<Entry> getEntries(@PageableDefault Pageable pageable) {
+	public Page<Entry> getEntries(@PageableDefault Pageable pageable) {
 		SearchCriteria criteria = SearchCriteria.builder().excludeContent(true).build();
 		return entryMapper.findPage(criteria, pageable);
 	}
 
 	@GetMapping(path = "entries", params = "q")
-	Page<Entry> searchEntries(@PageableDefault Pageable pageable,
+	public Page<Entry> searchEntries(@PageableDefault Pageable pageable,
 			@RequestParam String q) {
 		SearchCriteria criteria = SearchCriteria.builder().excludeContent(true).keyword(q)
 				.build();
@@ -40,7 +40,7 @@ public class EntryController {
 	}
 
 	@GetMapping(path = "users/{createdBy}/entries")
-	Page<Entry> getEntriesByCreatedBy(@PageableDefault Pageable pageable,
+	public Page<Entry> getEntriesByCreatedBy(@PageableDefault Pageable pageable,
 			@PathVariable Name createdBy,
 			@RequestParam(defaultValue = DEFAULT_EXCLUDE_CONTENT) boolean excludeContent) {
 		SearchCriteria criteria = SearchCriteria.builder().createdBy(createdBy)
@@ -49,7 +49,7 @@ public class EntryController {
 	}
 
 	@GetMapping(path = "users/{updatedBy}/entries", params = "updated")
-	Page<Entry> getEntriesByUpdatedBy(@PageableDefault Pageable pageable,
+	public Page<Entry> getEntriesByUpdatedBy(@PageableDefault Pageable pageable,
 			@PathVariable Name updatedBy) {
 		SearchCriteria criteria = SearchCriteria.builder().lastModifiedBy(updatedBy)
 				.excludeContent(true).build();
@@ -57,7 +57,7 @@ public class EntryController {
 	}
 
 	@GetMapping(path = "tags/{tag}/entries")
-	Page<Entry> getEntriesByTag(@PageableDefault Pageable pageable,
+	public Page<Entry> getEntriesByTag(@PageableDefault Pageable pageable,
 			@PathVariable Tag tag) {
 		SearchCriteria criteria = SearchCriteria.builder().tag(tag).excludeContent(true)
 				.build();
@@ -65,7 +65,7 @@ public class EntryController {
 	}
 
 	@GetMapping(path = "categories/{categories}/entries")
-	Page<Entry> getEntriesByCategories(@PageableDefault Pageable pageable,
+	public Page<Entry> getEntriesByCategories(@PageableDefault Pageable pageable,
 			@PathVariable List<Category> categories) {
 		int order = categories.size() - 1;
 		Category category = categories.get(order);
@@ -76,7 +76,7 @@ public class EntryController {
 	}
 
 	@GetMapping(path = "entries/{entryId}")
-	Entry getEntry(@PathVariable EntryId entryId,
+	public Entry getEntry(@PathVariable EntryId entryId,
 			@RequestParam(defaultValue = DEFAULT_EXCLUDE_CONTENT) boolean excludeContent,
 			UriComponentsBuilder builder) {
 		Optional<Entry> entry = Optional
@@ -92,7 +92,7 @@ public class EntryController {
 	}
 
 	@GetMapping(path = "p/entries/{entryId}")
-	Entry getPremiumEntry(@PathVariable EntryId entryId,
+	public Entry getPremiumEntry(@PathVariable EntryId entryId,
 			@RequestParam(defaultValue = DEFAULT_EXCLUDE_CONTENT) boolean excludeContent) {
 		Optional<Entry> entry = Optional
 				.ofNullable(entryMapper.findOne(entryId, excludeContent));

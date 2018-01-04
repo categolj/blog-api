@@ -17,7 +17,7 @@ public class CategoryController {
 	private final CategoryMapper categoryMapper;
 
 	@GetMapping
-	List<List<String>> getCategories() {
+	public List<List<String>> getCategories() {
 		return categoryMapper.findAll().stream()
 				.map(c -> c.getValue().stream().map(Category::getValue).collect(toList()))
 				.collect(toList());
