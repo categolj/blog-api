@@ -8,6 +8,7 @@ import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.UriComponentsBuilder;
 
@@ -16,6 +17,8 @@ import am.ik.blog.entry.criteria.SearchCriteria;
 import am.ik.blog.exception.PremiumRedirectException;
 import am.ik.blog.point.PointService;
 import lombok.RequiredArgsConstructor;
+import reactor.core.publisher.Flux;
+import reactor.core.scheduler.Schedulers;
 
 @RestController
 @RequestMapping(path = "api")
@@ -29,6 +32,14 @@ public class EntryController {
 	public Page<Entry> getEntries(@PageableDefault Pageable pageable) {
 		SearchCriteria criteria = SearchCriteria.builder().excludeContent(true).build();
 		return entryMapper.findPage(criteria, pageable);
+	}
+
+	@GetMapping(path = "entries", produces = { MediaType.APPLICATION_STREAM_JSON_VALUE,
+			MediaType.TEXT_EVENT_STREAM_VALUE })
+	public Flux<Entry> streamEntries(@PageableDefault Pageable pageable) {
+		SearchCriteria criteria = SearchCriteria.builder().excludeContent(true).build();
+		return entryMapper.collectAll(criteria, pageable).log("entry")
+				.subscribeOn(Schedulers.elastic());
 	}
 
 	@GetMapping(path = "entries", params = "q")
