@@ -38,7 +38,7 @@ public class EntryController {
 			MediaType.TEXT_EVENT_STREAM_VALUE })
 	public Flux<Entry> streamEntries(@PageableDefault Pageable pageable) {
 		SearchCriteria criteria = SearchCriteria.builder().excludeContent(true).build();
-		return entryMapper.collectAll(criteria, pageable).log("entry")
+		return entryMapper.collectAll(criteria, pageable)
 				.subscribeOn(Schedulers.elastic());
 	}
 
