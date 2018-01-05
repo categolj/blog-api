@@ -29,6 +29,11 @@
 	<dependencies>
 		<dependency>
 			<groupId>am.ik.blog</groupId>
+			<artifactId>blog-domain</artifactId>
+			<version>4.3.1</version>
+		</dependency>
+		<dependency>
+			<groupId>am.ik.blog</groupId>
 			<artifactId>blog-mapper</artifactId>
 			<version>${blog-mapper.version}</version>
 		</dependency>
