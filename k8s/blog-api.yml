@@ -74,21 +74,6 @@ spec:
             secretKeyRef:
               name: blog-config-secret
               key: ops-password
-        - name: SPRING_CLOUD_CONFIG_URI
-          valueFrom:
-            secretKeyRef:
-              name: config-server-secret
-              key: config-server-uri
-        - name: SPRING_CLOUD_CONFIG_USERNAME
-          valueFrom:
-            secretKeyRef:
-              name: config-server-secret
-              key: config-server-user
-        - name: SPRING_CLOUD_CONFIG_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: config-server-secret
-              key: config-server-password
         resources:
           limits:
             memory: "1024Mi"
