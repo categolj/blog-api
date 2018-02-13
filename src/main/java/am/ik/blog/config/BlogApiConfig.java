@@ -15,8 +15,8 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 public class BlogApiConfig implements WebMvcConfigurer {
 	@Bean
 	@LoadBalanced
-	RestTemplate restTemplate(RestTemplateBuilder builder) {
-		return builder.build();
+	RestTemplate restTemplate() {
+		return new RestTemplateBuilder().build();
 	}
 
 	@Bean
