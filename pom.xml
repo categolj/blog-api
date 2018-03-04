@@ -88,7 +88,6 @@
 		<dependency>
 			<groupId>org.springframework.security.oauth.boot</groupId>
 			<artifactId>spring-security-oauth2-autoconfigure</artifactId>
-			<version>2.0.0.BUILD-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>mysql</groupId>
@@ -154,7 +153,7 @@
 			<dependency>
 				<groupId>org.springframework.cloud</groupId>
 				<artifactId>spring-cloud-dependencies</artifactId>
-				<version>Finchley.BUILD-SNAPSHOT</version>
+				<version>Finchley.M8</version>
 				<type>pom</type>
 				<scope>import</scope>
 			</dependency>
