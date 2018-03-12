@@ -67,12 +67,12 @@ spec:
             secretKeyRef:
               name: blog-db-secret
               key: mysql-password
-        - name: SECURITY_USER_NAME
+        - name: SPRING_SECURITY_USER_NAME
           valueFrom:
             secretKeyRef:
               name: blog-config-secret
               key: ops-username
-        - name: SECURITY_USER_PASSWORD
+        - name: SPRING_SECURITY_USER_PASSWORD
           valueFrom:
             secretKeyRef:
               name: blog-config-secret
