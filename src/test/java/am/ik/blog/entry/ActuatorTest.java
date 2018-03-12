@@ -32,7 +32,7 @@ public class ActuatorTest {
 		this.webClient.get() //
 				.uri("/actuator/info") //
 				.exchange() //
-				.expectStatus().isOk().expectBody(JsonNode.class);
+				.expectStatus().isOk();
 	}
 
 	@Test
@@ -74,11 +74,7 @@ public class ActuatorTest {
 		this.webClient.get() //
 				.uri("/actuator/prometheus") //
 				.exchange() //
-				.expectStatus().isUnauthorized() //
-				.expectBody(String.class) //
-				.consumeWith(n -> {
-					System.out.println(n.getResponseBody());
-				});
+				.expectStatus().isUnauthorized();
 	}
 
 	@Test
@@ -88,10 +84,6 @@ public class ActuatorTest {
 				.header("Authorization",
 						"Basic " + Base64Utils.encodeToString("test:pass".getBytes()))
 				.exchange() //
-				.expectStatus().isOk() //
-				.expectBody(String.class) //
-				.consumeWith(n -> {
-					System.out.println(n.getResponseBody());
-				});
+				.expectStatus().isOk();
 	}
 }
