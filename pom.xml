@@ -198,13 +198,13 @@
 							<target>
 								<echo message="" file="target/classes/application.properties" append="yes"/>
 								<echo message="" file="target/classes/application.properties" append="yes"/>
-								<echo message="info.build.versions.spring-boot=${project.parent.version}${line.separator}"
+								<echo message="info.maven.versions.spring-boot=${project.parent.version}${line.separator}"
 									  file="target/classes/application.properties" append="yes"/>
-								<echo message="info.build.versions.spring-cloud=${spring-cloud.version}${line.separator}"
+								<echo message="info.maven.versions.spring-cloud=${spring-cloud.version}${line.separator}"
 									  file="target/classes/application.properties" append="yes"/>
-								<echo message="info.build.versions.spring-framework=${spring.version}${line.separator}"
+								<echo message="info.maven.versions.spring-framework=${spring.version}${line.separator}"
 									  file="target/classes/application.properties" append="yes"/>
-								<echo message="info.build.versions.spring-security=${spring-security.version}${line.separator}"
+								<echo message="info.maven.versions.spring-security=${spring-security.version}${line.separator}"
 									  file="target/classes/application.properties" append="yes"/>
 							</target>
 						</configuration>
