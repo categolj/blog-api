@@ -5,6 +5,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+import org.springframework.security.config.http.SessionCreationPolicy;
 
 @Configuration
 @Order(-5)
@@ -15,6 +16,9 @@ public class ActuatorConfig extends WebSecurityConfigurerAdapter {
 				.authorizeRequests() //
 				.requestMatchers(EndpointRequest.to("health", "info")).permitAll() //
 				.requestMatchers(EndpointRequest.toAnyEndpoint()).hasRole("ACTUATOR") //
-				.and().httpBasic();
+				.and() //
+				.httpBasic() //
+				.and() //
+				.sessionManagement().sessionCreationPolicy(SessionCreationPolicy.NEVER);
 	}
 }
