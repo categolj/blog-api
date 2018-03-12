@@ -31,7 +31,6 @@ resources:
       private_key: ((github-private-key))
       ignore_paths:
       - ci/*
-      - k8s/*
       - README.md
   - name: repo-version
     type: semver
