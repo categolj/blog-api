@@ -86,4 +86,37 @@ public class ActuatorTest {
 				.exchange() //
 				.expectStatus().isOk();
 	}
+
+	@Test
+	public void testPrometheusFilter() {
+		this.webClient.get() //
+				.uri("/actuator/prometheus") //
+				.header("Authorization",
+						"Basic " + Base64Utils.encodeToString("test:pass".getBytes()))
+				.exchange() //
+				.expectStatus().isOk();
+		this.webClient.get() //
+				.uri("/actuator/health") //
+				.exchange() //
+				.expectStatus().isOk();
+		this.webClient.get() //
+				.uri("/actuator/info") //
+				.exchange() //
+				.expectStatus().isOk();
+		this.webClient.get() //
+				.uri("/api/entries") //
+				.exchange() //
+				.expectStatus().isOk();
+
+		this.webClient.get() //
+				.uri("/actuator/prometheus") //
+				.header("Authorization",
+						"Basic " + Base64Utils.encodeToString("test:pass".getBytes()))
+				.exchange() //
+				.expectStatus().isOk().expectBody(String.class).consumeWith(n -> {
+					String body = n.getResponseBody();
+					assertThat(body).doesNotContain("/actuator");
+					assertThat(body).contains("/api/entries");
+				});
+	}
 }
