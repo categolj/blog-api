@@ -6,16 +6,6 @@ import org.springframework.stereotype.Component;
 @ConfigurationProperties(prefix = "blog")
 @Component
 public class BlogProperties {
-	private Service point;
-
-	public Service getPoint() {
-		return point;
-	}
-
-	public void setPoint(Service point) {
-		this.point = point;
-	}
-
 	public static class Service {
 		private String url;
 
