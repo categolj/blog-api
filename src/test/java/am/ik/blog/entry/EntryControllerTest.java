@@ -1,5 +1,26 @@
 package am.ik.blog.entry;
 
+import java.util.LinkedHashMap;
+import java.util.Map;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import io.restassured.RestAssured;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.web.server.LocalServerPort;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.security.oauth2.client.OAuth2RestTemplate;
+import org.springframework.test.context.jdbc.Sql;
+import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.web.client.MockRestServiceServer;
+
 import static am.ik.blog.entry.Asserts.*;
 import static io.restassured.RestAssured.given;
 import static java.util.Arrays.asList;
@@ -8,29 +29,6 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasSize;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo;
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess;
-
-import java.util.LinkedHashMap;
-import java.util.Map;
-
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.web.server.LocalServerPort;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.security.oauth2.client.OAuth2RestTemplate;
-import org.springframework.test.context.jdbc.Sql;
-import org.springframework.test.context.junit4.SpringRunner;
-import org.springframework.test.web.client.MockRestServiceServer;
-
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
-import io.restassured.RestAssured;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -473,21 +471,20 @@ public class EntryControllerTest {
 				.andRespond(withSuccess(objectMapper.writeValueAsString(response),
 						MediaType.APPLICATION_JSON_UTF8));
 
-		JsonNode error = given().log().all()
+		Entry entry = given().log().all()
 				.header(HttpHeaders.AUTHORIZATION, "Bearer test-user-1")
 				.queryParam("excludeContent", "false")
 				.get("/api/entries/{entryId}", 99997).then().log().all().assertThat()
-				.statusCode(HttpStatus.PAYMENT_REQUIRED.value()).extract()
-				.as(JsonNode.class);
-		assertThat(error.get("message").asText())
-				.isEqualTo("entry 99997 is not subscribed.");
+				.statusCode(200).extract().as(Entry.class);
+		assertEntry99997(entry).assertContent();
 	}
 
 	@Test
 	public void getEntry99997_includeContent_noToken() throws Exception {
-		given().log().all().queryParam("excludeContent", "false")
+		Entry entry = given().log().all().queryParam("excludeContent", "false")
 				.get("/api/entries/{entryId}", 99997).then().log().all().assertThat()
-				.statusCode(401);
+				.statusCode(200).extract().as(Entry.class);
+		assertEntry99997(entry).assertContent();
 	}
 
 	@Test

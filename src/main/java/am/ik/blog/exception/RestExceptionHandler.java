@@ -2,20 +2,19 @@ package am.ik.blog.exception;
 
 import java.util.Locale;
 
+import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.beans.TypeMismatchException;
 import org.springframework.context.MessageSource;
 import org.springframework.context.support.MessageSourceAccessor;
 import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
-
-import lombok.extern.slf4j.Slf4j;
 
 @RestControllerAdvice
 @Slf4j
@@ -31,12 +30,6 @@ public class RestExceptionHandler {
 	@ResponseStatus(HttpStatus.NOT_FOUND)
 	SimpleExceptionMessage handleResourceNotFoundException(ResourceNotFoundException e) {
 		return new SimpleExceptionMessage(e.getMessage());
-	}
-
-	@ExceptionHandler(PremiumRedirectException.class)
-	ResponseEntity<Void> handlePremiumException(PremiumRedirectException e) {
-		return ResponseEntity.status(HttpStatus.SEE_OTHER).location(e.premiumUri())
-				.build();
 	}
 
 	@ExceptionHandler(NotSubscribedException.class)

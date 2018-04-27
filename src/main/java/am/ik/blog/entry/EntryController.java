@@ -1,9 +1,13 @@
 package am.ik.blog.entry;
 
-import static am.ik.blog.exception.ResourceNotFoundException.defer;
-
 import java.util.List;
 import java.util.Optional;
+
+import am.ik.blog.entry.criteria.CategoryOrders;
+import am.ik.blog.entry.criteria.SearchCriteria;
+import lombok.RequiredArgsConstructor;
+import reactor.core.publisher.Flux;
+import reactor.core.scheduler.Schedulers;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -12,20 +16,13 @@ import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.UriComponentsBuilder;
 
-import am.ik.blog.entry.criteria.CategoryOrders;
-import am.ik.blog.entry.criteria.SearchCriteria;
-import am.ik.blog.exception.PremiumRedirectException;
-import am.ik.blog.point.PointService;
-import lombok.RequiredArgsConstructor;
-import reactor.core.publisher.Flux;
-import reactor.core.scheduler.Schedulers;
+import static am.ik.blog.exception.ResourceNotFoundException.defer;
 
 @RestController
 @RequestMapping(path = "api")
 @RequiredArgsConstructor
 public class EntryController {
 	private final EntryMapper entryMapper;
-	private final PointService pointService;
 	private static final String DEFAULT_EXCLUDE_CONTENT = "false";
 
 	@GetMapping(path = "entries")
@@ -92,14 +89,7 @@ public class EntryController {
 			UriComponentsBuilder builder) {
 		Optional<Entry> entry = Optional
 				.ofNullable(entryMapper.findOne(entryId, excludeContent));
-		return entry.map(x -> {
-			if (!excludeContent && x.isPremium()) {
-				throw new PremiumRedirectException(builder
-						.pathSegment("api", "p", "entries", entryId.toString())
-						.queryParam("excludeContent", excludeContent).build().toUri());
-			}
-			return x;
-		}).orElseThrow(defer("entry " + entryId + " is not found."));
+		return entry.orElseThrow(defer("entry " + entryId + " is not found."));
 	}
 
 	@GetMapping(path = "p/entries/{entryId}")
@@ -107,11 +97,6 @@ public class EntryController {
 			@RequestParam(defaultValue = DEFAULT_EXCLUDE_CONTENT) boolean excludeContent) {
 		Optional<Entry> entry = Optional
 				.ofNullable(entryMapper.findOne(entryId, excludeContent));
-		return entry.map(x -> {
-			if (!excludeContent) {
-				pointService.checkIfSubscribed(x);
-			}
-			return x;
-		}).orElseThrow(defer("entry " + entryId + " is not found."));
+		return entry.orElseThrow(defer("entry " + entryId + " is not found."));
 	}
 }
