@@ -1,12 +1,7 @@
 package am.ik.blog.entry;
 
-import java.util.LinkedHashMap;
-import java.util.Map;
-
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.restassured.RestAssured;
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -14,21 +9,14 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.web.server.LocalServerPort;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
-import org.springframework.security.oauth2.client.OAuth2RestTemplate;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.client.MockRestServiceServer;
 
 import static am.ik.blog.entry.Asserts.*;
 import static io.restassured.RestAssured.given;
-import static java.util.Arrays.asList;
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasSize;
-import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo;
-import static org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -39,25 +27,11 @@ public class EntryControllerTest {
 	UserInfoServer userInfoServer;
 	MockRestServiceServer mockServer;
 	@Autowired
-	OAuth2RestTemplate restTemplate;
-	@Autowired
 	ObjectMapper objectMapper;
 
 	@Before
 	public void setUp() throws Exception {
 		RestAssured.port = port;
-		userInfoServer = new UserInfoServer(34539);
-		userInfoServer.start();
-		setupMock();
-	}
-
-	void setupMock() throws Exception {
-		mockServer = MockRestServiceServer.bindTo(restTemplate).build();
-	}
-
-	@After
-	public void tearDown() {
-		userInfoServer.shutdown();
 	}
 
 	@Test
@@ -405,23 +379,6 @@ public class EntryControllerTest {
 	}
 
 	@Test
-	public void getEntry99997() throws Exception {
-		Map<String, Object> response = new LinkedHashMap<>();
-		response.put("pint", 100);
-		response.put("entryIds", asList(99997, 99998));
-		mockServer.expect(requestTo("http://blog-point/v1/user"))
-				.andRespond(withSuccess(objectMapper.writeValueAsString(response),
-						MediaType.APPLICATION_JSON_UTF8));
-
-		Entry entry = given().log().all()
-				.header(HttpHeaders.AUTHORIZATION, "Bearer test-user-1")
-				.queryParam("excludeContent", "true").get("/api/entries/{entryId}", 99997)
-				.then().log().all().assertThat().statusCode(200).extract()
-				.as(Entry.class);
-		assertEntry99997(entry).assertThatContentIsNotSet();
-	}
-
-	@Test
 	public void getEntry99997_noToken_excludeContent() throws Exception {
 		Entry entry = given().log().all().queryParam("excludeContent", "true")
 				.get("/api/entries/{entryId}", 99997).then().log().all().assertThat()
@@ -443,57 +400,5 @@ public class EntryControllerTest {
 				.get("/api/entries/{entryId}", 99998).then().log().all().assertThat()
 				.statusCode(200).extract().as(Entry.class);
 		assertEntry99998(entry).assertContent();
-	}
-
-	@Test
-	public void getEntry99997_includeContent_subscribed() throws Exception {
-		Map<String, Object> response = new LinkedHashMap<>();
-		response.put("point", 100);
-		response.put("entryIds", asList(99997, 99998));
-		mockServer.expect(requestTo("http://blog-point/v1/user"))
-				.andRespond(withSuccess(objectMapper.writeValueAsString(response),
-						MediaType.APPLICATION_JSON_UTF8));
-
-		Entry entry = given().log().all()
-				.header(HttpHeaders.AUTHORIZATION, "Bearer test-user-1")
-				.queryParam("excludeContent", "false")
-				.get("/api/entries/{entryId}", 99997).then().log().all().assertThat()
-				.statusCode(200).extract().as(Entry.class);
-		assertEntry99997(entry).assertContent();
-	}
-
-	@Test
-	public void getEntry99997_includeContent_not_subscribed() throws Exception {
-		Map<String, Object> response = new LinkedHashMap<>();
-		response.put("point", 100);
-		response.put("entryIds", asList(99998));
-		mockServer.expect(requestTo("http://blog-point/v1/user"))
-				.andRespond(withSuccess(objectMapper.writeValueAsString(response),
-						MediaType.APPLICATION_JSON_UTF8));
-
-		Entry entry = given().log().all()
-				.header(HttpHeaders.AUTHORIZATION, "Bearer test-user-1")
-				.queryParam("excludeContent", "false")
-				.get("/api/entries/{entryId}", 99997).then().log().all().assertThat()
-				.statusCode(200).extract().as(Entry.class);
-		assertEntry99997(entry).assertContent();
-	}
-
-	@Test
-	public void getEntry99997_includeContent_noToken() throws Exception {
-		Entry entry = given().log().all().queryParam("excludeContent", "false")
-				.get("/api/entries/{entryId}", 99997).then().log().all().assertThat()
-				.statusCode(200).extract().as(Entry.class);
-		assertEntry99997(entry).assertContent();
-	}
-
-	@Test
-	public void getPremiumEntry_notFound() throws Exception {
-		JsonNode error = given().log().all()
-				.header(HttpHeaders.AUTHORIZATION, "Bearer test-user-1")
-				.queryParam("excludeContent", "false")
-				.get("/api/p/entries/{entryId}", 99990).then().log().all().assertThat()
-				.statusCode(404).extract().as(JsonNode.class);
-		assertThat(error.get("message").asText()).isEqualTo("entry 99990 is not found.");
 	}
 }
