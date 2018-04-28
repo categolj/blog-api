@@ -2,7 +2,8 @@ package am.ik.blog.exception;
 
 import java.util.Locale;
 
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import org.springframework.beans.TypeMismatchException;
 import org.springframework.context.MessageSource;
@@ -18,8 +19,8 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 import org.springframework.web.server.ServerWebInputException;
 
 @RestControllerAdvice
-@Slf4j
 public class RestExceptionHandler {
+	private static final Logger log = LoggerFactory.getLogger(RestExceptionHandler.class);
 	private final MessageSourceAccessor messageSourceAccessor;
 
 	public RestExceptionHandler(MessageSource messageSource) {

@@ -3,7 +3,6 @@ package am.ik.blog.entry;
 import java.util.List;
 
 import am.ik.blog.reactive.ReactiveCategoryMapper;
-import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Mono;
 
 import org.springframework.web.bind.annotation.GetMapping;
@@ -14,9 +13,12 @@ import static java.util.stream.Collectors.toList;
 
 @RestController
 @RequestMapping(path = "api/categories")
-@RequiredArgsConstructor
 public class CategoryController {
 	private final ReactiveCategoryMapper categoryMapper;
+
+	public CategoryController(ReactiveCategoryMapper categoryMapper) {
+		this.categoryMapper = categoryMapper;
+	}
 
 	@GetMapping
 	public Mono<List<List<String>>> getCategories() {

@@ -18,15 +18,13 @@ package am.ik.blog.exception;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import org.springframework.context.support.MessageSourceAccessor;
 import org.springframework.util.Assert;
 import org.springframework.validation.BindException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
-
-import com.fasterxml.jackson.annotation.JsonProperty;
-
-import lombok.Value;
 
 /**
  * @author Jon Brisbin
@@ -74,10 +72,22 @@ public class ConstraintViolationExceptionMessage {
 		return errors;
 	}
 
-	@Value(staticConstructor = "of")
 	public static class ValidationError {
 		String entity, property;
 		Object invalidValue;
 		String message;
+
+		public ValidationError(String entity, String property, Object invalidValue,
+				String message) {
+			this.entity = entity;
+			this.property = property;
+			this.invalidValue = invalidValue;
+			this.message = message;
+		}
+
+		static ValidationError of(String entity, String property, Object invalidValue,
+				String message) {
+			return new ValidationError(entity, property, invalidValue, message);
+		}
 	}
 }
