@@ -92,11 +92,6 @@
 			<scope>test</scope>
 		</dependency>
 		<dependency>
-			<groupId>org.springframework.restdocs</groupId>
-			<artifactId>spring-restdocs-mockmvc</artifactId>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
 			<groupId>am.ik.blog</groupId>
 			<artifactId>blog-mapper</artifactId>
 			<version>${blog-mapper.version}</version>
@@ -112,6 +107,11 @@
 					<artifactId>spring-cloud-cloudfoundry-connector</artifactId>
 				</exclusion>
 			</exclusions>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.restdocs</groupId>
+			<artifactId>spring-restdocs-webtestclient</artifactId>
+			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.restdocs</groupId>
