@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.server.ServerWebInputException;
 
 @RestControllerAdvice
 @Slf4j
@@ -63,6 +64,16 @@ public class RestExceptionHandler {
 	SimpleExceptionMessage handleException(TypeMismatchException e) {
 		return new SimpleExceptionMessage(
 				"The given request (" + e.getValue() + ") is not valid.");
+	}
+
+	@ExceptionHandler(ServerWebInputException.class)
+	@ResponseStatus(HttpStatus.BAD_REQUEST)
+	SimpleExceptionMessage handleException(ServerWebInputException e) {
+		Throwable cause = e.getCause();
+		if (cause instanceof TypeMismatchException) {
+			return this.handleException((TypeMismatchException) cause);
+		}
+		return this.handleException((RuntimeException) e);
 	}
 
 	@ExceptionHandler(DataAccessException.class)

@@ -359,7 +359,7 @@ public class EntryControllerTest {
 	public void invalidEntryIdShouldReturn400() throws Exception {
 		given().log().all().get("/api/entries/{entryId}", "foo").then().log().all()
 				.assertThat().statusCode(400).body("message",
-						equalTo("The given request (entryId = foo) is not valid."));
+						equalTo("The given request (foo) is not valid."));
 	}
 
 	@Test

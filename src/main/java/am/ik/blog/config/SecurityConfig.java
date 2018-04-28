@@ -1,24 +1,23 @@
 package am.ik.blog.config;
 
-import org.springframework.boot.actuate.autoconfigure.security.servlet.EndpointRequest;
+import org.springframework.boot.actuate.autoconfigure.security.reactive.EndpointRequest;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.annotation.Order;
-import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
-import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.config.web.server.ServerHttpSecurity;
+import org.springframework.security.web.server.SecurityWebFilterChain;
 
 @Configuration
-@Order(-5)
-public class SecurityConfig extends WebSecurityConfigurerAdapter {
-	@Override
-	protected void configure(HttpSecurity http) throws Exception {
-		http.requestMatcher(EndpointRequest.toAnyEndpoint()) //
-				.authorizeRequests() //
-				.requestMatchers(EndpointRequest.to("health", "info")).permitAll() //
-				.requestMatchers(EndpointRequest.toAnyEndpoint()).hasRole("ACTUATOR") //
-				.and() //
+public class SecurityConfig {
+	@Bean
+	public SecurityWebFilterChain springWebFilterChain(ServerHttpSecurity http) {
+		return http //
 				.httpBasic() //
 				.and() //
-				.sessionManagement().sessionCreationPolicy(SessionCreationPolicy.NEVER);
+				.authorizeExchange() //
+				.matchers(EndpointRequest.to("health", "info")).permitAll() //
+				.matchers(EndpointRequest.toAnyEndpoint()).hasRole("ACTUATOR") //
+				.anyExchange().permitAll() //
+				.and() //
+				.build();
 	}
 }
