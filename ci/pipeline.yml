@@ -9,7 +9,7 @@ resource_types:
   type: docker-image
   source:
     repository: pivotalpa/maven-resource
-    tag: 1.3.4
+    tag: 1.3.5
 - name: kubernetes
   type: docker-image
   source:
@@ -44,9 +44,9 @@ resources:
   - name: docker
     type: docker-image
     source:
-      repository: asia.gcr.io/fe-tmaki/blog-api
-      username: _json_key
-      password: ((gcr-key))
+      repository: ((harbor-hostname))/categolj/blog-api
+      username: ((harbor-username))
+      password: ((harbor-password))
   - name: k8s-master
     type: kubernetes
     source:
