@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.*;
 public class EntryController {
 	private final ReactiveEntryMapper entryMapper;
 	private static final String DEFAULT_EXCLUDE_CONTENT = "false";
+	public final static String STREAM_SMILE_MIME_TYPE_VALUE = "application/stream+x-jackson-smile";
 
 	public EntryController(ReactiveEntryMapper entryMapper) {
 		this.entryMapper = entryMapper;
@@ -32,7 +33,7 @@ public class EntryController {
 	}
 
 	@GetMapping(path = "entries", produces = { MediaType.APPLICATION_STREAM_JSON_VALUE,
-			MediaType.TEXT_EVENT_STREAM_VALUE })
+			MediaType.TEXT_EVENT_STREAM_VALUE, STREAM_SMILE_MIME_TYPE_VALUE })
 	public Flux<Entry> streamEntries(@PageableDefault Pageable pageable) {
 		SearchCriteria criteria = SearchCriteria.builder().excludeContent(true).build();
 		return entryMapper.collectAll(criteria, pageable);

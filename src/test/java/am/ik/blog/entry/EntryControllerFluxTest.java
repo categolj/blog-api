@@ -14,10 +14,10 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.reactive.server.WebTestClient;
 
 import static am.ik.blog.entry.Asserts.*;
+import static am.ik.blog.entry.EntryController.STREAM_SMILE_MIME_TYPE_VALUE;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.springframework.http.HttpHeaders.ACCEPT;
-import static org.springframework.http.MediaType.APPLICATION_STREAM_JSON;
-import static org.springframework.http.MediaType.APPLICATION_STREAM_JSON_VALUE;
+import static org.springframework.http.MediaType.*;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -35,12 +35,30 @@ public class EntryControllerFluxTest {
 	}
 
 	@Test
-	public void streamEntries() {
+	public void streamEntriesJson() {
 		Flux<Entry> body = this.webClient.get().uri("/api/entries") //
 				.header(ACCEPT, APPLICATION_STREAM_JSON_VALUE) //
 				.exchange() //
 				.expectStatus().isOk() //
 				.expectHeader().contentType(new MediaType(APPLICATION_STREAM_JSON, UTF_8)) //
+				.returnResult(Entry.class) //
+				.getResponseBody();
+		StepVerifier.create(body)//
+				.assertNext(entry -> assertEntry99999(entry).assertThatContentIsNotSet()) //
+				.assertNext(entry -> assertEntry99998(entry).assertThatContentIsNotSet()) //
+				.assertNext(entry -> assertEntry99997(entry).assertThatContentIsNotSet()) //
+				.verifyComplete();
+	}
+
+	@Test
+	public void streamEntriesSmile() {
+		Flux<Entry> body = this.webClient.get().uri("/api/entries") //
+				.header(ACCEPT, STREAM_SMILE_MIME_TYPE_VALUE) //
+				.exchange() //
+				.expectStatus().isOk() //
+				.expectHeader()
+				.contentType(new MediaType(parseMediaType(STREAM_SMILE_MIME_TYPE_VALUE),
+						UTF_8)) //
 				.returnResult(Entry.class) //
 				.getResponseBody();
 		StepVerifier.create(body)//
