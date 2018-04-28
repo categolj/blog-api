@@ -11,7 +11,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.web.server.LocalServerPort;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.context.junit4.SpringRunner;
-import org.springframework.test.web.client.MockRestServiceServer;
 
 import static am.ik.blog.entry.Asserts.*;
 import static io.restassured.RestAssured.given;
@@ -24,8 +23,6 @@ import static org.hamcrest.Matchers.hasSize;
 public class EntryControllerTest {
 	@LocalServerPort
 	int port;
-	UserInfoServer userInfoServer;
-	MockRestServiceServer mockServer;
 	@Autowired
 	ObjectMapper objectMapper;
 
@@ -358,8 +355,8 @@ public class EntryControllerTest {
 	@Test
 	public void invalidEntryIdShouldReturn400() throws Exception {
 		given().log().all().get("/api/entries/{entryId}", "foo").then().log().all()
-				.assertThat().statusCode(400).body("message",
-						equalTo("The given request (foo) is not valid."));
+				.assertThat().statusCode(400)
+				.body("message", equalTo("The given request (foo) is not valid."));
 	}
 
 	@Test
