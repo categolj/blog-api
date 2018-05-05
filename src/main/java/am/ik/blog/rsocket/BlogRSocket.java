@@ -38,7 +38,7 @@ public class BlogRSocket extends AbstractRSocket {
 	private final List<RSocketRoute> routes;
 	private final NettyDataBufferFactory dataBufferFactory = new NettyDataBufferFactory(
 			PooledByteBufAllocator.DEFAULT);
-	private RSocketCodec codec = RSocketCodec.JSON;
+	private RSocketCodec codec = RSocketCodec.SMILE;
 
 	public BlogRSocket(List<RSocketRouter> routers) {
 		ArrayList<RSocketRoute> routes = new ArrayList<>();
