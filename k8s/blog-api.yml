@@ -12,6 +12,9 @@ spec:
   - protocol: TCP
     port: 8080
     nodePort: 30080
+  - protocol: TCP
+    port: 7000
+    nodePort: 30700
   type: NodePort
 ---
 apiVersion: extensions/v1beta1
@@ -47,9 +50,14 @@ spec:
         imagePullPolicy: Always
         ports:
         - containerPort: 8080
+          name: http
+        - containerPort: 7000
+          name: rsocket
         env:
         - name: SERVER_PORT
           value: "8080"
+        - name: RSOCKET_SERVER_PORT
+          value: "7000"
         - name: SPRING_PROFILES_ACTIVE
           value: kubernetes
         - name: _JAVA_OPTIONS
