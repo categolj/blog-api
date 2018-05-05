@@ -25,6 +25,7 @@
 		<blog-mapper.version>4.6.0</blog-mapper.version>
 		<maven-surefire-plugin.version>2.18.1</maven-surefire-plugin.version>
 		<spring-cloud.version>Finchley.RC1</spring-cloud.version>
+		<rsocket.version>0.10.0.BUILD-SNAPSHOT</rsocket.version>
 	</properties>
 
 	<dependencies>
@@ -65,6 +66,16 @@
 		<dependency>
 			<groupId>org.springframework.cloud</groupId>
 			<artifactId>spring-cloud-starter-zipkin</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>io.rsocket</groupId>
+			<artifactId>rsocket-core</artifactId>
+			<version>${rsocket.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>io.rsocket</groupId>
+			<artifactId>rsocket-transport-netty</artifactId>
+			<version>${rsocket.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>mysql</groupId>
@@ -186,6 +197,14 @@
 	</build>
 
 	<repositories>
+		<repository>
+			<id>jfrog</id>
+			<name>JFrog</name>
+			<url>https://oss.jfrog.org/libs-snapshot</url>
+			<snapshots>
+				<enabled>true</enabled>
+			</snapshots>
+		</repository>
 		<repository>
 			<id>spring-snapshots</id>
 			<name>Spring Snapshots</name>
