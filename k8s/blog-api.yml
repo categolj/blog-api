@@ -12,9 +12,11 @@ spec:
   - protocol: TCP
     port: 8080
     nodePort: 30080
+    name: http
   - protocol: TCP
     port: 7000
     nodePort: 30700
+    name: rsocket
   type: NodePort
 ---
 apiVersion: extensions/v1beta1
