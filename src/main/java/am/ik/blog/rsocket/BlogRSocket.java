@@ -57,7 +57,7 @@ public class BlogRSocket extends AbstractRSocket {
 				.flatMap(route -> route.invoke(path,
 						RSocketQueryParams.parse(payload.getDataUtf8())))
 				.flatMap(response -> this.toPayload(response.body(), response.type(),
-						this.codec.singleMediaType()));
+						this.codec.streamMediaType()));
 	}
 
 	@Override
