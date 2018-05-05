@@ -79,6 +79,8 @@ spec:
             secretKeyRef:
               name: blog-config-secret
               key: ops-password
+        - name: SPRING_SLEUTH_WEB_ADDITIONAL_SKIP_PATTERN
+          value: /actuator.*
         resources:
           limits:
             memory: "1024Mi"
