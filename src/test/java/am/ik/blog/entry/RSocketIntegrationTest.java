@@ -54,12 +54,12 @@ public class RSocketIntegrationTest {
 	@Before
 	public void setup() {
 		ClientTransport transport = TcpClientTransport.create("localhost", port);
-		for (int i = 0; i < 100; i++) {
+		for (int i = 0; i < 10; i++) {
 			if (isPortAvailable(port)) {
 				break;
 			}
 			try {
-				Thread.sleep(200);
+				Thread.sleep(100);
 			}
 			catch (InterruptedException e) {
 				Thread.currentThread().interrupt();
