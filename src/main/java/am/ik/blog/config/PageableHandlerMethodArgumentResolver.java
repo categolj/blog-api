@@ -4,6 +4,7 @@ import java.util.OptionalInt;
 
 import reactor.core.publisher.Mono;
 
+import org.springframework.context.annotation.Lazy;
 import org.springframework.core.MethodParameter;
 import org.springframework.core.ReactiveAdapterRegistry;
 import org.springframework.data.domain.PageRequest;
@@ -17,6 +18,7 @@ import org.springframework.web.reactive.result.method.HandlerMethodArgumentResol
 import org.springframework.web.server.ServerWebExchange;
 
 @Component
+@Lazy
 public class PageableHandlerMethodArgumentResolver
 		extends HandlerMethodArgumentResolverSupport {
 
