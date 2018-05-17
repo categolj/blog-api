@@ -24,7 +24,7 @@
 		<java.version>1.8</java.version>
 		<blog-mapper.version>4.6.0</blog-mapper.version>
 		<maven-surefire-plugin.version>2.18.1</maven-surefire-plugin.version>
-		<spring-cloud.version>Finchley.RC1</spring-cloud.version>
+		<spring-cloud.version>Finchley.BUILD-SNAPSHOT</spring-cloud.version>
 		<rsocket.version>0.10.0.BUILD-SNAPSHOT</rsocket.version>
 	</properties>
 
@@ -66,6 +66,11 @@
 		<dependency>
 			<groupId>org.springframework.cloud</groupId>
 			<artifactId>spring-cloud-starter-zipkin</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>io.zipkin.brave</groupId>
+			<artifactId>brave-instrumentation-mysql</artifactId>
+			<version>4.19.2</version>
 		</dependency>
 		<dependency>
 			<groupId>io.rsocket</groupId>
