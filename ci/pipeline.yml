@@ -71,8 +71,8 @@ resources:
   - name: mysql
     type: docker-image
     source:
-      repository: mariadb
-      tag: 10.0.30
+      repository: mysql
+      tag: 5.7
 jobs:
 ### Dev
 - name: unit-test-develop
@@ -94,33 +94,36 @@ jobs:
         image_resource:
           type: docker-image
           source:
-            repository: making/dcind-jdk
+            repository: springci/spring-boot-ci-image
+            tag: master
         inputs:
         - name: repo
         - name: mysql
         caches:
-        - path: repo/m2
+        - path: maven
         run:
-          path: sh
+          path: bash
           args:
           - -c
           - |
             set -e
+            source /opt/concourse-java.sh
+            setup_symlinks
 
             source /docker-lib.sh
             start_docker
             docker load -i mysql/image
             docker tag "$(cat mysql/image-id)" "$(cat mysql/repository):$(cat mysql/tag)"
             docker images
+            docker run --name mysql -d \
+              $(cat mysql/repository):$(cat mysql/tag) \
+              -e MYSQL_DATABASE=blog_test \
+              -e MYSQL_ALLOW_EMPTY_PASSWORD=yes \
+              -p 3306:3306
+            sleep 3
 
             cd repo
-            rm -rf ~/.m2
-            ln -fs $(pwd)/m2 ~/.m2
-
-            docker-compose up -d
-            sleep 3
-            mvn test
-            docker-compose down
+            ./mvnw -f pom.xml test
       on_failure:
         put: slack-alert
         params:
