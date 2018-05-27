@@ -115,11 +115,13 @@ jobs:
             docker load -i mysql/image
             docker tag "$(cat mysql/image-id)" "$(cat mysql/repository):$(cat mysql/tag)"
             docker images
-            docker run --name mysql -d \
-              $(cat mysql/repository):$(cat mysql/tag) \
-              -e MYSQL_DATABASE=blog_test \
-              -e MYSQL_ALLOW_EMPTY_PASSWORD=yes \
-              -p 3306:3306
+            docker run -d \
+              --name mysql \
+              -e "MYSQL_DATABASE=blog_test" \
+              -e "MYSQL_ALLOW_EMPTY_PASSWORD=yes" \
+              -p 3306:3306 \
+              $(cat mysql/repository):$(cat mysql/tag)
+            docker ps
             sleep 3
 
             cd repo
