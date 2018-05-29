@@ -15,9 +15,11 @@ import org.springframework.stereotype.Component;
 @Component
 public class ReactiveEntryMapper {
 	private final EntryMapper entryMapper;
+	private final EntryHelper entryHelper;
 
-	public ReactiveEntryMapper(EntryMapper entryMapper) {
+	public ReactiveEntryMapper(EntryMapper entryMapper, EntryHelper entryHelper) {
 		this.entryMapper = entryMapper;
+		this.entryHelper = entryHelper;
 	}
 
 	public Mono<Page<Entry>> findPage(SearchCriteria criteria, Pageable pageable) {
@@ -26,7 +28,7 @@ public class ReactiveEntryMapper {
 	}
 
 	public Mono<Entry> findOne(EntryId entryId, boolean excludeContent) {
-		return Mono.fromCallable(() -> this.entryMapper.findOne(entryId, excludeContent))
+		return Mono.fromCallable(() -> this.entryHelper.getEntry(entryId, excludeContent))
 				.subscribeOn(Schedulers.elastic());
 	}
 
