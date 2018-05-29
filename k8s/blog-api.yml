@@ -13,10 +13,6 @@ spec:
     port: 8080
     nodePort: 30080
     name: http
-  - protocol: TCP
-    port: 7000
-    nodePort: 30700
-    name: rsocket
   type: NodePort
 ---
 apiVersion: extensions/v1beta1
@@ -53,13 +49,9 @@ spec:
         ports:
         - containerPort: 8080
           name: http
-        - containerPort: 7000
-          name: rsocket
         env:
         - name: SERVER_PORT
           value: "8080"
-        - name: RSOCKET_SERVER_PORT
-          value: "7000"
         - name: SPRING_PROFILES_ACTIVE
           value: kubernetes
         - name: _JAVA_OPTIONS
