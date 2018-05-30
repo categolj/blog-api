@@ -1,0 +1,37 @@
+= Blog API Guide
+Toshiaki Maki(@making);
+:doctype: book
+:icons: font
+:source-highlighter: highlightjs
+:toc: left
+:toclevels: 4
+:sectlinks:
+
+
+[[resources]]
+= Resources
+
+== Entry
+=== Get an entry
+
+operation::api/get-an-entry[]
+=== Get entries
+
+operation::api/get-entries[]
+=== Get entries by tag
+
+operation::api/get-entries-by-tag[]
+=== Get entries by categories
+
+operation::api/get-entries-by-categories[]
+
+=== Get entries by created by
+
+operation::api/get-entries-by-created-by[]
+
+=== Get entries by update by
+
+operation::api/get-entries-by-updated-by[]
+=== Search entries
+
+operation::api/search-entries[]
