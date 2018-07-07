@@ -40,54 +40,55 @@ public class EntryControllerTest {
 
 	@Test
 	public void getEntries() throws Exception {
-		given(this.documentationSpec) //
-				.filter(document("api/get-entries", uri(),
-						preprocessResponse(prettyPrint()),
-						responseFields(
-								fieldWithPath("content[].entryId")
-										.description("Entry ID"),
-								fieldWithPath("content[].content").description("Content")
-										.optional(),
-								fieldWithPath("content[].frontMatter.title")
-										.description("Title"),
-								fieldWithPath("content[].frontMatter.categories")
-										.description("Categories"),
-								fieldWithPath("content[].frontMatter.tags")
-										.description("Tags"),
-								fieldWithPath("content[].frontMatter.point")
-										.description("Point (Deprecated)").optional(),
-								fieldWithPath("content[].created.name")
-										.description("Creator's name"),
-								fieldWithPath("content[].created.date")
-										.description("Created date"),
-								fieldWithPath("content[].updated.name")
-										.description("Updater's name"),
-								fieldWithPath("content[].updated.date")
-										.description("Updated date"),
-								fieldWithPath("last").description("Is last"),
-								fieldWithPath("first").description("Is first"),
-								fieldWithPath("totalPages").description("Total pages"),
-								fieldWithPath("totalElements")
-										.description("Total elements"),
-								fieldWithPath("size").description("Size"),
-								fieldWithPath("number").description("Number"),
-								fieldWithPath("numberOfElements")
-										.description("Number of elements"),
-								fieldWithPath("pageable.sort.sorted")
-										.description("Is sorted"),
-								fieldWithPath("pageable.sort.unsorted")
-										.description("Is unsorted"),
-								fieldWithPath("pageable.offset").description("Offset"),
-								fieldWithPath("pageable.pageSize")
-										.description("Page size"),
-								fieldWithPath("pageable.pageNumber")
-										.description("Page number"),
-								fieldWithPath("pageable.paged").description("Is paged"),
-								fieldWithPath("pageable.unpaged")
-										.description("Is unpaged"),
-								fieldWithPath("sort.sorted").description("Is sorted"),
-								fieldWithPath("sort.unsorted")
-										.description("Is unsorted"))))
+		given()
+//		given(this.documentationSpec) //
+//				.filter(document("api/get-entries", uri(),
+//						preprocessResponse(prettyPrint()),
+//						responseFields(
+//								fieldWithPath("content[].entryId")
+//										.description("Entry ID"),
+//								fieldWithPath("content[].content").description("Content")
+//										.optional(),
+//								fieldWithPath("content[].frontMatter.title")
+//										.description("Title"),
+//								fieldWithPath("content[].frontMatter.categories")
+//										.description("Categories"),
+//								fieldWithPath("content[].frontMatter.tags")
+//										.description("Tags"),
+//								fieldWithPath("content[].frontMatter.point")
+//										.description("Point (Deprecated)").optional(),
+//								fieldWithPath("content[].created.name")
+//										.description("Creator's name"),
+//								fieldWithPath("content[].created.date")
+//										.description("Created date"),
+//								fieldWithPath("content[].updated.name")
+//										.description("Updater's name"),
+//								fieldWithPath("content[].updated.date")
+//										.description("Updated date"),
+//								fieldWithPath("last").description("Is last"),
+//								fieldWithPath("first").description("Is first"),
+//								fieldWithPath("totalPages").description("Total pages"),
+//								fieldWithPath("totalElements")
+//										.description("Total elements"),
+//								fieldWithPath("size").description("Size"),
+//								fieldWithPath("number").description("Number"),
+//								fieldWithPath("numberOfElements")
+//										.description("Number of elements"),
+//								fieldWithPath("pageable.sort.sorted")
+//										.description("Is sorted"),
+//								fieldWithPath("pageable.sort.unsorted")
+//										.description("Is unsorted"),
+//								fieldWithPath("pageable.offset").description("Offset"),
+//								fieldWithPath("pageable.pageSize")
+//										.description("Page size"),
+//								fieldWithPath("pageable.pageNumber")
+//										.description("Page number"),
+//								fieldWithPath("pageable.paged").description("Is paged"),
+//								fieldWithPath("pageable.unpaged")
+//										.description("Is unpaged"),
+//								fieldWithPath("sort.sorted").description("Is sorted"),
+//								fieldWithPath("sort.unsorted")
+//										.description("Is unsorted"))))
 				.log().all() //
 				.get("/api/entries").then() //
 				.log().all() //
@@ -139,9 +140,10 @@ public class EntryControllerTest {
 
 	@Test
 	public void searchEntries() throws Exception {
-		given(this.documentationSpec) //
-				.filter(document("api/search-entries", uri(),
-						preprocessResponse(prettyPrint()))) //
+		given()
+//		given(this.documentationSpec) //
+//				.filter(document("api/search-entries", uri(),
+//						preprocessResponse(prettyPrint()))) //
 				.log().all().queryParam("q", "test").get("/api/entries").then().log()
 				.all().assertThat().statusCode(200).body("size", equalTo(10))
 				.body("number", equalTo(0)).body("totalPages", equalTo(1))
@@ -228,9 +230,10 @@ public class EntryControllerTest {
 
 	@Test
 	public void getEntriesByCreatedBy() throws Exception {
-		given(this.documentationSpec) //
-				.filter(document("api/get-entries-by-created-by", uri(),
-						preprocessResponse(prettyPrint()))) //
+		given()
+//		given(this.documentationSpec) //
+//				.filter(document("api/get-entries-by-created-by", uri(),
+//						preprocessResponse(prettyPrint()))) //
 				.log().all().get("/api/users/{createdBy}/entries", "making").then().log()
 				.all().assertThat().statusCode(200).body("size", equalTo(10))
 				.body("number", equalTo(0)).body("totalPages", equalTo(1))
@@ -267,9 +270,10 @@ public class EntryControllerTest {
 
 	@Test
 	public void getEntriesByUpdatedBy() throws Exception {
-		given(this.documentationSpec) //
-				.filter(document("api/get-entries-by-updated-by", uri(),
-						preprocessResponse(prettyPrint()))) //
+		given()
+//		given(this.documentationSpec) //
+//				.filter(document("api/get-entries-by-updated-by", uri(),
+//						preprocessResponse(prettyPrint()))) //
 				.queryParam("updated").log().all()
 				.get("/api/users/{updatedBy}/entries", "making").then().log().all()
 				.assertThat().statusCode(200).body("size", equalTo(10))
@@ -320,9 +324,10 @@ public class EntryControllerTest {
 
 	@Test
 	public void getEntriesByTag() throws Exception {
-		given(this.documentationSpec) //
-				.filter(document("api/get-entries-by-tag", uri(),
-						preprocessResponse(prettyPrint()))) //
+		given()
+//		given(this.documentationSpec) //
+//				.filter(document("api/get-entries-by-tag", uri(),
+//						preprocessResponse(prettyPrint()))) //
 				.log().all().get("/api/tags/{tag}/entries", "test3").then().log().all()
 				.assertThat().statusCode(200).body("size", equalTo(10))
 				.body("number", equalTo(0)).body("totalPages", equalTo(1))
@@ -359,9 +364,10 @@ public class EntryControllerTest {
 
 	@Test
 	public void getEntriesByCategories() throws Exception {
-		given(this.documentationSpec) //
-				.filter(document("api/get-entries-by-categories", uri(),
-						preprocessResponse(prettyPrint()))) //
+		given()
+//		given(this.documentationSpec) //
+//				.filter(document("api/get-entries-by-categories", uri(),
+//						preprocessResponse(prettyPrint()))) //
 				.log().all().get("/api/categories/x,y/entries").then().log().all()
 				.assertThat().statusCode(200).body("size", equalTo(10))
 				.body("number", equalTo(0)).body("totalPages", equalTo(1))
@@ -398,26 +404,27 @@ public class EntryControllerTest {
 
 	@Test
 	public void getEntry() throws Exception {
-		given(this.documentationSpec) //
-				.filter(document("api/get-an-entry", uri(),
-						preprocessResponse(prettyPrint()),
-						responseFields(fieldWithPath("entryId").description("Entry ID"),
-								fieldWithPath("content").description("Content")
-										.optional(),
-								fieldWithPath("frontMatter.title").description("Title"),
-								fieldWithPath("frontMatter.categories")
-										.description("Categories"),
-								fieldWithPath("frontMatter.tags").description("Tags"),
-								fieldWithPath("frontMatter.point")
-										.description("Point (Deprecated)")
-										.type(Number.class.getSimpleName()).optional(),
-								fieldWithPath("created.name")
-										.description("Creator's name"),
-								fieldWithPath("created.date").description("Created date"),
-								fieldWithPath("updated.name")
-										.description("Updater's name"),
-								fieldWithPath("updated.date")
-										.description("Updated date")))) //
+		given()
+//		given(this.documentationSpec) //
+//				.filter(document("api/get-an-entry", uri(),
+//						preprocessResponse(prettyPrint()),
+//						responseFields(fieldWithPath("entryId").description("Entry ID"),
+//								fieldWithPath("content").description("Content")
+//										.optional(),
+//								fieldWithPath("frontMatter.title").description("Title"),
+//								fieldWithPath("frontMatter.categories")
+//										.description("Categories"),
+//								fieldWithPath("frontMatter.tags").description("Tags"),
+//								fieldWithPath("frontMatter.point")
+//										.description("Point (Deprecated)")
+//										.type(Number.class.getSimpleName()).optional(),
+//								fieldWithPath("created.name")
+//										.description("Creator's name"),
+//								fieldWithPath("created.date").description("Created date"),
+//								fieldWithPath("updated.name")
+//										.description("Updater's name"),
+//								fieldWithPath("updated.date")
+//										.description("Updated date")))) //
 				.log().all().get("/api/entries/{entryId}", 99999).then().log().all()
 				.assertThat().statusCode(200).body("entryId", equalTo(99999))
 				.body("content", equalTo("This is a test data."))
