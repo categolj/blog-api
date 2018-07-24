@@ -6,6 +6,7 @@ import java.util.Optional;
 import am.ik.blog.entry.*;
 import am.ik.blog.entry.Entry.EntryBuilder;
 import am.ik.blog.entry.factory.EntryFactory;
+import am.ik.github.AccessToken;
 import am.ik.github.GitHubClient;
 import am.ik.github.core.Committer;
 import am.ik.github.repositories.commits.CommitsResponse.Commit;
@@ -16,13 +17,15 @@ import reactor.util.function.Tuple2;
 import reactor.util.function.Tuples;
 
 import org.springframework.stereotype.Component;
+import org.springframework.web.reactive.function.client.WebClient;
 
 @Component
 public class EntryFetcher {
 	private final GitHubClient gitHubClient;
 
-	public EntryFetcher(GitHubClient gitHubClient) {
-		this.gitHubClient = gitHubClient;
+	public EntryFetcher(GitHubProps props, WebClient.Builder builder) {
+		this.gitHubClient = new GitHubClient(builder,
+				new AccessToken(props.getAccessToken()));
 	}
 
 	public Mono<Entry> fetch(String owner, String repo, String path) {
