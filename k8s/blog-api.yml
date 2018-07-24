@@ -81,6 +81,16 @@ spec:
             secretKeyRef:
               name: blog-config-secret
               key: ops-password
+        - name: BLOG_GITHUB_ACCESS_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: blog-config-secret
+              key: github-access-token
+        - name: BLOG_GITHUB_WEBHOOK_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: blog-config-secret
+              key: github-webhook-secret
         - name: SPRING_SLEUTH_WEB_ADDITIONAL_SKIP_PATTERN
           value: /actuator.*
         resources:

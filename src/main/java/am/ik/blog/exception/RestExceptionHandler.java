@@ -2,6 +2,7 @@ package am.ik.blog.exception;
 
 import java.util.Locale;
 
+import am.ik.blog.github.WebhookAuthenticationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,6 +27,13 @@ public class RestExceptionHandler {
 	public RestExceptionHandler(MessageSource messageSource) {
 		this.messageSourceAccessor = new MessageSourceAccessor(messageSource,
 				Locale.getDefault());
+	}
+
+	@ExceptionHandler(WebhookAuthenticationException.class)
+	@ResponseStatus(HttpStatus.FORBIDDEN)
+	SimpleExceptionMessage handleWebhookAuthenticationException(
+			WebhookAuthenticationException e) {
+		return new SimpleExceptionMessage(e.getMessage());
 	}
 
 	@ExceptionHandler(ResourceNotFoundException.class)
