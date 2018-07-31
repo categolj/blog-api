@@ -8,16 +8,14 @@ import reactor.test.StepVerifier;
 
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.web.server.LocalServerPort;
-import org.springframework.http.MediaType;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.reactive.server.WebTestClient;
 
 import static am.ik.blog.entry.Asserts.*;
-import static am.ik.blog.entry.EntryController.STREAM_SMILE_MIME_TYPE_VALUE;
-import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.springframework.http.HttpHeaders.ACCEPT;
-import static org.springframework.http.MediaType.*;
+import static org.springframework.http.MediaType.APPLICATION_STREAM_JSON;
+import static org.springframework.http.MediaType.APPLICATION_STREAM_JSON_VALUE;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -40,7 +38,7 @@ public class EntryControllerFluxTest {
 				.header(ACCEPT, APPLICATION_STREAM_JSON_VALUE) //
 				.exchange() //
 				.expectStatus().isOk() //
-				.expectHeader().contentType(new MediaType(APPLICATION_STREAM_JSON, UTF_8)) //
+				.expectHeader().contentType(APPLICATION_STREAM_JSON) //
 				.returnResult(Entry.class) //
 				.getResponseBody();
 		StepVerifier.create(body)//
@@ -53,12 +51,10 @@ public class EntryControllerFluxTest {
 	@Test
 	public void streamEntriesSmile() {
 		Flux<Entry> body = this.webClient.get().uri("/api/entries") //
-				.header(ACCEPT, STREAM_SMILE_MIME_TYPE_VALUE) //
+				.header(ACCEPT, EntryHandler.STREAM_SMILE_MIME_TYPE.toString()) //
 				.exchange() //
 				.expectStatus().isOk() //
-				.expectHeader()
-				.contentType(new MediaType(parseMediaType(STREAM_SMILE_MIME_TYPE_VALUE),
-						UTF_8)) //
+				.expectHeader().contentType(EntryHandler.STREAM_SMILE_MIME_TYPE) //
 				.returnResult(Entry.class) //
 				.getResponseBody();
 		StepVerifier.create(body)//
