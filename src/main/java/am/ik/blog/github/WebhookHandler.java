@@ -1,6 +1,7 @@
 package am.ik.blog.github;
 
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.nio.file.Paths;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
@@ -61,57 +62,56 @@ public class WebhookHandler {
 		return request.bodyToMono(String.class) //
 				.flatMap(payload -> {
 					this.webhookVerifier.verify(payload, signature);
-					try {
-						JsonNode node = this.objectMapper.readValue(payload,
-								JsonNode.class); // TODO blocking
-						String[] repository = node.get("repository").get("full_name")
-								.asText().split("/");
-						String owner = repository[0];
-						String repo = repository[1];
-						if (!node.has("commits")) {
-							return ServerResponse.status(HttpStatus.BAD_REQUEST)
-									.syncBody(Collections.singletonMap("message",
-											"commit is empty!"));
-						}
-						Stream<JsonNode> commits = StreamSupport
-								.stream(node.get("commits").spliterator(), false);
-						Flux<Map<String, Long>> response = Flux.fromStream(commits)
-								.flatMap(commit -> {
-									Flux<EntryId> added = this.paths(commit.get("added"))
-											.flatMap(path -> this.entryFetcher
-													.fetch(owner, repo, path)) //
-											.publishOn(Schedulers.elastic()) //
-											.doOnNext(this.entryMapper::save) //
-											.map(Entry::entryId);
-									Flux<EntryId> modified = this
-											.paths(commit.get("modified")) //
-											.flatMap(path -> this.entryFetcher
-													.fetch(owner, repo, path)) //
-											.publishOn(Schedulers.elastic()) //
-											.doOnNext(this.entryMapper::save) //
-											.map(Entry::entryId);
-									Flux<EntryId> removed = this
-											.paths(commit.get("removed")) //
-											.map(path -> EntryId
-													.fromFilePath(Paths.get(path))) //
-											.publishOn(Schedulers.elastic()) //
-											.doOnNext(this.entryMapper::delete);
-									return added
-											.map(id -> Collections.singletonMap("added",
-													id.getValue())) //
-											.mergeWith(modified
-													.map(id -> Collections.singletonMap(
-															"modified", id.getValue()))) //
-											.mergeWith(removed
-													.map(id -> Collections.singletonMap(
-															"removed", id.getValue())));
-								});
-						return ServerResponse.ok().body(response, typeReference);
+					JsonNode node = this.node(payload);
+					String[] repository = node.get("repository").get("full_name").asText()
+							.split("/");
+					String owner = repository[0];
+					String repo = repository[1];
+					if (!node.has("commits")) {
+						return ServerResponse.status(HttpStatus.BAD_REQUEST).syncBody(
+								Collections.singletonMap("message", "commit is empty!"));
 					}
-					catch (IOException e) {
-						return Mono.error(e);
-					}
+					Stream<JsonNode> commits = StreamSupport
+							.stream(node.get("commits").spliterator(), false);
+					Flux<Map<String, Long>> response = Flux.fromStream(commits)
+							.flatMap(commit -> {
+								Flux<EntryId> added = this.paths(commit.get("added"))
+										.flatMap(path -> this.entryFetcher.fetch(owner,
+												repo, path)) //
+										.publishOn(Schedulers.elastic()) //
+										.doOnNext(this.entryMapper::save) //
+										.map(Entry::entryId);
+								Flux<EntryId> modified = this
+										.paths(commit.get("modified")) //
+										.flatMap(path -> this.entryFetcher.fetch(owner,
+												repo, path)) //
+										.publishOn(Schedulers.elastic()) //
+										.doOnNext(this.entryMapper::save) //
+										.map(Entry::entryId);
+								Flux<EntryId> removed = this.paths(commit.get("removed")) //
+										.map(path -> EntryId
+												.fromFilePath(Paths.get(path))) //
+										.publishOn(Schedulers.elastic()) //
+										.doOnNext(this.entryMapper::delete);
+								return added
+										.map(id -> Collections.singletonMap("added",
+												id.getValue())) //
+										.mergeWith(modified.map(id -> Collections
+												.singletonMap("modified", id.getValue()))) //
+										.mergeWith(removed.map(id -> Collections
+												.singletonMap("removed", id.getValue())));
+							});
+					return ServerResponse.ok().body(response, typeReference);
 				});
+	}
+
+	JsonNode node(String payload) {
+		try {
+			return this.objectMapper.readValue(payload, JsonNode.class);
+		}
+		catch (IOException e) {
+			throw new UncheckedIOException(e);
+		}
 	}
 
 	Flux<String> paths(JsonNode paths) {
