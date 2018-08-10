@@ -134,8 +134,7 @@ public class EntryControllerTest {
 				.body("content[2].frontMatter.categories[1]", equalTo("y"))
 				.body("content[2].frontMatter.tags", hasSize(2))
 				.body("content[2].frontMatter.tags[0]", equalTo("test1"))
-				.body("content[2].frontMatter.tags[1]", equalTo("test3"))
-				.body("content[2].frontMatter.point", equalTo(50));
+				.body("content[2].frontMatter.tags[1]", equalTo("test3"));
 	}
 
 	@Test
@@ -187,8 +186,7 @@ public class EntryControllerTest {
 				.body("content[2].frontMatter.categories[1]", equalTo("y"))
 				.body("content[2].frontMatter.tags", hasSize(2))
 				.body("content[2].frontMatter.tags[0]", equalTo("test1"))
-				.body("content[2].frontMatter.tags[1]", equalTo("test3"))
-				.body("content[2].frontMatter.point", equalTo(50));
+				.body("content[2].frontMatter.tags[1]", equalTo("test3"));
 	}
 
 	@Test
@@ -224,8 +222,7 @@ public class EntryControllerTest {
 				.body("content[1].frontMatter.categories[1]", equalTo("y"))
 				.body("content[1].frontMatter.tags", hasSize(2))
 				.body("content[1].frontMatter.tags[0]", equalTo("test1"))
-				.body("content[1].frontMatter.tags[1]", equalTo("test3"))
-				.body("content[1].frontMatter.point", equalTo(50));
+				.body("content[1].frontMatter.tags[1]", equalTo("test3"));
 	}
 
 	@Test
@@ -318,8 +315,7 @@ public class EntryControllerTest {
 				.body("content[2].frontMatter.categories[1]", equalTo("y"))
 				.body("content[2].frontMatter.tags", hasSize(2))
 				.body("content[2].frontMatter.tags[0]", equalTo("test1"))
-				.body("content[2].frontMatter.tags[1]", equalTo("test3"))
-				.body("content[2].frontMatter.point", equalTo(50));
+				.body("content[2].frontMatter.tags[1]", equalTo("test3"));
 	}
 
 	@Test
@@ -358,8 +354,7 @@ public class EntryControllerTest {
 				.body("content[1].frontMatter.categories[1]", equalTo("y"))
 				.body("content[1].frontMatter.tags", hasSize(2))
 				.body("content[1].frontMatter.tags[0]", equalTo("test1"))
-				.body("content[1].frontMatter.tags[1]", equalTo("test3"))
-				.body("content[1].frontMatter.point", equalTo(50));
+				.body("content[1].frontMatter.tags[1]", equalTo("test3"));
 	}
 
 	@Test
@@ -398,8 +393,7 @@ public class EntryControllerTest {
 				.body("content[1].frontMatter.categories[1]", equalTo("y"))
 				.body("content[1].frontMatter.tags", hasSize(2))
 				.body("content[1].frontMatter.tags[0]", equalTo("test1"))
-				.body("content[1].frontMatter.tags[1]", equalTo("test3"))
-				.body("content[1].frontMatter.point", equalTo(50));
+				.body("content[1].frontMatter.tags[1]", equalTo("test3"));
 	}
 
 	@Test
