@@ -22,7 +22,7 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 		<java.version>1.8</java.version>
-		<blog-mapper.version>4.7.0</blog-mapper.version>
+		<blog-mapper.version>4.7.1</blog-mapper.version>
 		<maven-surefire-plugin.version>2.18.1</maven-surefire-plugin.version>
 		<spring-cloud.version>Finchley.SR1</spring-cloud.version>
 	</properties>
