@@ -22,8 +22,7 @@ import static io.restassured.RestAssured.given;
 import static java.time.format.DateTimeFormatter.RFC_1123_DATE_TIME;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasSize;
-import static org.springframework.http.HttpHeaders.IF_MODIFIED_SINCE;
-import static org.springframework.http.HttpHeaders.LAST_MODIFIED;
+import static org.springframework.http.HttpHeaders.*;
 import static org.springframework.restdocs.operation.preprocess.Preprocessors.*;
 import static org.springframework.restdocs.payload.PayloadDocumentation.fieldWithPath;
 import static org.springframework.restdocs.payload.PayloadDocumentation.responseFields;
@@ -510,6 +509,8 @@ public class EntryControllerTest {
 				.log().all() //
 				.assertThat()
 				.header(LAST_MODIFIED, lastModifiedDate99998.format(RFC_1123_DATE_TIME)) //
+				.header(EXPIRES, lastModifiedDate99998.format(RFC_1123_DATE_TIME)) //
+				.header(CACHE_CONTROL, "max-age=0") //
 				.assertThat().statusCode(200);
 	}
 
@@ -523,6 +524,8 @@ public class EntryControllerTest {
 				.log().all() //
 				.assertThat()
 				.header(LAST_MODIFIED, lastModifiedDate99998.format(RFC_1123_DATE_TIME)) //
+				.header(EXPIRES, lastModifiedDate99998.format(RFC_1123_DATE_TIME)) //
+				.header(CACHE_CONTROL, "max-age=0") //
 				.assertThat().statusCode(304);
 	}
 
@@ -536,6 +539,8 @@ public class EntryControllerTest {
 				.log().all() //
 				.assertThat()
 				.header(LAST_MODIFIED, lastModifiedDate99998.format(RFC_1123_DATE_TIME)) //
+				.header(EXPIRES, lastModifiedDate99998.format(RFC_1123_DATE_TIME)) //
+				.header(CACHE_CONTROL, "max-age=0") //
 				.assertThat().statusCode(200);
 	}
 
@@ -547,6 +552,8 @@ public class EntryControllerTest {
 				.log().all() //
 				.assertThat()
 				.header(LAST_MODIFIED, lastModifiedDate99999.format(RFC_1123_DATE_TIME)) //
+				.header(EXPIRES, lastModifiedDate99999.format(RFC_1123_DATE_TIME)) //
+				.header(CACHE_CONTROL, "max-age=0") //
 				.assertThat().statusCode(200);
 	}
 
@@ -560,6 +567,8 @@ public class EntryControllerTest {
 				.log().all() //
 				.assertThat()
 				.header(LAST_MODIFIED, lastModifiedDate99999.format(RFC_1123_DATE_TIME)) //
+				.header(EXPIRES, lastModifiedDate99999.format(RFC_1123_DATE_TIME)) //
+				.header(CACHE_CONTROL, "max-age=0") //
 				.assertThat().statusCode(304);
 	}
 
@@ -573,6 +582,8 @@ public class EntryControllerTest {
 				.log().all() //
 				.assertThat()
 				.header(LAST_MODIFIED, lastModifiedDate99999.format(RFC_1123_DATE_TIME)) //
+				.header(EXPIRES, lastModifiedDate99999.format(RFC_1123_DATE_TIME)) //
+				.header(CACHE_CONTROL, "max-age=0") //
 				.assertThat().statusCode(200);
 	}
 
