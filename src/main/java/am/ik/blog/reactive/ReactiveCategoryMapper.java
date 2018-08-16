@@ -5,20 +5,22 @@ import java.util.List;
 import am.ik.blog.entry.Categories;
 import am.ik.blog.entry.CategoryMapper;
 import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Schedulers;
+import reactor.core.scheduler.Scheduler;
 
 import org.springframework.stereotype.Component;
 
 @Component
 public class ReactiveCategoryMapper {
 	private final CategoryMapper categoryMapper;
+	private final Scheduler scheduler;
 
-	public ReactiveCategoryMapper(CategoryMapper categoryMapper) {
+	public ReactiveCategoryMapper(CategoryMapper categoryMapper, Scheduler scheduler) {
 		this.categoryMapper = categoryMapper;
+		this.scheduler = scheduler;
 	}
 
 	public Mono<List<Categories>> findAll() {
 		return Mono.fromCallable(this.categoryMapper::findAll)
-				.subscribeOn(Schedulers.elastic());
+				.subscribeOn(this.scheduler);
 	}
 }
