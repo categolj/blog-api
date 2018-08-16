@@ -1,5 +1,8 @@
 package am.ik.blog.entry;
 
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
+
 import io.restassured.RestAssured;
 import io.restassured.specification.RequestSpecification;
 import org.junit.Before;
@@ -16,8 +19,11 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 import static am.ik.blog.entry.Asserts.*;
 import static io.restassured.RestAssured.given;
+import static java.time.format.DateTimeFormatter.RFC_1123_DATE_TIME;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasSize;
+import static org.springframework.http.HttpHeaders.IF_MODIFIED_SINCE;
+import static org.springframework.http.HttpHeaders.LAST_MODIFIED;
 import static org.springframework.restdocs.operation.preprocess.Preprocessors.*;
 import static org.springframework.restdocs.payload.PayloadDocumentation.fieldWithPath;
 import static org.springframework.restdocs.payload.PayloadDocumentation.responseFields;
@@ -32,6 +38,10 @@ public class EntryControllerTest {
 	int port;
 	@Autowired
 	RequestSpecification documentationSpec;
+	private final OffsetDateTime lastModifiedDate99998 = OffsetDateTime.of(2017, 4, 1, 0,
+			0, 0, 0, ZoneOffset.ofHours(9));
+	private final OffsetDateTime lastModifiedDate99999 = OffsetDateTime.of(2017, 4, 1, 2,
+			0, 0, 0, ZoneOffset.ofHours(9));
 
 	@Before
 	public void setUp() throws Exception {
@@ -490,6 +500,80 @@ public class EntryControllerTest {
 				.get("/api/entries/{entryId}", 99998).then().log().all().assertThat()
 				.statusCode(200).extract().as(Entry.class);
 		assertEntry99998(entry).assertContent();
+	}
+
+	@Test
+	public void headEntry99998() throws Exception {
+		given().log().all() //
+				.head("/api/entries/{entryId}", 99998) //
+				.then() //
+				.log().all() //
+				.assertThat()
+				.header(LAST_MODIFIED, lastModifiedDate99998.format(RFC_1123_DATE_TIME)) //
+				.assertThat().statusCode(200);
+	}
+
+	@Test
+	public void headEntry99998_If_Modified_Since_304() throws Exception {
+		given().log().all() //
+				.header(IF_MODIFIED_SINCE,
+						lastModifiedDate99998.format(RFC_1123_DATE_TIME)) //
+				.head("/api/entries/{entryId}", 99998) //
+				.then() //
+				.log().all() //
+				.assertThat()
+				.header(LAST_MODIFIED, lastModifiedDate99998.format(RFC_1123_DATE_TIME)) //
+				.assertThat().statusCode(304);
+	}
+
+	@Test
+	public void headEntry99998_If_Modified_Since_200() throws Exception {
+		given().log().all() //
+				.header(IF_MODIFIED_SINCE,
+						lastModifiedDate99998.minusMinutes(1).format(RFC_1123_DATE_TIME)) //
+				.head("/api/entries/{entryId}", 99998) //
+				.then() //
+				.log().all() //
+				.assertThat()
+				.header(LAST_MODIFIED, lastModifiedDate99998.format(RFC_1123_DATE_TIME)) //
+				.assertThat().statusCode(200);
+	}
+
+	@Test
+	public void headEntries() throws Exception {
+		given().log().all() //
+				.head("/api/entries") //
+				.then() //
+				.log().all() //
+				.assertThat()
+				.header(LAST_MODIFIED, lastModifiedDate99999.format(RFC_1123_DATE_TIME)) //
+				.assertThat().statusCode(200);
+	}
+
+	@Test
+	public void headEntries_If_Modified_Since_304() throws Exception {
+		given().log().all() //
+				.header(IF_MODIFIED_SINCE,
+						lastModifiedDate99999.format(RFC_1123_DATE_TIME)) //
+				.head("/api/entries") //
+				.then() //
+				.log().all() //
+				.assertThat()
+				.header(LAST_MODIFIED, lastModifiedDate99999.format(RFC_1123_DATE_TIME)) //
+				.assertThat().statusCode(304);
+	}
+
+	@Test
+	public void headEntries_If_Modified_Since_200() throws Exception {
+		given().log().all() //
+				.header(IF_MODIFIED_SINCE,
+						lastModifiedDate99999.minusMinutes(1).format(RFC_1123_DATE_TIME)) //
+				.head("/api/entries") //
+				.then() //
+				.log().all() //
+				.assertThat()
+				.header(LAST_MODIFIED, lastModifiedDate99999.format(RFC_1123_DATE_TIME)) //
+				.assertThat().statusCode(200);
 	}
 
 	private static OperationRequestPreprocessor uri() {

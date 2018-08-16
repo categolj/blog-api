@@ -21,6 +21,8 @@ import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.server.*;
 
+import static java.time.format.DateTimeFormatter.RFC_1123_DATE_TIME;
+import static org.springframework.http.HttpHeaders.LAST_MODIFIED;
 import static org.springframework.http.MediaType.*;
 import static org.springframework.web.reactive.function.server.RequestPredicates.*;
 import static org.springframework.web.reactive.function.server.RouterFunctions.route;
@@ -42,7 +44,9 @@ public class EntryHandler {
 			.headers(h -> !h.accept().contains(MediaType.ALL));
 
 	public RouterFunction<ServerResponse> routes() {
-		return route(GET("/api/entries/{entryId}"), this::getEntry) //
+		return route(HEAD("/api/entries/{entryId}"), this::headEntry) //
+				.andRoute(GET("/api/entries/{entryId}"), this::getEntry) //
+				.andRoute(HEAD("/api/entries"), this::headEntries) //
 				.andRoute(GET("/api/entries") //
 						.and(queryParam("q", Objects::nonNull)), this::searchEntries) //
 				.andRoute(GET("/api/entries") //
@@ -66,16 +70,38 @@ public class EntryHandler {
 						this::getEntriesByCategories);
 	}
 
+	public Mono<ServerResponse> headEntry(ServerRequest request) {
+		EntryId entryId = new EntryId(request.pathVariable("entryId"));
+		Mono<EventTime> lastModifiedDate = entryMapper.findLastModifiedDate(entryId);
+		return lastModifiedDate.flatMap(e -> ServerResponse.ok() //
+				.header(LAST_MODIFIED, e.getValue().format(RFC_1123_DATE_TIME)) //
+				.build()) // does not check body
+				.switchIfEmpty(Mono.defer(
+						() -> ServerResponse.status(HttpStatus.NOT_FOUND).build()));
+	}
+
 	public Mono<ServerResponse> getEntry(ServerRequest request) {
 		boolean excludeContent = request.queryParam("excludeContent")
 				.map(Boolean::valueOf).orElse(DEFAULT_EXCLUDE_CONTENT);
 		EntryId entryId = new EntryId(request.pathVariable("entryId"));
 		Mono<Entry> entry = entryMapper.findOne(entryId, excludeContent);
-		return entry.flatMap(e -> ServerResponse.ok().syncBody(e)) //
+		return entry.flatMap(e -> ServerResponse.ok() //
+				.header(LAST_MODIFIED,
+						e.getUpdated().getDate().getValue().format(RFC_1123_DATE_TIME)) //
+				.syncBody(e)) //
 				.switchIfEmpty(
 						Mono.defer(() -> ServerResponse.status(HttpStatus.NOT_FOUND)
 								.syncBody(Collections.singletonMap("message",
 										"entry " + entryId + " is not found."))));
+	}
+
+	public Mono<ServerResponse> headEntries(ServerRequest request) {
+		Mono<EventTime> latestModifiedDate = this.entryMapper.findLatestModifiedDate();
+		return latestModifiedDate.flatMap(e -> ServerResponse.ok() //
+				.header(LAST_MODIFIED, e.getValue().format(RFC_1123_DATE_TIME)) //
+				.build()) // does not check body
+				.switchIfEmpty(Mono.defer(
+						() -> ServerResponse.status(HttpStatus.NOT_FOUND).build()));
 	}
 
 	public Mono<ServerResponse> getEntries(ServerRequest request) {

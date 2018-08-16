@@ -3,6 +3,7 @@ package am.ik.blog.reactive;
 import am.ik.blog.entry.Entry;
 import am.ik.blog.entry.EntryId;
 import am.ik.blog.entry.EntryMapper;
+import am.ik.blog.entry.EventTime;
 import am.ik.blog.entry.criteria.SearchCriteria;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -29,6 +30,16 @@ public class ReactiveEntryMapper {
 
 	public Mono<Entry> findOne(EntryId entryId, boolean excludeContent) {
 		return Mono.fromCallable(() -> this.entryMapper.findOne(entryId, excludeContent))
+				.subscribeOn(this.scheduler);
+	}
+
+	public Mono<EventTime> findLastModifiedDate(EntryId entryId) {
+		return Mono.fromCallable(() -> this.entryMapper.findLastModifiedDate(entryId))
+				.subscribeOn(this.scheduler);
+	}
+
+	public Mono<EventTime> findLatestModifiedDate() {
+		return Mono.fromCallable(this.entryMapper::findLatestModifiedDate)
 				.subscribeOn(this.scheduler);
 	}
 
