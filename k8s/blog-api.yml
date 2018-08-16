@@ -95,9 +95,9 @@ spec:
           value: /actuator.*
         resources:
           limits:
-            memory: "320Mi"
+            memory: "384Mi"
           requests:
-            memory: "320Mi"
+            memory: "384Mi"
         readinessProbe:
           httpGet:
             path: /actuator/health
