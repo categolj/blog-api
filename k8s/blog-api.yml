@@ -44,8 +44,7 @@ spec:
       - name: harbor-secret
       containers:
       - name: blog-api
-        image: harbor-13-78-118-111.sslip.io/categolj/blog-api:latest
-        imagePullPolicy: Always
+        image: asia.gcr.io/fe-tmaki/blog-api:latest
         ports:
         - containerPort: 8080
           name: http

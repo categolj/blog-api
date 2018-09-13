@@ -14,7 +14,7 @@ resource_types:
   type: docker-image
   source:
     repository: zlabjp/kubernetes-resource
-    tag: "1.9"
+    tag: "1.11"
 
 resources:
   - name: repo-master
@@ -44,9 +44,9 @@ resources:
   - name: docker
     type: docker-image
     source:
-      repository: ((harbor-hostname))/categolj/blog-api
-      username: ((harbor-username))
-      password: ((harbor-password))
+      repository: asia.gcr.io/fe-tmaki/blog-api
+      username: _json_key
+      password: ((gcr-key))
   - name: k8s-master
     type: kubernetes
     source:
