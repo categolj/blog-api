@@ -17,6 +17,11 @@ resource_types:
     tag: "1.11"
 
 resources:
+  - name: utils
+    type: git
+    source:
+      uri: https://github.com/making/ci-utils.git
+      branch: master
   - name: repo-master
     type: git
     source:
@@ -85,6 +90,7 @@ jobs:
       - get: mysql
         params:
           save: true
+      - get: utils
     - task: mvn-test
       privileged: true
       params:
@@ -99,6 +105,7 @@ jobs:
         inputs:
         - name: repo
         - name: mysql
+        - name: utils
         caches:
         - path: maven
         run:
@@ -122,10 +129,65 @@ jobs:
               -p 3306:3306 \
               $(cat mysql/repository):$(cat mysql/tag)
             docker ps
-            sleep 3
-
+            python utils/scripts/tcp_probe.py --host=localhost --port=3306 --retries=10
             cd repo
             ./mvnw -f pom.xml test
+      on_failure:
+        put: slack-alert
+        params:
+          <<: *SLACK_FAILURE
+- name: unit-test-develop-jdk11
+  build_logs_to_retain: 5
+  plan:
+    - aggregate:
+      - get: repo
+        resource: repo-develop
+        trigger: true
+      - get: mysql
+        params:
+          save: true
+      - get: utils
+    - task: mvn-test
+      privileged: true
+      params:
+        <<: *JAVA_OPS
+      config: &MVN_TEST_CONFIG
+        platform: linux
+        image_resource:
+          type: docker-image
+          source:
+            repository: springci/spring-boot-jdk11-ci-image
+            tag: master
+        inputs:
+        - name: repo
+        - name: mysql
+        - name: utils
+        caches:
+        - path: maven
+        run:
+          path: bash
+          args:
+          - -c
+          - |
+            set -e
+            source /opt/concourse-java.sh
+            setup_symlinks
+
+            source /docker-lib.sh
+            start_docker
+            docker load -i mysql/image
+            docker tag "$(cat mysql/image-id)" "$(cat mysql/repository):$(cat mysql/tag)"
+            docker images
+            docker run -d \
+              --name mysql \
+              -e "MYSQL_DATABASE=blog_test" \
+              -e "MYSQL_ALLOW_EMPTY_PASSWORD=yes" \
+              -p 3306:3306 \
+              $(cat mysql/repository):$(cat mysql/tag)
+            docker ps
+            python utils/scripts/tcp_probe.py --host=localhost --port=3306 --retries=10
+            cd repo
+            ./mvnw -f pom.xml test -Djava.version=11 -Dmockito.version=2.22.0
       on_failure:
         put: slack-alert
         params:
