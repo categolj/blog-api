@@ -54,7 +54,7 @@ spec:
         - name: SPRING_PROFILES_ACTIVE
           value: kubernetes
         - name: _JAVA_OPTIONS
-          value: "-Xmx142M -Xss1M -XX:MaxMetaspaceSize=80M -XX:ReservedCodeCacheSize=32M -XX:CompressedClassSpaceSize=20M -XX:MaxDirectMemorySize=32M -XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap -XX:MaxRAMFraction=1 -Duser.timezone=Asia/Tokyo -Duser.language=ja -Duser.country=JP -Dinfo.docker.digest=INFO_DOCKER_DIGEST"
+          value: "-Xmx142M -Xss1M -XX:MaxMetaspaceSize=80M -XX:ReservedCodeCacheSize=32M -XX:CompressedClassSpaceSize=20M -XX:MaxDirectMemorySize=32M -Duser.timezone=Asia/Tokyo -Duser.language=ja -Duser.country=JP -Dinfo.docker.digest=INFO_DOCKER_DIGEST"
         - name: SPRING_DATASOURCE_URL
           valueFrom:
             secretKeyRef:
