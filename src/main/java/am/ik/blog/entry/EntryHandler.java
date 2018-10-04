@@ -23,7 +23,8 @@ import org.springframework.web.reactive.function.server.*;
 
 import static org.springframework.http.HttpHeaders.*;
 import static org.springframework.http.MediaType.*;
-import static org.springframework.web.reactive.function.server.RequestPredicates.*;
+import static org.springframework.web.reactive.function.server.RequestPredicates.accept;
+import static org.springframework.web.reactive.function.server.RequestPredicates.queryParam;
 import static org.springframework.web.reactive.function.server.RouterFunctions.route;
 
 @Component
@@ -43,30 +44,26 @@ public class EntryHandler {
 			.headers(h -> !h.accept().contains(MediaType.ALL));
 
 	public RouterFunction<ServerResponse> routes() {
-		return route(HEAD("/api/entries/{entryId}"), this::headEntry) //
-				.andRoute(GET("/api/entries/{entryId}"), this::getEntry) //
-				.andRoute(HEAD("/api/entries"), this::headEntries) //
-				.andRoute(GET("/api/entries") //
-						.and(queryParam("q", Objects::nonNull)), this::searchEntries) //
-				.andRoute(GET("/api/entries") //
-						.and(notAcceptAll.and(accept(APPLICATION_STREAM_JSON))),
-						this::jsonStreamEntries) //
-				.andRoute(GET("/api/entries") //
-						.and(notAcceptAll.and(accept(TEXT_EVENT_STREAM))),
+		return route() //
+				.HEAD("/api/entries/{entryId}", this::headEntry) //
+				.GET("/api/entries/{entryId}", this::getEntry) //
+				.HEAD("/api/entries", this::headEntries) //
+				.GET("/api/entries", queryParam("q", Objects::nonNull),
+						this::searchEntries) //
+				.GET("/api/entries", notAcceptAll.and(accept(APPLICATION_STREAM_JSON)),
+						this::jsonStreamEntries)
+				.GET("/api/entries", notAcceptAll.and(accept(TEXT_EVENT_STREAM)),
 						this::textEventStreamEntries) //
-				.andRoute(GET("/api/entries") //
-						.and(notAcceptAll.and(accept(STREAM_SMILE_MIME_TYPE))),
+				.GET("/api/entries", notAcceptAll.and(accept(STREAM_SMILE_MIME_TYPE)),
 						this::smileStreamEntries) //
-				.andRoute(GET("/api/entries").and(accept(APPLICATION_JSON)),
-						this::getEntries) //
-				.andRoute(GET("/api/users/{updatedBy}/entries") //
-						.and(queryParam("updated", Objects::nonNull)),
+				.GET("/api/entries", accept(APPLICATION_JSON), this::getEntries) //
+				.GET("/api/users/{updatedBy}/entries",
+						queryParam("updated", Objects::nonNull),
 						this::getEntriesByUpdatedBy) //
-				.andRoute(GET("/api/users/{createdBy}/entries"),
-						this::getEntriesByCreatedBy) //
-				.andRoute(GET("/api/tags/{tag}/entries"), this::getEntriesByTag) //
-				.andRoute(GET("/api/categories/{categories}/entries"),
-						this::getEntriesByCategories);
+				.GET("/api/users/{createdBy}/entries", this::getEntriesByCreatedBy) //
+				.GET("/api/tags/{tag}/entries", this::getEntriesByTag) //
+				.GET("/api/categories/{categories}/entries", this::getEntriesByCategories) //
+				.build();
 	}
 
 	public Mono<ServerResponse> headEntry(ServerRequest request) {

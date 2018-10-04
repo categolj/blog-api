@@ -12,7 +12,6 @@ import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
 
 import static java.util.stream.Collectors.toList;
-import static org.springframework.web.reactive.function.server.RequestPredicates.GET;
 import static org.springframework.web.reactive.function.server.RouterFunctions.route;
 
 @Component
@@ -26,7 +25,9 @@ public class CategoryHandler {
 	}
 
 	public RouterFunction<ServerResponse> routes() {
-		return route(GET("/api/categories"), this::getCategories);
+		return route() //
+				.GET("/api/categories", this::getCategories) //
+				.build();
 	}
 
 	public Mono<ServerResponse> getCategories(ServerRequest request) {
