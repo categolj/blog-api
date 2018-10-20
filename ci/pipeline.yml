@@ -100,7 +100,7 @@ jobs:
         image_resource:
           type: docker-image
           source:
-            repository: springci/spring-boot-ci-image
+            repository: springci/spring-boot-jdk11-ci-image
             tag: master
         inputs:
         - name: repo
@@ -136,62 +136,6 @@ jobs:
         put: slack-alert
         params:
           <<: *SLACK_FAILURE
-- name: unit-test-develop-jdk11
-  build_logs_to_retain: 5
-  plan:
-    - aggregate:
-      - get: repo
-        resource: repo-develop
-        trigger: true
-      - get: mysql
-        params:
-          save: true
-      - get: utils
-    - task: mvn-test
-      privileged: true
-      params:
-        <<: *JAVA_OPS
-      config: &MVN_TEST_CONFIG
-        platform: linux
-        image_resource:
-          type: docker-image
-          source:
-            repository: springci/spring-boot-jdk11-ci-image
-            tag: master
-        inputs:
-        - name: repo
-        - name: mysql
-        - name: utils
-        caches:
-        - path: maven
-        run:
-          path: bash
-          args:
-          - -c
-          - |
-            set -e
-            source /opt/concourse-java.sh
-            setup_symlinks
-
-            source /docker-lib.sh
-            start_docker
-            docker load -i mysql/image
-            docker tag "$(cat mysql/image-id)" "$(cat mysql/repository):$(cat mysql/tag)"
-            docker images
-            docker run -d \
-              --name mysql \
-              -e "MYSQL_DATABASE=blog_test" \
-              -e "MYSQL_ALLOW_EMPTY_PASSWORD=yes" \
-              -p 3306:3306 \
-              $(cat mysql/repository):$(cat mysql/tag)
-            docker ps
-            python utils/scripts/tcp_probe.py --host=localhost --port=3306 --retries=10
-            cd repo
-            ./mvnw -f pom.xml test -Djava.version=11 -Dmockito.version=2.22.0
-      on_failure:
-        put: slack-alert
-        params:
-          <<: *SLACK_FAILURE
 - name: upload-to-nexus-snapshots
   plan:
   - get: repo
@@ -205,7 +149,8 @@ jobs:
       image_resource:
         type: docker-image
         source:
-          repository: maven
+          repository: openjdk
+          tag: 11-slim
       inputs:
       - name: repo
       outputs:
@@ -221,7 +166,7 @@ jobs:
           cd repo
           rm -rf ~/.m2
           ln -fs $(pwd)/m2 ~/.m2
-          mvn package -DskipTests=true
+          ./mvnw package -DskipTests=true
           cp target/*.jar ../build/
   - aggregate:
     - put: nexus
@@ -244,32 +189,45 @@ jobs:
     - get: nexus
       passed:
       - upload-to-nexus-snapshots
-  - task: update-docker
-    config: &COPY_DOCKERFILE
+  - task: build-image
+    privileged: true
+    config: &BUILD_IMAGE
       platform: linux
       image_resource:
         type: docker-image
         source:
-          repository: ubuntu
+          repository: springci/spring-boot-jdk11-ci-image
+          tag: master
       inputs:
       - name: repo
       - name: nexus
       outputs:
-      - name: updated
+      - name: image
+      caches:
+      - path: repo/packs
       run:
         path: bash
         args:
         - -c
         - |
           set -e
-          mv nexus/*.jar updated/app.jar
-          cp repo/Dockerfile updated/Dockerfile
-          cat updated/Dockerfile
+          cd repo
+          curl -L -J -s -o cf-cli.tgz "https://cli.run.pivotal.io/stable?release=linux64-binary&version=6.40.0"
+          tar -zxf cf-cli.tgz -C /usr/local/bin
+          cf install-plugin -f cflocal
+          source /docker-lib.sh
+          start_docker
+
+          mv packs/.*.cache ./ || true
+          cf local stage blog-api -p $(ls ../nexus/*.jar)
+          cf local export blog-api -r making/blog-api:latest
+          mv .*.cache packs/ || true
+          docker images
+          docker save making/blog-api:latest  > ../image/image
+          docker images --no-trunc --digests making/blog-api --format "{{.ID}}" > ../image/image-id
   - put: docker
-    params: &DOCKER_PUSH
-      build: updated
-      build_args:
-        JAR_FILE: app.jar
+    params:
+      load: image
     on_failure:
       put: slack-alert
       params:
@@ -387,6 +345,7 @@ jobs:
     - get: mysql
       params:
         save: true
+    - get: utils
   - task: mvn-test
     privileged: true
     params:
@@ -494,12 +453,13 @@ jobs:
     - get: nexus
       passed:
       - upload-to-nexus-releases
-  - task: update-docker
+  - task: build-image
+    privileged: true
     config:
-      <<: *COPY_DOCKERFILE
+      <<: *BUILD_IMAGE
   - put: docker
     params:
-      <<: *DOCKER_PUSH
+      load: image
       tag: repo-version/number
       tag_as_latest: true
     on_failure:
