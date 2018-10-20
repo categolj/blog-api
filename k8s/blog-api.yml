@@ -90,8 +90,9 @@ spec:
             secretKeyRef:
               name: blog-config-secret
               key: github-webhook-secret
-        - name: SPRING_SLEUTH_WEB_ADDITIONAL_SKIP_PATTERN
-          value: /actuator.*
+        volumeMounts:
+        - name: tmp
+          mountPath: /home/vcap/tmp
         resources:
           limits:
             memory: "384Mi"
@@ -123,3 +124,7 @@ spec:
                      values:
                      - blog-api
                topologyKey: "kubernetes.io/hostname"
+
+      volumes:
+      - name: tmp
+        emptyDir: {}
