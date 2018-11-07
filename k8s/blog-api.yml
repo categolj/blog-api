@@ -5,6 +5,20 @@ metadata:
   namespace: blog
   labels:
     app: blog-api
+  annotations:
+    spring.cloud.gateway/routes: |
+      predicates:
+      - Host=blog-api.ik.am
+      filters:
+      - name: Hystrix
+        args:
+          name: blog/blog-api
+          fallbackUri: forward:/error/503
+      - SecureHeaders
+      - name: Retry
+        args:
+          retries: 3
+          statuses: BAD_GATEWAY
 spec:
   selector:
     app: blog-api
