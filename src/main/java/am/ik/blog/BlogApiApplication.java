@@ -1,17 +1,22 @@
 package am.ik.blog;
 
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+
 import am.ik.blog.github.GitHubProps;
 import am.ik.github.AccessToken;
 import am.ik.github.GitHubClient;
 import reactor.core.scheduler.Scheduler;
 import reactor.core.scheduler.Schedulers;
 
+import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.cloud.sleuth.instrument.async.TraceableExecutorService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.scheduling.annotation.EnableAsync;
-import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.web.reactive.function.client.WebClient;
 
 @SpringBootApplication
@@ -28,13 +33,11 @@ public class BlogApiApplication {
 	}
 
 	@Bean
-	public Scheduler jdbcScheduler(
+	public Scheduler jdbcScheduler(BeanFactory beanFactory,
 			@Value("${spring.datasource.hikari.maximum-pool-size}") int maxPoolSize) {
-		ThreadPoolTaskExecutor taskExecutor = new ThreadPoolTaskExecutor();
-		taskExecutor.setCorePoolSize(8);
-		taskExecutor.setQueueCapacity(0);
-		taskExecutor.setMaxPoolSize(maxPoolSize);
-		taskExecutor.afterPropertiesSet();
-		return Schedulers.fromExecutor(taskExecutor);
+		TraceableExecutorService executorService = new TraceableExecutorService(
+				beanFactory, new ThreadPoolExecutor(8, maxPoolSize, 0L,
+						TimeUnit.MILLISECONDS, new LinkedBlockingQueue<>()));
+		return Schedulers.fromExecutor(executorService);
 	}
 }
