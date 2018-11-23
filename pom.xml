@@ -23,7 +23,8 @@
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 		<java.version>11</java.version>
 		<blog-mapper.version>4.8.1</blog-mapper.version>
-		<spring-cloud.version>Greenwich.BUILD-SNAPSHOT</spring-cloud.version>	</properties>
+		<spring-cloud.version>Greenwich.M3</spring-cloud.version>
+	</properties>
 	<dependencies>
 		<dependency>
 			<groupId>am.ik.blog</groupId>
