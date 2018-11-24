@@ -44,6 +44,7 @@ public class ReactiveEntryMapperTest {
 	ReactiveEntryMapper reactiveEntryMapper;
 
 	@Test
+	@Ignore
 	public void findOne() {
 		StepVerifier.create(reactiveEntryMapper.findOne(new EntryId(99999L), false))
 				.assertNext(entry -> assertEntry99999(entry) //
@@ -52,6 +53,7 @@ public class ReactiveEntryMapperTest {
 	}
 
 	@Test
+	@Ignore
 	public void collectAll() {
 		StepVerifier
 				.create(reactiveEntryMapper.collectAll(SearchCriteria.builder().build(),
