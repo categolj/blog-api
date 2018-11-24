@@ -79,6 +79,11 @@
 			<version>1.0.0.BUILD-SNAPSHOT</version>
 		</dependency>
 		<dependency>
+            <groupId>net.ttddyy</groupId>
+            <artifactId>datasource-proxy-r2dbc</artifactId>
+            <version>0.1</version>
+        </dependency>
+		<dependency>
 			<groupId>org.flywaydb</groupId>
 			<artifactId>flyway-core</artifactId>
 		</dependency>
