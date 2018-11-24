@@ -70,20 +70,27 @@ spec:
         - name: _JAVA_OPTIONS
           value: "-Duser.timezone=Asia/Tokyo -Duser.language=ja -Duser.country=JP -Dinfo.docker.digest=INFO_DOCKER_DIGEST"
         - name: SPRING_DATASOURCE_URL
-          valueFrom:
-            secretKeyRef:
-              name: blog-db-secret
-              key: mysql-jdbc-url
-        - name: SPRING_DATASOURCE_USERNAME
-          valueFrom:
-            secretKeyRef:
-              name: blog-db-secret
-              key: mysql-user
+          value: "jdbc:postgresql://${POSTGRES_HOST}:5432/${POSTGRES_DB}"
         - name: SPRING_DATASOURCE_PASSWORD
           valueFrom:
             secretKeyRef:
               name: blog-db-secret
-              key: mysql-password
+              key: postgres-password
+        - name: SPRING_DATASOURCE_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: blog-db-secret
+              key: postgres-user
+        - name: POSTGRES_DB
+          valueFrom:
+            secretKeyRef:
+              name: blog-db-secret
+              key: postgres-db
+        - name: POSTGRES_HOST
+          valueFrom:
+            secretKeyRef:
+              name: blog-db-secret
+              key: postgres-host
         - name: SPRING_SECURITY_USER_NAME
           valueFrom:
             secretKeyRef:
