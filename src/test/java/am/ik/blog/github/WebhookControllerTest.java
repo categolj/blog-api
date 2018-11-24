@@ -2,7 +2,7 @@ package am.ik.blog.github;
 
 import am.ik.blog.entry.Entry;
 import am.ik.blog.entry.EntryId;
-import am.ik.blog.entry.EntryMapper;
+import am.ik.blog.reactive.ReactiveEntryMapper;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -35,7 +35,7 @@ public class WebhookControllerTest {
 	@MockBean
 	EntryFetcher entryFetcher;
 	@MockBean
-	EntryMapper entryRepository;
+	ReactiveEntryMapper entryRepository;
 
 	@Before
 	public void setup() {
@@ -49,6 +49,7 @@ public class WebhookControllerTest {
 		Entry entry = Fixtures.entry(new EntryId(100L));
 		given(entryFetcher.fetch("example", "blog.example.com", "content/00100.md"))
 				.willReturn(Mono.just(entry));
+		given(entryRepository.save(entry)).willReturn(Mono.just(entry));
 
 		ObjectNode body = this.objectMapper.createObjectNode();
 		body.putObject("repository").put("full_name", "example/blog.example.com");
@@ -80,6 +81,7 @@ public class WebhookControllerTest {
 		Entry entry = Fixtures.entry(new EntryId(100L));
 		given(entryFetcher.fetch("example", "blog.example.com", "content/00100.md"))
 				.willReturn(Mono.just(entry));
+		given(entryRepository.save(entry)).willReturn(Mono.just(entry));
 
 		ObjectNode body = this.objectMapper.createObjectNode();
 		body.putObject("repository").put("full_name", "example/blog.example.com");
@@ -111,6 +113,8 @@ public class WebhookControllerTest {
 		Entry entry = Fixtures.entry(new EntryId(100L));
 		given(entryFetcher.fetch("example", "blog.example.com", "content/00100.md"))
 				.willReturn(Mono.just(entry));
+		EntryId entryId = entry.entryId();
+		given(entryRepository.delete(entryId)).willReturn(Mono.just(entryId));
 
 		ObjectNode body = this.objectMapper.createObjectNode();
 		body.putObject("repository").put("full_name", "example/blog.example.com");

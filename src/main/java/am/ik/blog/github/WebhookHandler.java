@@ -13,12 +13,11 @@ import java.util.stream.StreamSupport;
 
 import am.ik.blog.entry.Entry;
 import am.ik.blog.entry.EntryId;
-import am.ik.blog.entry.EntryMapper;
+import am.ik.blog.reactive.ReactiveEntryMapper;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Schedulers;
 
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpStatus;
@@ -27,20 +26,19 @@ import org.springframework.web.reactive.function.server.RouterFunction;
 import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
 
-import static org.springframework.web.reactive.function.server.RequestPredicates.POST;
 import static org.springframework.web.reactive.function.server.RouterFunctions.route;
 
 @Component
 public class WebhookHandler {
 	private final EntryFetcher entryFetcher;
-	private final EntryMapper entryMapper;
+	private final ReactiveEntryMapper entryMapper;
 	private final WebhookVerifier webhookVerifier;
 	private final ObjectMapper objectMapper;
 	private final ParameterizedTypeReference<Map<String, Long>> typeReference = new ParameterizedTypeReference<Map<String, Long>>() {
 	};
 
 	public WebhookHandler(GitHubProps props, EntryFetcher entryFetcher,
-			EntryMapper entryMapper, ObjectMapper objectMapper)
+			ReactiveEntryMapper entryMapper, ObjectMapper objectMapper)
 			throws NoSuchAlgorithmException, InvalidKeyException {
 		this.entryFetcher = entryFetcher;
 		this.entryMapper = entryMapper;
@@ -49,7 +47,9 @@ public class WebhookHandler {
 	}
 
 	public RouterFunction<ServerResponse> routes() {
-		return route(POST("/webhook"), this::webhook);
+		return route() //
+				.POST("/webhook", this::webhook) //
+				.build();
 	}
 
 	public Mono<ServerResponse> webhook(ServerRequest request) {
@@ -73,33 +73,34 @@ public class WebhookHandler {
 					}
 					Stream<JsonNode> commits = StreamSupport
 							.stream(node.get("commits").spliterator(), false);
-					Flux<Map<String, Long>> response = Flux.fromStream(commits)
+					Flux<Map<String, Long>> response = Flux.fromStream(commits) //
 							.flatMap(commit -> {
 								Flux<EntryId> added = this.paths(commit.get("added"))
 										.flatMap(path -> this.entryFetcher.fetch(owner,
 												repo, path)) //
-										.publishOn(Schedulers.elastic()) //
-										.doOnNext(this.entryMapper::save) //
-										.map(Entry::entryId);
+										.flatMap(entryMapper::save) //
+										.map(Entry::entryId) //
+										.log("added");
 								Flux<EntryId> modified = this
 										.paths(commit.get("modified")) //
 										.flatMap(path -> this.entryFetcher.fetch(owner,
 												repo, path)) //
-										.publishOn(Schedulers.elastic()) //
-										.doOnNext(this.entryMapper::save) //
-										.map(Entry::entryId);
+										.flatMap(this.entryMapper::save) //
+										.map(Entry::entryId) //
+										.log("modified");
 								Flux<EntryId> removed = this.paths(commit.get("removed")) //
 										.map(path -> EntryId
 												.fromFilePath(Paths.get(path))) //
-										.publishOn(Schedulers.elastic()) //
-										.doOnNext(this.entryMapper::delete);
+										.flatMap(this.entryMapper::delete) //
+										.log("removed");
 								return added
 										.map(id -> Collections.singletonMap("added",
 												id.getValue())) //
 										.mergeWith(modified.map(id -> Collections
 												.singletonMap("modified", id.getValue()))) //
 										.mergeWith(removed.map(id -> Collections
-												.singletonMap("removed", id.getValue())));
+												.singletonMap("removed", id.getValue())))
+										.log("merged");
 							});
 					return ServerResponse.ok().body(response, typeReference);
 				});

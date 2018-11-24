@@ -3,24 +3,25 @@ package am.ik.blog.reactive;
 import java.util.List;
 
 import am.ik.blog.entry.Tag;
-import am.ik.blog.entry.TagMapper;
 import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Scheduler;
 
+import org.springframework.data.r2dbc.function.DatabaseClient;
 import org.springframework.stereotype.Component;
 
 @Component
 public class ReactiveTagMapper {
-	private final TagMapper tagMapper;
-	private final Scheduler scheduler;
+	private final DatabaseClient databaseClient;
 
-	public ReactiveTagMapper(TagMapper tagMapper, Scheduler scheduler) {
-		this.tagMapper = tagMapper;
-		this.scheduler = scheduler;
+	public ReactiveTagMapper(DatabaseClient databaseClient) {
+		this.databaseClient = databaseClient;
 	}
 
 	public Mono<List<Tag>> findOrderByTagNameAsc() {
-		return Mono.fromCallable(this.tagMapper::findOrderByTagNameAsc)
-				.subscribeOn(this.scheduler);
+		return this.databaseClient.execute()
+				.sql("SELECT tag_name FROM tag ORDER BY tag_name ASC").exchange()
+				.flatMap(result -> result
+						.extract(
+								(row, meta) -> new Tag(row.get("tag_name", String.class)))
+						.all().collectList());
 	}
 }
