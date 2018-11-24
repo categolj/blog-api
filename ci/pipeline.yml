@@ -73,11 +73,7 @@ resources:
     type: slack-notification
     source:
       url: ((slack-webhook-url))
-  - name: mysql
-    type: docker-image
-    source:
-      repository: mysql
-      tag: 5.7
+
 jobs:
 ### Dev
 - name: unit-test-develop
@@ -87,9 +83,6 @@ jobs:
       - get: repo
         resource: repo-develop
         trigger: true
-      - get: mysql
-        params:
-          save: true
       - get: utils
     - task: mvn-test
       privileged: true
@@ -104,7 +97,6 @@ jobs:
             tag: master
         inputs:
         - name: repo
-        - name: mysql
         - name: utils
         caches:
         - path: maven
@@ -119,17 +111,15 @@ jobs:
 
             source /docker-lib.sh
             start_docker
-            docker load -i mysql/image
-            docker tag "$(cat mysql/image-id)" "$(cat mysql/repository):$(cat mysql/tag)"
             docker images
             docker run -d \
-              --name mysql \
-              -e "MYSQL_DATABASE=blog_test" \
-              -e "MYSQL_ALLOW_EMPTY_PASSWORD=yes" \
-              -p 3306:3306 \
-              $(cat mysql/repository):$(cat mysql/tag)
+              --name postgres \
+              -e "POSTGRES_DB=blog_test" \
+              -e "POSTGRES_PASSWORD=testdb" \
+              -e "TZ=Japan" \
+              -p 5432:5432 \
+              postgres:9.6.8
             docker ps
-            python utils/scripts/tcp_probe.py --host=localhost --port=3306 --retries=10
             cd repo
             ./mvnw -f pom.xml test
       on_failure:
@@ -196,7 +186,7 @@ jobs:
       image_resource:
         type: docker-image
         source:
-          repository: springci/spring-boot-jdk11-ci-image
+          repository: springci/spring-boot-ci-image
           tag: master
       inputs:
       - name: repo
@@ -270,6 +260,7 @@ jobs:
           sed "s/FIXME/Bump to ${DIGEST}/g" | \
           sed "s/INFO_DOCKER_DIGEST/${DIGEST}/g" | \
           sed "s/namespace: blog/namespace: blog-dev/g" | \
+          sed "s/ik.am/k8s.bosh.tokyo/g" | \
           sed "s/3008/3058/g" > updated/blog-api.yml
   - put: k8s-develop
     params:
@@ -342,9 +333,6 @@ jobs:
       trigger: true
       passed:
       - merge-develop-to-master
-    - get: mysql
-      params:
-        save: true
     - get: utils
   - task: mvn-test
     privileged: true
@@ -680,6 +668,8 @@ params:
     SRC_BRANCH: develop
   java_opts: &JAVA_OPS
     _JAVA_OPTIONS: -Duser.timezone=Asia/Tokyo -Duser.language=ja -Duser.country=JP -Djava.security.egd=file:/dev/./urandom
+    SPRING_DATASOURCE_USERNAME: postgres
+    SPRING_DATASOURCE_PASSWORD: testdb
   slack_on_success_params: &SLACK_SUCCESS
     channel: '#concourse'
     text: |
