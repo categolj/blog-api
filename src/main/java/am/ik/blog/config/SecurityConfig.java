@@ -18,6 +18,7 @@ public class SecurityConfig {
 				.authorizeExchange() //
 				.matchers(EndpointRequest.to("health", "info")).permitAll() //
 				.matchers(EndpointRequest.toAnyEndpoint()).hasRole("ACTUATOR") //
+				.pathMatchers("/admin/**").hasRole("ACTUATOR") //
 				.anyExchange().permitAll() //
 				.and() //
 				.csrf().disable() //

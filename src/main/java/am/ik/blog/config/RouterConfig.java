@@ -1,5 +1,6 @@
 package am.ik.blog.config;
 
+import am.ik.blog.admin.EntryImportHandler;
 import am.ik.blog.entry.CategoryHandler;
 import am.ik.blog.entry.EntryHandler;
 import am.ik.blog.entry.TagHandler;
@@ -15,10 +16,11 @@ public class RouterConfig {
 	@Bean
 	public RouterFunction<ServerResponse> routes(EntryHandler entryHandler,
 			TagHandler tagHandler, CategoryHandler categoryHandler,
-			WebhookHandler webhookHandler) {
+			WebhookHandler webhookHandler, EntryImportHandler entryImportHandler) {
 		return entryHandler.routes() //
 				.and(tagHandler.routes()) //
 				.and(categoryHandler.routes()) //
-				.and(webhookHandler.routes());
+				.and(webhookHandler.routes()) //
+				.and(entryImportHandler.routes());
 	}
 }
