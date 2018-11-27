@@ -10,6 +10,7 @@ metadata:
       predicates:
       - Host=blog-api.ik.am
       filters:
+      - RequestLogging
       - name: Hystrix
         args:
           name: blog/blog-api
