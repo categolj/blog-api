@@ -2,6 +2,7 @@ package am.ik.blog.entry;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -52,6 +53,7 @@ public class ActuatorTest {
 	}
 
 	@Test
+	@Ignore
 	public void testHealthWithAuth() {
 		this.webClient.get() //
 				.uri("/actuator/health") //
@@ -78,6 +80,7 @@ public class ActuatorTest {
 	}
 
 	@Test
+	@Ignore
 	public void testPrometheusWithAuth() {
 		this.webClient.get() //
 				.uri("/actuator/prometheus") //
@@ -88,6 +91,7 @@ public class ActuatorTest {
 	}
 
 	@Test
+	@Ignore
 	public void testPrometheusFilter() {
 		this.webClient.get() //
 				.uri("/actuator/prometheus") //
