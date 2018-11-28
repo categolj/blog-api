@@ -2,7 +2,7 @@ package am.ik.blog.github;
 
 import am.ik.blog.entry.Entry;
 import am.ik.blog.entry.EntryId;
-import am.ik.blog.reactive.ReactiveEntryMapper;
+import am.ik.blog.reactive.EntryMapper;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -35,7 +35,7 @@ public class WebhookControllerTest {
 	@MockBean
 	EntryFetcher entryFetcher;
 	@MockBean
-	ReactiveEntryMapper entryRepository;
+	EntryMapper entryRepository;
 
 	@Before
 	public void setup() {

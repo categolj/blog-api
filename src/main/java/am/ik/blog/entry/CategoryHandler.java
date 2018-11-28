@@ -2,7 +2,7 @@ package am.ik.blog.entry;
 
 import java.util.List;
 
-import am.ik.blog.reactive.ReactiveCategoryMapper;
+import am.ik.blog.reactive.CategoryMapper;
 import reactor.core.publisher.Mono;
 
 import org.springframework.core.ParameterizedTypeReference;
@@ -16,11 +16,11 @@ import static org.springframework.web.reactive.function.server.RouterFunctions.r
 
 @Component
 public class CategoryHandler {
-	private final ReactiveCategoryMapper categoryMapper;
+	private final CategoryMapper categoryMapper;
 	private final ParameterizedTypeReference<List<List<String>>> typeReference = new ParameterizedTypeReference<List<List<String>>>() {
 	};
 
-	public CategoryHandler(ReactiveCategoryMapper categoryMapper) {
+	public CategoryHandler(CategoryMapper categoryMapper) {
 		this.categoryMapper = categoryMapper;
 	}
 

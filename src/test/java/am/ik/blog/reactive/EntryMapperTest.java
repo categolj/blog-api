@@ -39,14 +39,14 @@ import static am.ik.blog.entry.Asserts.assertEntry99999;
 @Import(R2dbcConfig.class)
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @Sql({ "classpath:/delete-test-data.sql", "classpath:/insert-test-data.sql" })
-public class ReactiveEntryMapperTest {
+public class EntryMapperTest {
 	@Autowired
-	ReactiveEntryMapper reactiveEntryMapper;
+	EntryMapper entryMapper;
 
 	@Test
 	@Ignore
 	public void findOne() {
-		StepVerifier.create(reactiveEntryMapper.findOne(new EntryId(99999L), false))
+		StepVerifier.create(entryMapper.findOne(new EntryId(99999L), false))
 				.assertNext(entry -> assertEntry99999(entry) //
 						.assertContent())
 				.verifyComplete();
@@ -56,7 +56,7 @@ public class ReactiveEntryMapperTest {
 	@Ignore
 	public void collectAll() {
 		StepVerifier
-				.create(reactiveEntryMapper.collectAll(SearchCriteria.builder().build(),
+				.create(entryMapper.collectAll(SearchCriteria.builder().build(),
 						PageRequest.of(0, 10)))
 				.assertNext(entry -> assertEntry99999(entry) //
 						.assertThatContentIsNotSet())
@@ -81,7 +81,7 @@ public class ReactiveEntryMapperTest {
 						new Tags(new Tag("test1"), new Tag("test2")))) //
 				.build();
 
-		StepVerifier.create(reactiveEntryMapper.save(entry)) //
+		StepVerifier.create(entryMapper.save(entry)) //
 				.expectNext(entry) //
 				.verifyComplete();
 	}
@@ -89,7 +89,7 @@ public class ReactiveEntryMapperTest {
 	@Test
 	@Ignore("does not work :-(")
 	public void delete() {
-		StepVerifier.create(this.reactiveEntryMapper.delete(new EntryId(99999L)))
+		StepVerifier.create(this.entryMapper.delete(new EntryId(99999L)))
 				.expectNext(new EntryId(99999L)) //
 				.verifyComplete();
 	}
@@ -97,9 +97,9 @@ public class ReactiveEntryMapperTest {
 	@Configuration
 	static class Config {
 		@Bean
-		public ReactiveEntryMapper reactiveEntryMapper(
+		public EntryMapper reactiveEntryMapper(
 				TransactionalDatabaseClient databaseClient) {
-			return new ReactiveEntryMapper(databaseClient);
+			return new EntryMapper(databaseClient);
 		}
 	}
 }

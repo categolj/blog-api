@@ -35,8 +35,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 @RunWith(SpringRunner.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @Sql({ "classpath:/delete-test-data.sql", "classpath:/insert-test-data.sql" })
-@Import(ReactiveEntryMapperWebTest.DemoHandler.class)
-public class ReactiveEntryMapperWebTest {
+@Import(EntryMapperWebTest.DemoHandler.class)
+public class EntryMapperWebTest {
 	@LocalServerPort
 	int port;
 	WebTestClient webClient;
@@ -140,9 +140,9 @@ public class ReactiveEntryMapperWebTest {
 
 	@RestController
 	static public class DemoHandler {
-		private final ReactiveEntryMapper entryMapper;
+		private final EntryMapper entryMapper;
 
-		public DemoHandler(ReactiveEntryMapper entryMapper) {
+		public DemoHandler(EntryMapper entryMapper) {
 			this.entryMapper = entryMapper;
 		}
 

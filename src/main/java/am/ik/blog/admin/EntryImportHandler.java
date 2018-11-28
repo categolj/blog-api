@@ -3,7 +3,7 @@ package am.ik.blog.admin;
 import java.util.stream.IntStream;
 
 import am.ik.blog.github.EntryFetcher;
-import am.ik.blog.reactive.ReactiveEntryMapper;
+import am.ik.blog.reactive.EntryMapper;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -19,10 +19,10 @@ import static org.springframework.web.reactive.function.server.RouterFunctions.r
 @Component
 public class EntryImportHandler {
 	private final EntryFetcher entryFetcher;
-	private final ReactiveEntryMapper entryMapper;
+	private final EntryMapper entryMapper;
 
 	public EntryImportHandler(EntryFetcher entryFetcher,
-			ReactiveEntryMapper entryMapper) {
+							  EntryMapper entryMapper) {
 		this.entryFetcher = entryFetcher;
 		this.entryMapper = entryMapper;
 	}

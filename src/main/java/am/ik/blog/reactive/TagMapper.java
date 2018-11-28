@@ -9,10 +9,10 @@ import org.springframework.data.r2dbc.function.DatabaseClient;
 import org.springframework.stereotype.Component;
 
 @Component
-public class ReactiveTagMapper {
+public class TagMapper {
 	private final DatabaseClient databaseClient;
 
-	public ReactiveTagMapper(DatabaseClient databaseClient) {
+	public TagMapper(DatabaseClient databaseClient) {
 		this.databaseClient = databaseClient;
 	}
 

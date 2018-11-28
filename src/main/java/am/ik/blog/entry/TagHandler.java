@@ -2,7 +2,7 @@ package am.ik.blog.entry;
 
 import java.util.List;
 
-import am.ik.blog.reactive.ReactiveTagMapper;
+import am.ik.blog.reactive.TagMapper;
 import reactor.core.publisher.Mono;
 
 import org.springframework.core.ParameterizedTypeReference;
@@ -16,11 +16,11 @@ import static org.springframework.web.reactive.function.server.RouterFunctions.r
 
 @Component
 public class TagHandler {
-	private final ReactiveTagMapper tagMapper;
+	private final TagMapper tagMapper;
 	private final ParameterizedTypeReference<List<String>> typeReference = new ParameterizedTypeReference<List<String>>() {
 	};
 
-	public TagHandler(ReactiveTagMapper tagMapper) {
+	public TagHandler(TagMapper tagMapper) {
 		this.tagMapper = tagMapper;
 	}
 

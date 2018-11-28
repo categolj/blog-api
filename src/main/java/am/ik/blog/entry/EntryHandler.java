@@ -8,7 +8,7 @@ import java.util.stream.Collectors;
 
 import am.ik.blog.entry.criteria.CategoryOrders;
 import am.ik.blog.entry.criteria.SearchCriteria;
-import am.ik.blog.reactive.ReactiveEntryMapper;
+import am.ik.blog.reactive.EntryMapper;
 import am.ik.blog.support.PageableImpl;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -29,14 +29,14 @@ import static org.springframework.web.reactive.function.server.RouterFunctions.r
 
 @Component
 public class EntryHandler {
-	private final ReactiveEntryMapper entryMapper;
+	private final EntryMapper entryMapper;
 	private final ParameterizedTypeReference<Page<Entry>> typeReference = new ParameterizedTypeReference<Page<Entry>>() {
 	};
 	private static final boolean DEFAULT_EXCLUDE_CONTENT = false;
 	static final MediaType STREAM_SMILE_MIME_TYPE = MediaType
 			.valueOf("application/stream+x-jackson-smile");
 
-	public EntryHandler(ReactiveEntryMapper entryMapper) {
+	public EntryHandler(EntryMapper entryMapper) {
 		this.entryMapper = entryMapper;
 	}
 

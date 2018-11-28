@@ -42,11 +42,11 @@ import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 
 @Component
-public class ReactiveEntryMapper {
+public class EntryMapper {
 	private final TransactionalDatabaseClient databaseClient;
-	private final Logger log = LoggerFactory.getLogger(ReactiveEntryMapper.class);
+	private final Logger log = LoggerFactory.getLogger(EntryMapper.class);
 
-	public ReactiveEntryMapper(TransactionalDatabaseClient databaseClient) {
+	public EntryMapper(TransactionalDatabaseClient databaseClient) {
 		this.databaseClient = databaseClient;
 	}
 

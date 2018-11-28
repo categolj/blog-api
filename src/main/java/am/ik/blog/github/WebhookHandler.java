@@ -13,7 +13,7 @@ import java.util.stream.StreamSupport;
 
 import am.ik.blog.entry.Entry;
 import am.ik.blog.entry.EntryId;
-import am.ik.blog.reactive.ReactiveEntryMapper;
+import am.ik.blog.reactive.EntryMapper;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import reactor.core.publisher.Flux;
@@ -31,14 +31,14 @@ import static org.springframework.web.reactive.function.server.RouterFunctions.r
 @Component
 public class WebhookHandler {
 	private final EntryFetcher entryFetcher;
-	private final ReactiveEntryMapper entryMapper;
+	private final EntryMapper entryMapper;
 	private final WebhookVerifier webhookVerifier;
 	private final ObjectMapper objectMapper;
 	private final ParameterizedTypeReference<Map<String, Long>> typeReference = new ParameterizedTypeReference<Map<String, Long>>() {
 	};
 
 	public WebhookHandler(GitHubProps props, EntryFetcher entryFetcher,
-			ReactiveEntryMapper entryMapper, ObjectMapper objectMapper)
+						  EntryMapper entryMapper, ObjectMapper objectMapper)
 			throws NoSuchAlgorithmException, InvalidKeyException {
 		this.entryFetcher = entryFetcher;
 		this.entryMapper = entryMapper;

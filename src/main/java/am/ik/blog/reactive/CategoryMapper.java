@@ -13,10 +13,10 @@ import org.springframework.stereotype.Component;
 import static java.util.stream.Collectors.toList;
 
 @Component
-public class ReactiveCategoryMapper {
+public class CategoryMapper {
 	private final DatabaseClient databaseClient;
 
-	public ReactiveCategoryMapper(DatabaseClient databaseClient) {
+	public CategoryMapper(DatabaseClient databaseClient) {
 		this.databaseClient = databaseClient;
 	}
 
