@@ -70,7 +70,8 @@ public class EntryMapper {
 
 	public Mono<Entry> findOne(EntryId entryId, boolean excludeContent) {
 		List<Long> ids = Collections.singletonList(entryId.getValue());
-		Mono<Tags> tagsMono = this.tagsMap(ids).map(x -> x.get(entryId));
+		Mono<Tags> tagsMono = this.tagsMap(ids)
+				.map(x -> x.getOrDefault(entryId, new Tags()));
 		Mono<Categories> categoriesMono = this.categoriesMap(ids)
 				.map(x -> x.get(entryId));
 		String sql = String.format(
