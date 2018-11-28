@@ -13,7 +13,7 @@ import java.util.stream.StreamSupport;
 
 import am.ik.blog.entry.Entry;
 import am.ik.blog.entry.EntryId;
-import am.ik.blog.reactive.EntryMapper;
+import am.ik.blog.entry.EntryMapper;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import reactor.core.publisher.Flux;

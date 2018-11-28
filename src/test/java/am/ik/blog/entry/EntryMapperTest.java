@@ -1,4 +1,4 @@
-package am.ik.blog.reactive;
+package am.ik.blog.entry;
 
 import am.ik.blog.config.R2dbcConfig;
 import am.ik.blog.entry.Author;
@@ -7,6 +7,7 @@ import am.ik.blog.entry.Category;
 import am.ik.blog.entry.Content;
 import am.ik.blog.entry.Entry;
 import am.ik.blog.entry.EntryId;
+import am.ik.blog.entry.EntryMapper;
 import am.ik.blog.entry.EventTime;
 import am.ik.blog.entry.FrontMatter;
 import am.ik.blog.entry.Name;

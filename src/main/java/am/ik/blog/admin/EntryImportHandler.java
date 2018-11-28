@@ -3,7 +3,7 @@ package am.ik.blog.admin;
 import java.util.stream.IntStream;
 
 import am.ik.blog.github.EntryFetcher;
-import am.ik.blog.reactive.EntryMapper;
+import am.ik.blog.entry.EntryMapper;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 

@@ -1,17 +1,5 @@
-package am.ik.blog.reactive;
+package am.ik.blog.entry;
 
-import am.ik.blog.entry.Author;
-import am.ik.blog.entry.Categories;
-import am.ik.blog.entry.Category;
-import am.ik.blog.entry.Content;
-import am.ik.blog.entry.Entry;
-import am.ik.blog.entry.EntryId;
-import am.ik.blog.entry.EventTime;
-import am.ik.blog.entry.FrontMatter;
-import am.ik.blog.entry.Name;
-import am.ik.blog.entry.Tag;
-import am.ik.blog.entry.Tags;
-import am.ik.blog.entry.Title;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.junit.Before;
 import org.junit.Test;

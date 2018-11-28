@@ -2,7 +2,7 @@ package am.ik.blog.github;
 
 import am.ik.blog.entry.Entry;
 import am.ik.blog.entry.EntryId;
-import am.ik.blog.reactive.EntryMapper;
+import am.ik.blog.entry.EntryMapper;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;

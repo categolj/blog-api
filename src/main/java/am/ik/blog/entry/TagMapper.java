@@ -1,4 +1,4 @@
-package am.ik.blog.reactive;
+package am.ik.blog.entry;
 
 import java.util.List;
 
