@@ -21,7 +21,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.r2dbc.function.DatabaseClient;
-import org.springframework.data.r2dbc.function.FetchSpec;
 import org.springframework.data.r2dbc.function.TransactionalDatabaseClient;
 import org.springframework.stereotype.Component;
 
@@ -50,10 +49,8 @@ public class EntryMapper {
 			executeSpec = executeSpec.bind(entry.getKey(), entry.getValue());
 		}
 		return executeSpec //
-				.exchange() //
-				.flatMap(result -> result
-						.extract((row, meta) -> row.get("count", Long.class)) //
-						.one());
+				.map((row, meta) -> row.get("count", Long.class)) //
+				.one();
 	}
 
 	public Mono<List<Entry>> findAll(SearchCriteria criteria, Pageable pageable) {
@@ -80,10 +77,8 @@ public class EntryMapper {
 		Mono<Entry> entryMono = this.databaseClient.execute().sql(sql) //
 				.bind("$1", entryId.getValue()) //
 				.as(Entry.class) //
-				.exchange() //
-				.flatMap(result -> result
-						.extract((row, meta) -> this.mapRow(row, excludeContent)) //
-						.one());
+				.map((row, meta) -> this.mapRow(row, excludeContent)) //
+				.one();
 		return entryMono.flatMap(entry -> Mono.zip(categoriesMono, tagsMono) //
 				.map(tpl -> {
 					FrontMatter fm = entry.getFrontMatter();
@@ -99,21 +94,17 @@ public class EntryMapper {
 		return this.databaseClient.execute() //
 				.sql("SELECT last_modified_date FROM entry WHERE entry_id = $1") //
 				.bind("$1", entryId.getValue()) //
-				.exchange()
-				.flatMap(result -> result
-						.extract((row, meta) -> new EventTime(
-								row.get("last_modified_date", OffsetDateTime.class)))
-						.one());
+				.map((row, meta) -> new EventTime(
+						row.get("last_modified_date", OffsetDateTime.class)))
+				.one();
 	}
 
 	public Mono<EventTime> findLatestModifiedDate() {
 		return this.databaseClient.execute() //
 				.sql("SELECT last_modified_date FROM entry ORDER BY last_modified_date DESC LIMIT 1") //
-				.exchange()
-				.flatMap(result -> result
-						.extract((row, meta) -> new EventTime(
-								row.get("last_modified_date", OffsetDateTime.class)))
-						.one());
+				.map((row, meta) -> new EventTime(
+						row.get("last_modified_date", OffsetDateTime.class)))
+				.one();
 	}
 
 	public Flux<Entry> collectAll(SearchCriteria criteria, Pageable pageable) {
@@ -137,11 +128,7 @@ public class EntryMapper {
 							}
 							return executeSpec //
 									.as(Entry.class) //
-									.exchange() //
-									.flatMapMany(result -> result
-											.extract(
-													(row, meta) -> this.mapRow(row, true))
-											.all())
+									.map((row, meta) -> this.mapRow(row, true)).all()
 									.map(e -> {
 										FrontMatter frontMatter = e.getFrontMatter();
 										return e.copy()
@@ -178,16 +165,14 @@ public class EntryMapper {
 					.bind("$5", created.getDate().getValue()) //
 					.bind("$6", updated.getName().getValue()) //
 					.bind("$7", updated.getDate().getValue()) //
-					.exchange() //
-					.flatMap(FetchSpec::rowsUpdated) //
+					.fetch().rowsUpdated() //
 					.log("upsertEntry") //
 			;
 
 			Mono<Integer> deleteCategory = this.databaseClient.execute()
 					.sql("DELETE FROM category WHERE entry_id = $1") //
 					.bind("$1", entryId) //
-					.exchange() //
-					.flatMap(FetchSpec::rowsUpdated) //
+					.fetch().rowsUpdated() //
 					.log("deleteCategory") //
 			;
 
@@ -200,16 +185,14 @@ public class EntryMapper {
 							.bind("$1", category.getValue()) //
 							.bind("$2", order.getAndIncrement()) //
 							.bind("$3", entryId) //
-							.exchange() //
-							.flatMap(FetchSpec::rowsUpdated)) //
+							.fetch().rowsUpdated()) //
 					.log("insertCategory") //
 			;
 
 			Mono<Integer> deleteEntryTag = this.databaseClient.execute()
 					.sql("DELETE FROM entry_tag WHERE entry_id = $1") //
 					.bind("$1", entryId) //
-					.exchange() //
-					.flatMap(FetchSpec::rowsUpdated) //
+					.fetch().rowsUpdated() //
 					.log("deleteEntryTag") //
 			;
 			// TODO Batch Update
@@ -219,8 +202,7 @@ public class EntryMapper {
 									+ " ON CONFLICT ON CONSTRAINT tag_pkey" //
 									+ " DO UPDATE SET tag_name = $1") //
 							.bind("$1", tag.getValue()) //
-							.exchange() //
-							.flatMap(FetchSpec::rowsUpdated)) //
+							.fetch().rowsUpdated()) //
 					.log("upsertTag") //
 			;
 			Flux<Integer> insertEntryTag = Flux
@@ -229,8 +211,7 @@ public class EntryMapper {
 							.sql("INSERT INTO entry_tag (entry_id, tag_name) VALUES ($1, $2)") //
 							.bind("$1", entryId) //
 							.bind("$2", tag.getValue()) //
-							.exchange() //
-							.flatMap(FetchSpec::rowsUpdated)) //
+							.fetch().rowsUpdated()) //
 					.log("insertEntryTag") //
 			;
 			return upsertEntry //
@@ -246,8 +227,7 @@ public class EntryMapper {
 		return this.databaseClient.inTransaction(x -> x.execute() //
 				.sql("DELETE FROM entry WHERE entry_id = $1") //
 				.bind("$1", entryId.getValue()) //
-				.exchange() //
-				.flatMap(FetchSpec::rowsUpdated)) //
+				.fetch().rowsUpdated()) //
 				.then(Mono.just(entryId));
 	}
 
@@ -278,22 +258,21 @@ public class EntryMapper {
 		for (int i = 0; i < ids.size(); i++) {
 			executeSpec = executeSpec.bind("$" + (i + 1), ids.get(i));
 		}
-		return executeSpec.exchange() //
-				.flatMap(result -> result
-						.extract((row, rowMetadata) -> Tuples.of(
-								new EntryId(row.get("entry_id", Long.class)),
-								new Tag(row.get("tag_name", String.class)))) //
-						.all() //
-						.collectList() //
-						.map(list -> list.stream() //
-								.collect(groupingBy(Tuple2::getT1)) //
-								.entrySet() //
+		return executeSpec
+				.map((row, rowMetadata) -> Tuples.of(
+						new EntryId(row.get("entry_id", Long.class)),
+						new Tag(row.get("tag_name", String.class)))) //
+				.all() //
+				.collectList() //
+				.map(list -> list.stream() //
+						.collect(groupingBy(Tuple2::getT1)) //
+						.entrySet() //
+						.stream() //
+						.map(e -> Tuples.of(e.getKey(), new Tags(e.getValue() //
 								.stream() //
-								.map(e -> Tuples.of(e.getKey(), new Tags(e.getValue() //
-										.stream() //
-										.map(Tuple2::getT2) //
-										.collect(toList()))))
-								.collect(toMap(Tuple2::getT1, Tuple2::getT2))));
+								.map(Tuple2::getT2) //
+								.collect(toList()))))
+						.collect(toMap(Tuple2::getT1, Tuple2::getT2)));
 	}
 
 	Mono<Map<EntryId, Categories>> categoriesMap(List<Long> ids) {
@@ -309,25 +288,21 @@ public class EntryMapper {
 		for (int i = 0; i < ids.size(); i++) {
 			executeSpec = executeSpec.bind("$" + (i + 1), ids.get(i));
 		}
-		return executeSpec.exchange() //
-				.flatMap(
-						result -> result
-								.extract((row, rowMetadata) -> Tuples.of(
-										new EntryId(row.get("entry_id", Long.class)),
-										new Category(
-												row.get("category_name", String.class)))) //
-								.all() //
-								.collectList() //
-								.map(list -> list.stream() //
-										.collect(groupingBy(Tuple2::getT1)) //
-										.entrySet() //
-										.stream() //
-										.map(e -> Tuples.of(e.getKey(),
-												new Categories(e.getValue() //
-														.stream() //
-														.map(Tuple2::getT2) //
-														.collect(toList()))))
-										.collect(toMap(Tuple2::getT1, Tuple2::getT2))));
+		return executeSpec
+				.map((row, rowMetadata) -> Tuples.of(
+						new EntryId(row.get("entry_id", Long.class)),
+						new Category(row.get("category_name", String.class)))) //
+				.all() //
+				.collectList() //
+				.map(list -> list.stream() //
+						.collect(groupingBy(Tuple2::getT1)) //
+						.entrySet() //
+						.stream() //
+						.map(e -> Tuples.of(e.getKey(), new Categories(e.getValue() //
+								.stream() //
+								.map(Tuple2::getT2) //
+								.collect(toList()))))
+						.collect(toMap(Tuple2::getT1, Tuple2::getT2)));
 	}
 
 	Flux<Long> entryIds(SearchCriteria searchCriteria, Pageable pageable,
@@ -342,9 +317,7 @@ public class EntryMapper {
 		for (Map.Entry<String, Object> entry : params.entrySet()) {
 			executeSpec = executeSpec.bind(entry.getKey(), entry.getValue());
 		}
-		return executeSpec.exchange()
-				.flatMapMany(result -> result
-						.extract((row, meta) -> row.get("entry_id", Long.class)) //
-						.all());
+		return executeSpec.map((row, meta) -> row.get("entry_id", Long.class)) //
+				.all();
 	}
 }
