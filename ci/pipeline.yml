@@ -14,7 +14,7 @@ resource_types:
   type: docker-image
   source:
     repository: zlabjp/kubernetes-resource
-    tag: "1.11"
+    tag: "1.12"
 
 resources:
   - name: utils
@@ -118,7 +118,7 @@ jobs:
               -e "POSTGRES_PASSWORD=testdb" \
               -e "TZ=Japan" \
               -p 5432:5432 \
-              postgres:9.6.8
+              postgres:9.6.10
             docker ps
             cd repo
             ./mvnw -f pom.xml test
@@ -257,7 +257,7 @@ jobs:
           set -e
           DIGEST=`cat docker/digest`
           sed "s/:latest/@${DIGEST}/g" repo/k8s/blog-api.yml |
-          sed "s/FIXME/Bump to ${DIGEST}/g" | \
+          sed "s/FIXME/Bump to ${DIGEST} $(date)/g" | \
           sed "s/INFO_DOCKER_DIGEST/${DIGEST}/g" | \
           sed "s/namespace: blog/namespace: blog-dev/g" | \
           sed "s/ik.am/k8s.bosh.tokyo/g" | \
@@ -493,7 +493,7 @@ jobs:
           set -e
           VERSION=`cat repo-version/number`
           DIGEST=`cat docker/digest`
-          sed "s/latest/${VERSION}/g" repo/k8s/blog-api.yml | sed "s/FIXME/Bump to ${VERSION}/g" | sed "s/INFO_DOCKER_DIGEST/${DIGEST}/g" > updated/blog-api.yml
+          sed "s/latest/${VERSION}/g" repo/k8s/blog-api.yml | sed "s/FIXME/Bump to ${VERSION} $(date)/g" | sed "s/INFO_DOCKER_DIGEST/${DIGEST}/g" > updated/blog-api.yml
   - put: k8s-master
     params:
       kubectl: apply -f updated/blog-api.yml
