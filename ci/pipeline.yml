@@ -111,7 +111,6 @@ jobs:
 
             source /docker-lib.sh
             start_docker
-            docker images
             docker run -d \
               --name postgres \
               -e "POSTGRES_DB=blog_test" \
@@ -134,29 +133,43 @@ jobs:
     - unit-test-develop
     trigger: true
   - task: mvn-package
+    privileged: true
+    params:
+      <<: *JAVA_OPS
     config: &NEXUS_PACKAGE_CONFIG
       platform: linux
       image_resource:
         type: docker-image
         source:
-          repository: openjdk
-          tag: 11-slim
+          repository: springci/spring-boot-jdk11-ci-image
+          tag: master
       inputs:
       - name: repo
       outputs:
       - name: build
       caches:
-      - path: repo/m2
+      - path: maven
       run:
         path: bash
         args:
         - -c
         - |
           set -e
+          source /opt/concourse-java.sh
+          setup_symlinks
+
+          source /docker-lib.sh
+          start_docker
+          docker run -d \
+            --name postgres \
+            -e "POSTGRES_DB=blog_test" \
+            -e "POSTGRES_PASSWORD=testdb" \
+            -e "TZ=Japan" \
+            -p 5432:5432 \
+            postgres:9.6.10
+          docker ps
           cd repo
-          rm -rf ~/.m2
-          ln -fs $(pwd)/m2 ~/.m2
-          ./mvnw package -DskipTests=true
+          ./mvnw -f pom.xml package -DskipTests=true
           cp target/*.jar ../build/
   - aggregate:
     - put: nexus
@@ -413,6 +426,9 @@ jobs:
       passed:
       - tag-master
   - task: mvn-package
+    privileged: true
+    params:
+      <<: *JAVA_OPS
     config:
       <<: *NEXUS_PACKAGE_CONFIG
     on_failure:
