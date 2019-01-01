@@ -70,6 +70,8 @@ spec:
           value: kubernetes
         - name: _JAVA_OPTIONS
           value: "-Duser.timezone=Asia/Tokyo -Duser.language=ja -Duser.country=JP -Dinfo.docker.digest=INFO_DOCKER_DIGEST"
+        - name: SPRING_APPLICATION_NAME
+          value: "${NAMESPACE}:blog-api"
         - name: SPRING_DATASOURCE_URL
           value: "jdbc:postgresql://${POSTGRES_HOST}:5432/${POSTGRES_DB}"
         - name: SPRING_DATASOURCE_PASSWORD
@@ -112,6 +114,10 @@ spec:
             secretKeyRef:
               name: blog-config-secret
               key: github-webhook-secret
+        - name: NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
         volumeMounts:
         - name: tmp
           mountPath: /home/vcap/tmp
