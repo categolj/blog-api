@@ -1,7 +1,8 @@
 applications:
 - name: blog-api
   buildpacks:
-  - https://github.com/cloudfoundry/java-buildpack#v4.16.1
+  #- https://github.com/cloudfoundry/java-buildpack#v4.16.1
+  - https://github.com/cloudfoundry/java-buildpack
   env:
     JAVA_OPTS: '-XX:ReservedCodeCacheSize=32M -Xss512k -XX:+PrintCodeCache'
     JBP_CONFIG_OPEN_JDK_JRE: '[memory_calculator: {stack_threads: 36}, jre: { version: 11.+}]'
