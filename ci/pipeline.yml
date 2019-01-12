@@ -15,6 +15,10 @@ resource_types:
   source:
     repository: zlabjp/kubernetes-resource
     tag: "1.12"
+- name: pull-request
+  type: docker-image
+  source:
+    repository: teliaoss/github-pr-resource
 
 resources:
   - name: utils
@@ -37,6 +41,12 @@ resources:
       ignore_paths:
       - ci/*
       - README.md
+  - name: repo-pr
+    type: pull-request
+    check_every: 10m
+    source:
+      repository: categolj/blog-api
+      access_token: ((github-access-token))
   - name: repo-version
     type: semver
     source:
@@ -73,8 +83,61 @@ resources:
     type: slack-notification
     source:
       url: ((slack-webhook-url))
-
+  - name: spring-boot
+    type: maven
+    check_every: 30m
+    source:
+      url: https://repo1.maven.org/maven2
+      artifact: org.springframework.boot:spring-boot-dependencies:pom
 jobs:
+### Check Spring Boot
+- name: check-spring-boot-version
+  plan:
+  - aggregate:
+    - get: pom
+      resource: spring-boot
+      trigger: true
+    - get: utils
+    - get: repo
+      resource: repo-develop
+  - task: update-pom
+    params:
+      GIT_EMAIL: ((git-email))
+      GIT_NAME: ((git-name))
+      GIT_SSH_KEY: ((github-private-key))
+      GITHUB_API_TOKEN: ((github-access-token))
+    config:
+      platform: linux
+      image_resource:
+        type: docker-image
+        source:
+          repository: maven
+      inputs:
+      - name: pom
+      - name: repo
+      - name: utils
+      outputs:
+      - name: updated-repo
+      run:
+        path: bash
+        args:
+        - -c
+        - |
+          set -e
+          shopt -s dotglob
+          source utils/scripts/generate-pr.sh
+          CURRENT_VERSION=`grep -A 1 spring-boot-starter-parent repo/pom.xml | grep version | sed 's|<[/]*version>||g' | sed 's/ //g' | tr -d "\t"`
+          NEW_VERSION=`ls pom/*.pom | sed 's|pom/spring-boot-dependencies-||' | sed 's|.pom||'`
+
+          echo "Current: $CURRENT_VERSION"
+          echo "New    : $NEW_VERSION"
+          cd repo
+          sed -i "s/$CURRENT_VERSION/$NEW_VERSION/g" pom.xml
+          git diff | cat
+          cp -r ./* ../updated-repo
+          cd ../updated-repo
+          generate_pull_request "making-bot" "spring-boot" "${NEW_VERSION}" "categolj/blog-api" "develop"
+
 ### Dev
 - name: unit-test-develop
   build_logs_to_retain: 5
@@ -676,6 +739,47 @@ jobs:
       params:
         <<: *SLACK_SUCCESS
 
+### Pull Request
+- name: unit-test-pr
+  build_logs_to_retain: 5
+  plan:
+  - aggregate:
+    - get: repo
+      resource: repo-pr
+      trigger: true
+    - get: utils
+  - put: repo-pr
+    params:
+      path: repo
+      status: pending
+  - task: mvn-test
+    privileged: true
+    params:
+      <<: *JAVA_OPS
+    config:
+      <<: *MVN_TEST_CONFIG
+    on_failure:
+      put: slack-alert
+      params:
+        <<: *SLACK_FAILURE
+    on_success:
+      do:
+      - put: repo-pr
+        params:
+          path: repo
+          status: success
+      - put: slack-alert
+        params:
+          <<: *SLACK_SUCCESS
+    on_failure:
+      do:
+      - put: repo-pr
+        params:
+          path: repo
+          status: failure
+      - put: slack-alert
+        params:
+          <<: *SLACK_FAILURE
 
 params:
   git: &GIT_PARAMS
