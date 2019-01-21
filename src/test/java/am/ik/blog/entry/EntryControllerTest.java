@@ -3,6 +3,7 @@ package am.ik.blog.entry;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 
+import com.epages.restdocs.apispec.RestAssuredRestDocumentationWrapper;
 import io.restassured.RestAssured;
 import io.restassured.specification.RequestSpecification;
 import org.junit.Before;
@@ -10,16 +11,19 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.restdocs.AutoConfigureRestDocs;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.web.server.LocalServerPort;
 import org.springframework.restdocs.operation.preprocess.OperationRequestPreprocessor;
+import org.springframework.restdocs.payload.ResponseFieldsSnippet;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import static am.ik.blog.entry.Asserts.assertEntry99997;
 import static am.ik.blog.entry.Asserts.assertEntry99998;
 import static am.ik.blog.entry.Asserts.assertEntry99999;
+import static com.epages.restdocs.apispec.RestAssuredRestDocumentationWrapper.resourceDetails;
 import static io.restassured.RestAssured.given;
 import static java.time.format.DateTimeFormatter.RFC_1123_DATE_TIME;
 import static org.hamcrest.Matchers.equalTo;
@@ -35,13 +39,20 @@ import static org.springframework.restdocs.operation.preprocess.Preprocessors.pr
 import static org.springframework.restdocs.operation.preprocess.Preprocessors.prettyPrint;
 import static org.springframework.restdocs.payload.PayloadDocumentation.fieldWithPath;
 import static org.springframework.restdocs.payload.PayloadDocumentation.responseFields;
-import static org.springframework.restdocs.restassured3.RestAssuredRestDocumentation.document;
+import static org.springframework.restdocs.request.RequestDocumentation.parameterWithName;
+import static org.springframework.restdocs.request.RequestDocumentation.requestParameters;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @Sql({ "classpath:/delete-test-data.sql", "classpath:/insert-test-data.sql" })
 @AutoConfigureRestDocs
 public class EntryControllerTest {
+	@Value("${restdoc.scheme:http}")
+	private String restdocScheme;
+	@Value("${restdoc.host:localhost}")
+	private String restdocHost;
+	@Value("${restdoc.port:8080}")
+	private int restdocPort;
 	@LocalServerPort
 	int port;
 	@Autowired
@@ -59,56 +70,11 @@ public class EntryControllerTest {
 	@Test
 	public void getEntries() throws Exception {
 		given(this.documentationSpec) //
-				.filter(document("api/get-entries", uri(),
-						preprocessResponse(prettyPrint()),
-						responseFields(
-								fieldWithPath("content[].entryId")
-										.description("Entry ID"),
-								fieldWithPath("content[].content").description("Content")
-										.optional(),
-								fieldWithPath("content[].frontMatter.title")
-										.description("Title"),
-								fieldWithPath("content[].frontMatter.categories")
-										.description("Categories"),
-								fieldWithPath("content[].frontMatter.tags")
-										.description("Tags"),
-								fieldWithPath("content[].created.name")
-										.description("Creator's name"),
-								fieldWithPath("content[].created.date")
-										.description("Created date"),
-								fieldWithPath("content[].updated.name")
-										.description("Updater's name"),
-								fieldWithPath("content[].updated.date")
-										.description("Updated date"),
-								fieldWithPath("last").description("Is last"),
-								fieldWithPath("first").description("Is first"),
-								fieldWithPath("totalPages").description("Total pages"),
-								fieldWithPath("totalElements")
-										.description("Total elements"),
-								fieldWithPath("size").description("Size"),
-								fieldWithPath("number").description("Number"),
-								fieldWithPath("numberOfElements")
-										.description("Number of elements"),
-								fieldWithPath("pageable.sort.sorted")
-										.description("Is sorted"),
-								fieldWithPath("pageable.sort.unsorted")
-										.description("Is unsorted"),
-								fieldWithPath("pageable.offset").description("Offset"),
-								fieldWithPath("pageable.pageSize")
-										.description("Page size"),
-								fieldWithPath("pageable.pageNumber")
-										.description("Page number"),
-								fieldWithPath("pageable.paged").description("Is paged"),
-								fieldWithPath("pageable.unpaged")
-										.description("Is unpaged"),
-								fieldWithPath("pageable.sort.empty").description(
-										"Whether the pageable.sort is empty or not"),
-								fieldWithPath("sort.sorted").description("Is sorted"),
-								fieldWithPath("sort.unsorted").description("Is unsorted"),
-								fieldWithPath("sort.empty")
-										.description("Whether the sort is empty or not"),
-								fieldWithPath("empty").description(
-										"Whether the content is empty or not"))))
+				.filter(RestAssuredRestDocumentationWrapper.document("api/get-entries",
+						resourceDetails().description("Get entries"), //
+						uri(), //
+						preprocessResponse(prettyPrint()), //
+						entriesResponseFields())) //
 				.log().all() //
 				.when().port(this.port).get("/api/entries").then() //
 				.log().all() //
@@ -160,8 +126,13 @@ public class EntryControllerTest {
 	@Test
 	public void searchEntries() throws Exception {
 		given(this.documentationSpec) //
-				.filter(document("api/search-entries", uri(),
-						preprocessResponse(prettyPrint()))) //
+				.filter(RestAssuredRestDocumentationWrapper.document("api/search-entries",
+						resourceDetails().description("Search entries"), //
+						uri(), //
+						preprocessResponse(prettyPrint()), //
+						requestParameters(
+								parameterWithName("q").description("A search query")), //
+						entriesResponseFields())) //
 				.log().all().queryParam("q", "test").port(this.port).get("/api/entries")
 				.then().log().all().assertThat().statusCode(200).body("size", equalTo(10))
 				.body("number", equalTo(0)).body("totalPages", equalTo(1))
@@ -247,7 +218,9 @@ public class EntryControllerTest {
 	@Test
 	public void getEntriesByCreatedBy() throws Exception {
 		given(this.documentationSpec) //
-				.filter(document("api/get-entries-by-created-by", uri(),
+				.filter(RestAssuredRestDocumentationWrapper.document(
+						"api/get-entries-by-created-by",
+						resourceDetails().description("Get entries by created by"), uri(),
 						preprocessResponse(prettyPrint()))) //
 				.log().all().port(this.port)
 				.get("/api/users/{createdBy}/entries", "making").then().log().all()
@@ -287,7 +260,9 @@ public class EntryControllerTest {
 	@Test
 	public void getEntriesByUpdatedBy() throws Exception {
 		given(this.documentationSpec) //
-				.filter(document("api/get-entries-by-updated-by", uri(),
+				.filter(RestAssuredRestDocumentationWrapper.document(
+						"api/get-entries-by-updated-by",
+						resourceDetails().description("Get entries by updated by"), uri(),
 						preprocessResponse(prettyPrint()))) //
 				.queryParam("updated").log().all().port(this.port)
 				.get("/api/users/{updatedBy}/entries", "making").then().log().all()
@@ -339,7 +314,9 @@ public class EntryControllerTest {
 	@Test
 	public void getEntriesByTag() throws Exception {
 		given(this.documentationSpec) //
-				.filter(document("api/get-entries-by-tag", uri(),
+				.filter(RestAssuredRestDocumentationWrapper.document(
+						"api/get-entries-by-tag",
+						resourceDetails().description("Get entries by tag"), uri(),
 						preprocessResponse(prettyPrint()))) //
 				.log().all().port(this.port).get("/api/tags/{tag}/entries", "test3")
 				.then().log().all().assertThat().statusCode(200).body("size", equalTo(10))
@@ -377,10 +354,13 @@ public class EntryControllerTest {
 	@Test
 	public void getEntriesByCategories() throws Exception {
 		given(this.documentationSpec) //
-				.filter(document("api/get-entries-by-categories", uri(),
+				.filter(RestAssuredRestDocumentationWrapper.document(
+						"api/get-entries-by-categories",
+						resourceDetails().description("Get entries by categories"), uri(),
 						preprocessResponse(prettyPrint()))) //
-				.log().all().port(this.port).get("/api/categories/x,y/entries").then()
-				.log().all().assertThat().statusCode(200).body("size", equalTo(10))
+				.log().all().port(this.port)
+				.get("/api/categories/{categories}/entries", "x,y").then().log().all()
+				.assertThat().statusCode(200).body("size", equalTo(10))
 				.body("number", equalTo(0)).body("totalPages", equalTo(1))
 				.body("totalElements", equalTo(2)).body("numberOfElements", equalTo(2))
 				.body("first", equalTo(true)).body("last", equalTo(true))
@@ -415,7 +395,8 @@ public class EntryControllerTest {
 	@Test
 	public void getEntry() throws Exception {
 		given(this.documentationSpec) //
-				.filter(document("api/get-an-entry", uri(),
+				.filter(RestAssuredRestDocumentationWrapper.document("api/get-an-entry",
+						resourceDetails().description("Get an entry"), uri(),
 						preprocessResponse(prettyPrint()),
 						responseFields(fieldWithPath("entryId").description("Entry ID"),
 								fieldWithPath("content").description("Content")
@@ -592,8 +573,45 @@ public class EntryControllerTest {
 				.assertThat().statusCode(200);
 	}
 
-	private static OperationRequestPreprocessor uri() {
-		return preprocessRequest(
-				modifyUris().scheme("https").host("blog-api.ik.am").removePort());
+	private static ResponseFieldsSnippet entriesResponseFields() {
+		return responseFields(fieldWithPath("content[].entryId").description("Entry ID"),
+				fieldWithPath("content[].content").description("Content").optional(),
+				fieldWithPath("content[].frontMatter.title").description("Title"),
+				fieldWithPath("content[].frontMatter.categories")
+						.description("Categories"),
+				fieldWithPath("content[].frontMatter.tags").description("Tags"),
+				fieldWithPath("content[].created.name").description("Creator's name"),
+				fieldWithPath("content[].created.date").description("Created date"),
+				fieldWithPath("content[].updated.name").description("Updater's name"),
+				fieldWithPath("content[].updated.date").description("Updated date"),
+				fieldWithPath("last").description("Is last"),
+				fieldWithPath("first").description("Is first"),
+				fieldWithPath("totalPages").description("Total pages"),
+				fieldWithPath("totalElements").description("Total elements"),
+				fieldWithPath("size").description("Size"),
+				fieldWithPath("number").description("Number"),
+				fieldWithPath("numberOfElements").description("Number of elements"),
+				fieldWithPath("pageable.sort.sorted").description("Is sorted"),
+				fieldWithPath("pageable.sort.unsorted").description("Is unsorted"),
+				fieldWithPath("pageable.offset").description("Offset"),
+				fieldWithPath("pageable.pageSize").description("Page size"),
+				fieldWithPath("pageable.pageNumber").description("Page number"),
+				fieldWithPath("pageable.paged").description("Is paged"),
+				fieldWithPath("pageable.unpaged").description("Is unpaged"),
+				fieldWithPath("pageable.sort.empty")
+						.description("Whether the pageable.sort is empty or not"),
+				fieldWithPath("sort.sorted").description("Is sorted"),
+				fieldWithPath("sort.unsorted").description("Is unsorted"),
+				fieldWithPath("sort.empty")
+						.description("Whether the sort is empty or not"),
+				fieldWithPath("empty")
+						.description("Whether the content is empty or not"));
+	}
+
+	private OperationRequestPreprocessor uri() {
+		return preprocessRequest(modifyUris() //
+				.scheme(this.restdocScheme) //
+				.host(this.restdocHost) //
+				.port(this.restdocPort));
 	}
 }

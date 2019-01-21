@@ -24,6 +24,11 @@
 		<java.version>11</java.version>
 		<blog-mapper.version>4.8.1</blog-mapper.version>
 		<spring-cloud.version>Greenwich.RELEASE</spring-cloud.version>
+		<restdocs-api-spec.version>0.8.0</restdocs-api-spec.version>
+		<restdocs-spec.version>0.10</restdocs-spec.version>
+		<restdoc.scheme>http</restdoc.scheme>
+		<restdoc.host>localhost</restdoc.host>
+		<restdoc.port>8080</restdoc.port>
 	</properties>
 	<dependencies>
 		<dependency>
@@ -35,6 +40,16 @@
 			<groupId>am.ik.github</groupId>
 			<artifactId>reactive-github-client</artifactId>
 			<version>0.0.4</version>
+		</dependency>
+		<dependency>
+			<groupId>org.webjars</groupId>
+			<artifactId>swagger-ui</artifactId>
+			<version>3.20.5</version>
+		</dependency>
+		<dependency>
+			<groupId>org.webjars</groupId>
+			<artifactId>webjars-locator</artifactId>
+			<version>0.35</version>
 		</dependency>
 		<dependency>
 			<groupId>am.ik.yavi</groupId>
@@ -139,8 +154,9 @@
 			<scope>test</scope>
 		</dependency>
 		<dependency>
-			<groupId>io.rest-assured</groupId>
-			<artifactId>rest-assured</artifactId>
+			<groupId>com.epages</groupId>
+			<artifactId>restdocs-api-spec-restassured</artifactId>
+			<version>${restdocs-api-spec.version}</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
@@ -211,7 +227,7 @@
             <plugin>
                 <groupId>org.asciidoctor</groupId>
                 <artifactId>asciidoctor-maven-plugin</artifactId>
-                <version>1.5.3</version>
+                <version>1.5.6</version>
                 <executions>
                     <execution>
                         <id>generate-docs</id>
@@ -253,6 +269,29 @@
                     </execution>
                 </executions>
             </plugin>
+			<plugin>
+				<groupId>com.github.berkleytechnologyservices.restdocs-spec</groupId>
+				<artifactId>restdocs-spec-maven-plugin</artifactId>
+				<version>${restdocs-spec.version}</version>
+				<executions>
+					<execution>
+						<goals>
+							<goal>generate</goal>
+						</goals>
+						<configuration>
+							<specification>OPENAPI_V3</specification>
+							<!--<host>${restdoc.host}:${restdoc.port}</host>--><!-- plugin hasn't support configuring port for V3 yet -->
+							<host>${restdoc.host}</host>
+							<schemes>
+								<scheme>${restdoc.scheme}</scheme>
+							</schemes>
+							<outputDirectory>${project.build.directory}/classes/static/docs</outputDirectory>
+							<!--suppress MavenModelInspection -->
+							<skip>${skipTests}</skip>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
 		</plugins>
 	</build>
 
@@ -273,6 +312,14 @@
 				<enabled>false</enabled>
 			</snapshots>
 		</repository>
+		<repository>
+			<id>jitpack.io</id>
+			<url>https://jitpack.io</url>
+		</repository>
+		<repository>
+			<id>jcenter</id>
+			<url>https://jcenter.bintray.com</url>
+		</repository>
 	</repositories>
 	<pluginRepositories>
 		<pluginRepository>
@@ -290,6 +337,14 @@
 			<snapshots>
 				<enabled>false</enabled>
 			</snapshots>
+		</pluginRepository>
+		<pluginRepository>
+			<id>jitpack.io</id>
+			<url>https://jitpack.io</url>
+		</pluginRepository>
+		<pluginRepository>
+			<id>jcenter</id>
+			<url>https://jcenter.bintray.com</url>
 		</pluginRepository>
 	</pluginRepositories>
 
