@@ -24,6 +24,7 @@ import static io.restassured.RestAssured.given;
 import static java.time.format.DateTimeFormatter.RFC_1123_DATE_TIME;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.notNullValue;
 import static org.springframework.http.HttpHeaders.CACHE_CONTROL;
 import static org.springframework.http.HttpHeaders.EXPIRES;
 import static org.springframework.http.HttpHeaders.IF_MODIFIED_SINCE;
@@ -453,14 +454,16 @@ public class EntryControllerTest {
 	public void nonExistingEntryShouldReturn404() throws Exception {
 		given().log().all().get("/api/entries/{entryId}", 100000).then().log().all()
 				.assertThat().statusCode(404)
-				.body("message", equalTo("entry 100000 is not found."));
+				.body("message", equalTo("entry 100000 is not found.")) //
+				.body("b3", notNullValue());
 	}
 
 	@Test
 	public void invalidEntryIdShouldReturn400() throws Exception {
 		given().log().all().get("/api/entries/{entryId}", "foo").then().log().all()
 				.assertThat().statusCode(400)
-				.body("message", equalTo("The given request (foo) is not valid."));
+				.body("message", equalTo("The given request (foo) is not valid.")) //
+				.body("b3", notNullValue());
 	}
 
 	@Test

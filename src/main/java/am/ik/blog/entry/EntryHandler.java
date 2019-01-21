@@ -1,7 +1,6 @@
 package am.ik.blog.entry;
 
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -15,13 +14,22 @@ import reactor.core.publisher.Mono;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
-import org.springframework.web.reactive.function.server.*;
+import org.springframework.web.reactive.function.server.RequestPredicate;
+import org.springframework.web.reactive.function.server.RequestPredicates;
+import org.springframework.web.reactive.function.server.RouterFunction;
+import org.springframework.web.reactive.function.server.ServerRequest;
+import org.springframework.web.reactive.function.server.ServerResponse;
+import org.springframework.web.server.ResponseStatusException;
 
-import static org.springframework.http.HttpHeaders.*;
-import static org.springframework.http.MediaType.*;
+import static org.springframework.http.HttpHeaders.CACHE_CONTROL;
+import static org.springframework.http.HttpHeaders.EXPIRES;
+import static org.springframework.http.HttpHeaders.LAST_MODIFIED;
+import static org.springframework.http.HttpStatus.NOT_FOUND;
+import static org.springframework.http.MediaType.APPLICATION_JSON;
+import static org.springframework.http.MediaType.APPLICATION_STREAM_JSON;
+import static org.springframework.http.MediaType.TEXT_EVENT_STREAM;
 import static org.springframework.web.reactive.function.server.RequestPredicates.accept;
 import static org.springframework.web.reactive.function.server.RequestPredicates.queryParam;
 import static org.springframework.web.reactive.function.server.RouterFunctions.route;
@@ -75,8 +83,7 @@ public class EntryHandler {
 					.header(CACHE_CONTROL, "max-age=0") //
 					.header(EXPIRES, rfc1123).build();
 		}) // does not check body
-				.switchIfEmpty(Mono.defer(
-						() -> ServerResponse.status(HttpStatus.NOT_FOUND).build()));
+				.switchIfEmpty(Mono.error(() -> new ResponseStatusException(NOT_FOUND)));
 	}
 
 	public Mono<ServerResponse> getEntry(ServerRequest request) {
@@ -92,10 +99,8 @@ public class EntryHandler {
 					.header(EXPIRES, rfc1123) //
 					.syncBody(e);
 		}) //
-				.switchIfEmpty(
-						Mono.defer(() -> ServerResponse.status(HttpStatus.NOT_FOUND)
-								.syncBody(Collections.singletonMap("message",
-										"entry " + entryId + " is not found."))));
+				.switchIfEmpty(Mono.error(() -> new ResponseStatusException(NOT_FOUND,
+						"entry " + entryId + " is not found.")));
 	}
 
 	public Mono<ServerResponse> headEntries(ServerRequest request) {
@@ -108,8 +113,7 @@ public class EntryHandler {
 					.header(EXPIRES, rfc1123) //
 					.build();
 		}) // does not check body
-				.switchIfEmpty(Mono.defer(
-						() -> ServerResponse.status(HttpStatus.NOT_FOUND).build()));
+				.switchIfEmpty(Mono.error(() -> new ResponseStatusException(NOT_FOUND)));
 	}
 
 	public Mono<ServerResponse> getEntries(ServerRequest request) {
