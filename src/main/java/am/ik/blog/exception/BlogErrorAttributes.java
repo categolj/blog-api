@@ -1,6 +1,7 @@
 package am.ik.blog.exception;
 
 import java.util.Map;
+import java.util.Objects;
 
 import brave.Span;
 import brave.Tracer;
@@ -25,7 +26,7 @@ public class BlogErrorAttributes extends DefaultErrorAttributes {
 		Map<String, Object> attributes = super.getErrorAttributes(request,
 				includeStackTrace);
 		Span span = this.tracer.currentSpan();
-		attributes.put("b3", span == null ? null : span.context().toString());
+		attributes.put("b3", span == null ? null : Objects.toString(span.context(), ""));
 		return attributes;
 	}
 }
