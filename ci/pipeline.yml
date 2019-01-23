@@ -89,6 +89,12 @@ resources:
     source:
       url: https://repo1.maven.org/maven2
       artifact: org.springframework.boot:spring-boot-dependencies:pom
+  - name: spring-cloud
+    type: maven
+    check_every: 30m
+    source:
+      url: https://repo1.maven.org/maven2
+      artifact: org.springframework.cloud:spring-cloud-dependencies:pom
 jobs:
 ### Check Spring Boot
 - name: check-spring-boot-version
@@ -137,6 +143,54 @@ jobs:
           cp -r ./* ../updated-repo
           cd ../updated-repo
           generate_pull_request "making-bot" "spring-boot" "${NEW_VERSION}" "categolj/blog-api" "develop"
+
+### Check Spring Cloud
+- name: check-spring-cloud-version
+  plan:
+  - aggregate:
+    - get: pom
+      resource: spring-cloud
+      trigger: true
+    - get: utils
+    - get: repo
+      resource: repo-develop
+  - task: update-pom
+    params:
+      GIT_EMAIL: ((git-email))
+      GIT_NAME: ((git-name))
+      GIT_SSH_KEY: ((github-private-key))
+      GITHUB_API_TOKEN: ((github-access-token))
+    config: &CHECK_SPRING_CLOUD_CONFIG
+      platform: linux
+      image_resource:
+        type: docker-image
+        source:
+          repository: maven
+      inputs:
+      - name: pom
+      - name: repo
+      - name: utils
+      outputs:
+      - name: updated-repo
+      run:
+        path: bash
+        args:
+        - -c
+        - |
+          set -e
+          shopt -s dotglob
+          source utils/scripts/generate-pr.sh
+          CURRENT_VERSION=`grep '<spring-cloud.version>' repo/pom.xml | sed 's|<[/]*spring-cloud.version>||g' | sed 's/ //g' | tr -d "\t"`
+          NEW_VERSION=`ls pom/*.pom | sed 's|pom/spring-cloud-dependencies-||' | sed 's|.pom||'`
+
+          echo "Current: $CURRENT_VERSION"
+          echo "New    : $NEW_VERSION"
+          cd repo
+          sed -i "s/$CURRENT_VERSION/$NEW_VERSION/g" pom.xml
+          git diff | cat
+          cp -r ./* ../updated-repo
+          cd ../updated-repo
+          generate_pull_request "making-bot" "spring-cloud" "${NEW_VERSION}" "categolj/blog-api" "develop"
 
 ### Dev
 - name: unit-test-develop
