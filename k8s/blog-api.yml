@@ -156,3 +156,72 @@ spec:
       volumes:
       - name: tmp
         emptyDir: {}
+---
+apiVersion: policy/v1beta1
+kind: PodDisruptionBudget
+metadata:
+  name: blog-api
+  namespace: blog
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: blog-api
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  labels:
+    k8s-app: blog-api
+  name: blog-api
+  namespace: blog
+spec:
+  endpoints:
+    - interval: 30s
+      port: http
+      path: /actuator/prometheus
+      basicAuth:
+        username:
+          name: blog-config-secret
+          key: ops-username
+        password:
+          name: blog-config-secret
+          key: ops-password
+  namespaceSelector:
+    matchNames:
+      - blog
+  selector:
+    matchLabels:
+      app: blog-api
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: prometheus-k8s
+  namespace: blog
+rules:
+  - apiGroups:
+      - ""
+    resources:
+      - nodes
+      - services
+      - endpoints
+      - pods
+    verbs:
+      - get
+      - list
+      - watch
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: prometheus-k8s
+  namespace: blog
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: prometheus-k8s
+subjects:
+  - kind: ServiceAccount
+    name: prometheus-k8s
+    namespace: monitoring
