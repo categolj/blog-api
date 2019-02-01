@@ -20,24 +20,24 @@ In addition to the documentation on this page, you can also download a spec file
 == Entry
 === Get an entry
 
-operation::api/get-an-entry[]
+operation::get-an-entry[]
 === Get entries
 
-operation::api/get-entries[]
+operation::get-entries[]
 === Get entries by tag
 
-operation::api/get-entries-by-tag[]
+operation::get-entries-by-tag[]
 === Get entries by categories
 
-operation::api/get-entries-by-categories[]
+operation::get-entries-by-categories[]
 
 === Get entries by created by
 
-operation::api/get-entries-by-created-by[]
+operation::get-entries-by-created-by[]
 
 === Get entries by update by
 
-operation::api/get-entries-by-updated-by[]
+operation::get-entries-by-updated-by[]
 === Search entries
 
-operation::api/search-entries[]
+operation::search-entries[]
