@@ -41,3 +41,11 @@ operation::get-entries-by-updated-by[]
 === Search entries
 
 operation::search-entries[]
+
+== Tag
+
+operation::get-tags[]
+
+== Category
+
+operation::get-categories[]
