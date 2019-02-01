@@ -253,6 +253,9 @@ jobs:
     privileged: true
     params:
       <<: *JAVA_OPS
+      RESTDOC_SCHEME: https
+      RESTDOC_HOST: blog-api.k8s.bosh.tokyo
+      RESTDOC_PORT: 443
     config: &NEXUS_PACKAGE_CONFIG
       platform: linux
       image_resource:
@@ -286,7 +289,7 @@ jobs:
             postgres:9.6.10
           docker ps
           cd repo
-          ./mvnw -f pom.xml package
+          ./mvnw -f pom.xml package -Drestdoc.scheme=${RESTDOC_SCHEME} -Drestdoc.host=${RESTDOC_HOST} -Drestdoc.port=${RESTDOC_PORT}
           cp target/*.jar ../build/
   - aggregate:
     - put: nexus
@@ -546,6 +549,9 @@ jobs:
     privileged: true
     params:
       <<: *JAVA_OPS
+      RESTDOC_SCHEME: https
+      RESTDOC_HOST: blog-api.ik.am
+      RESTDOC_PORT: 443
     config:
       <<: *NEXUS_PACKAGE_CONFIG
     on_failure:
