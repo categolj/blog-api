@@ -130,15 +130,22 @@ public class EntryV2ControllerTest {
 						resourceDetails().description("Search entries"), //
 						uri(), //
 						preprocessResponse(prettyPrint()), //
-						requestParameters(parameterWithName("q")
-								.description("A search query").optional()), //
+						requestParameters(
+								parameterWithName("q").description("A search query")
+										.optional(),
+								parameterWithName("excludeContent").description(
+										"Whether the entry includes content (true/false)")
+										.optional()), //
 						entriesResponseFields())) //
-				.log().all().queryParam("q", "test").port(this.port).get("/entries")
-				.then().log().all().assertThat().statusCode(200).body("size", equalTo(10))
-				.body("number", equalTo(0)).body("totalPages", equalTo(1))
-				.body("totalElements", equalTo(3)).body("numberOfElements", equalTo(3))
-				.body("first", equalTo(true)).body("last", equalTo(true))
-				.body("content", hasSize(3)).body("content[0].entryId", equalTo(99999))
+				.log().all() //
+				.queryParam("q", "test") //
+				.queryParam("excludeContent", true) //
+				.port(this.port).get("/entries").then().log().all().assertThat()
+				.statusCode(200).body("size", equalTo(10)).body("number", equalTo(0))
+				.body("totalPages", equalTo(1)).body("totalElements", equalTo(3))
+				.body("numberOfElements", equalTo(3)).body("first", equalTo(true))
+				.body("last", equalTo(true)).body("content", hasSize(3))
+				.body("content[0].entryId", equalTo(99999))
 				.body("content[0].created.name", equalTo("making"))
 				.body("content[0].created.date", equalTo("2017-04-01T01:00:00+09:00"))
 				.body("content[0].updated.name", equalTo("making"))
