@@ -15,7 +15,6 @@ metadata:
         args:
           name: blog/blog-api
           fallbackUri: forward:/error/503
-      - SecureHeaders
       - name: Retry
         args:
           retries: 3
