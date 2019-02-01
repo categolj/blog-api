@@ -429,11 +429,7 @@ public class EntryV2ControllerTest {
 
 	@Test
 	public void nonExistingEntryShouldReturn404() throws Exception {
-		given(this.documentationSpec) //
-				.filter(RestAssuredRestDocumentationWrapper.document("get-an-entry-404",
-						resourceDetails().description("Get an entry"), uri(),
-						preprocessResponse(prettyPrint()), //
-						errorResponseFields())) //
+		given() //
 				.log().all().get("/entries/{entryId}", 100000).then().log().all()
 				.assertThat().statusCode(404)
 				.body("message", equalTo("entry 100000 is not found.")) //
@@ -442,11 +438,7 @@ public class EntryV2ControllerTest {
 
 	@Test
 	public void invalidEntryIdShouldReturn400() throws Exception {
-		given(this.documentationSpec) //
-				.filter(RestAssuredRestDocumentationWrapper.document("get-an-entry-400",
-						resourceDetails().description("Get an entry"), uri(),
-						preprocessResponse(prettyPrint()), //
-						errorResponseFields())) //
+		given() //
 				.log().all().get("/entries/{entryId}", "foo").then().log().all()
 				.assertThat().statusCode(400)
 				.body("message", equalTo("The given request (foo) is not valid.")) //
