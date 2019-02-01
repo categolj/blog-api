@@ -429,7 +429,12 @@ public class EntryV2ControllerTest {
 
 	@Test
 	public void nonExistingEntryShouldReturn404() throws Exception {
-		given().log().all().get("/entries/{entryId}", 100000).then().log().all()
+		given(this.documentationSpec) //
+				.filter(RestAssuredRestDocumentationWrapper.document("get-an-entry-404",
+						resourceDetails().description("Get an entry"), uri(),
+						preprocessResponse(prettyPrint()), //
+						errorResponseFields())) //
+				.log().all().get("/entries/{entryId}", 100000).then().log().all()
 				.assertThat().statusCode(404)
 				.body("message", equalTo("entry 100000 is not found.")) //
 				.body("b3", notNullValue());
@@ -437,7 +442,12 @@ public class EntryV2ControllerTest {
 
 	@Test
 	public void invalidEntryIdShouldReturn400() throws Exception {
-		given().log().all().get("/entries/{entryId}", "foo").then().log().all()
+		given(this.documentationSpec) //
+				.filter(RestAssuredRestDocumentationWrapper.document("get-an-entry-400",
+						resourceDetails().description("Get an entry"), uri(),
+						preprocessResponse(prettyPrint()), //
+						errorResponseFields())) //
+				.log().all().get("/entries/{entryId}", "foo").then().log().all()
 				.assertThat().statusCode(400)
 				.body("message", equalTo("The given request (foo) is not valid.")) //
 				.body("b3", notNullValue());
@@ -623,6 +633,16 @@ public class EntryV2ControllerTest {
 						.description("Whether the sort is empty or not"),
 				fieldWithPath("empty")
 						.description("Whether the content is empty or not"));
+	}
+
+	private static ResponseFieldsSnippet errorResponseFields() {
+		return responseFields(fieldWithPath("timestamp").description("Timestamp"),
+				fieldWithPath("path").description("Error request path"),
+				fieldWithPath("status").description("Response status"),
+				fieldWithPath("error").description("Error response status"),
+				fieldWithPath("message").description("Error message"),
+				fieldWithPath("trace").description("Stacktrace"),
+				fieldWithPath("b3").description("B3 Trace"));
 	}
 
 	private OperationRequestPreprocessor uri() {
