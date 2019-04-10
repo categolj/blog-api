@@ -4,11 +4,9 @@ import am.ik.yavi.constraint.base.ContainerConstraintBase;
 import am.ik.yavi.core.Validator;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.stereotype.Component;
 import org.springframework.validation.Errors;
 import org.springframework.validation.annotation.Validated;
 
-@Component
 @ConfigurationProperties(prefix = "blog.github")
 @Validated
 public class GitHubProps implements org.springframework.validation.Validator {
