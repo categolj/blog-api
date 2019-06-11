@@ -4,5 +4,5 @@ applications:
   - https://github.com/cloudfoundry/java-buildpack#v4.19.1
   env:
     JAVA_OPTS: '-XX:ReservedCodeCacheSize=32M -Xss512k -XX:+PrintCodeCache'
-    JBP_CONFIG_OPEN_JDK_JRE: '[memory_calculator: {stack_threads: 36}, jre: { version: 11.+}]'
-  memory: 384m
+    JBP_CONFIG_OPEN_JDK_JRE: '[memory_calculator: {stack_threads: 28}, jre: { version: 11.+}]'
+  memory: 256m
