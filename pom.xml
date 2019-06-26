@@ -215,7 +215,7 @@
 									  file="target/classes/application.properties" append="yes"/>
 								<echo message="info.maven.versions.spring-cloud=${spring-cloud.version}${line.separator}"
 									  file="target/classes/application.properties" append="yes"/>
-								<echo message="info.maven.versions.spring-framework=${spring.version}${line.separator}"
+								<echo message="info.maven.versions.spring-framework=${spring-framework.version}${line.separator}"
 									  file="target/classes/application.properties" append="yes"/>
 								<echo message="info.maven.versions.spring-security=${spring-security.version}${line.separator}"
 									  file="target/classes/application.properties" append="yes"/>
