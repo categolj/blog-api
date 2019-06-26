@@ -5,16 +5,6 @@ metadata:
   namespace: blog
   labels:
     app: blog-api
-  annotations:
-    spring.cloud.gateway/routes: |
-      predicates:
-      - Host=blog-api.ik.am
-      filters:
-      - RequestLogging
-      - name: Retry
-        args:
-          retries: 3
-          statuses: BAD_GATEWAY
 spec:
   selector:
     app: blog-api
@@ -24,6 +14,23 @@ spec:
     nodePort: 30080
     name: http
   type: NodePort
+---
+apiVersion: gateway.cloud.ik.am/v1beta1
+kind: RouteDefinition
+metadata:
+  name: blog-api
+  namespace: blog
+spec:
+  serviceName: blog-api-service
+  route:
+    predicates:
+      - Host=blog-api.ik.am
+    filters:
+      - RequestLogging=
+      - name: Retry
+        args:
+          retries: "3"
+          statuses: BAD_GATEWAY
 ---
 apiVersion: extensions/v1beta1
 kind: Deployment
