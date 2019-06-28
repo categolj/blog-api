@@ -27,6 +27,10 @@ spec:
       - Host=blog-api.ik.am
     filters:
       - RequestLogging=
+      - SetResponseHeader=Access-Control-Allow-Origin, *
+      - SetResponseHeader=Access-Control-Allow-Methods, GET, OPTIONS
+      - SetResponseHeader=Access-Control-Max-Age, 3600
+      - SetResponseHeader=Access-Control-Allow-Headers, *
       - name: Retry
         args:
           retries: "3"
