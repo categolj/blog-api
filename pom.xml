@@ -23,7 +23,7 @@
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 		<java.version>11</java.version>
 		<blog-mapper.version>4.8.1</blog-mapper.version>
-		<spring-cloud.version>Greenwich.SR2</spring-cloud.version>
+		<spring-cloud.version>Hoxton.M1</spring-cloud.version>
 		<restdocs-api-spec.version>0.8.0</restdocs-api-spec.version>
 		<restdocs-spec.version>0.10</restdocs-spec.version>
 		<restdoc.scheme>http</restdoc.scheme>
