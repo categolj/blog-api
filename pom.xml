@@ -25,11 +25,12 @@
 		<blog-mapper.version>4.8.1</blog-mapper.version>
 		<spring-cloud.version>Hoxton.M1</spring-cloud.version>
 		<r2dbc-releasetrain.version>Arabba-M8</r2dbc-releasetrain.version>
-		<restdocs-api-spec.version>0.8.0</restdocs-api-spec.version>
-		<restdocs-spec.version>0.10</restdocs-spec.version>
+		<restdocs-api-spec.version>0.9.4</restdocs-api-spec.version>
+		<restdocs-spec.version>0.14</restdocs-spec.version>
 		<restdoc.scheme>http</restdoc.scheme>
 		<restdoc.host>localhost</restdoc.host>
 		<restdoc.port>8080</restdoc.port>
+		<docs.resources.version>0.1.2.RELEASE</docs.resources.version>
 	</properties>
 	<dependencies>
 		<dependency>
@@ -45,12 +46,12 @@
 		<dependency>
 			<groupId>org.webjars</groupId>
 			<artifactId>swagger-ui</artifactId>
-			<version>3.20.5</version>
+			<version>3.22.2</version>
 		</dependency>
 		<dependency>
 			<groupId>org.webjars</groupId>
 			<artifactId>webjars-locator</artifactId>
-			<version>0.35</version>
+			<version>0.36</version>
 		</dependency>
 		<dependency>
 			<groupId>am.ik.yavi</groupId>
@@ -173,6 +174,13 @@
 			<version>3.9.1</version>
 			<scope>test</scope>
 		</dependency>
+		<dependency>
+			<groupId>io.spring.docresources</groupId>
+			<artifactId>spring-doc-resources</artifactId>
+			<version>${docs.resources.version}</version>
+			<type>zip</type>
+			<optional>true</optional>
+		</dependency>
 	</dependencies>
 
 	<dependencyManagement>
@@ -250,10 +258,21 @@
                         <goals>
                             <goal>process-asciidoc</goal>
                         </goals>
-                        <configuration>
-                            <backend>html</backend>
-                            <doctype>book</doctype>
-                        </configuration>
+						<configuration>
+							<skip>${skipTests}</skip>
+							<backend>html5</backend>
+							<sourceHighlighter>highlight.js</sourceHighlighter>
+							<doctype>book</doctype>
+							<attributes>
+								<docinfo>shared</docinfo>
+								<stylesdir>css/</stylesdir>
+								<stylesheet>spring.css</stylesheet>
+								<linkcss>true</linkcss>
+								<icons>font</icons>
+								<highlightjsdir>js/highlight</highlightjsdir>
+								<highlightjs-theme>atom-one-dark-reasonable</highlightjs-theme>
+							</attributes>
+						</configuration>
                     </execution>
                 </executions>
                 <dependencies>
@@ -264,6 +283,26 @@
                     </dependency>
                 </dependencies>
             </plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-dependency-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>unpack-doc-resources</id>
+						<goals>
+							<goal>unpack-dependencies</goal>
+						</goals>
+						<phase>generate-resources</phase>
+						<configuration>
+							<includeGroupIds>io.spring.docresources</includeGroupIds>
+							<includeArtifactIds>spring-doc-resources</includeArtifactIds>
+							<includeTypes>zip</includeTypes>
+							<excludeTransitive>true</excludeTransitive>
+							<outputDirectory>${project.build.directory}/generated-docs</outputDirectory>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
             <plugin>
                 <artifactId>maven-resources-plugin</artifactId>
                 <executions>
@@ -312,6 +351,10 @@
 
 	<repositories>
 		<repository>
+			<id>spring-release</id>
+			<url>https://repo.spring.io/release</url>
+		</repository>
+		<repository>
 			<id>spring-snapshots</id>
 			<name>Spring Snapshots</name>
 			<url>https://repo.spring.io/snapshot</url>
@@ -337,6 +380,10 @@
 		</repository>
 	</repositories>
 	<pluginRepositories>
+		<pluginRepository>
+			<id>spring-release</id>
+			<url>https://repo.spring.io/release</url>
+		</pluginRepository>
 		<pluginRepository>
 			<id>spring-snapshots</id>
 			<name>Spring Snapshots</name>
