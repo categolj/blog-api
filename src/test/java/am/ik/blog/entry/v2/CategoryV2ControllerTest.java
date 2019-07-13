@@ -60,19 +60,18 @@ public class CategoryV2ControllerTest {
 				.when().port(this.port).get("/categories").then() //
 				.log().all() //
 				.assertThat().statusCode(200).body("size", equalTo(3))
-				.body("[0].categories[0].name", equalTo("a")) //
-				.body("[0].categories[1].name", equalTo("b")) //
-				.body("[0].categories[2].name", equalTo("c"))
-				.body("[1].categories[0].name", equalTo("x")) //
-				.body("[1].categories[1].name", equalTo("y")) //
-				.body("[2].categories[0].name", equalTo("x")) //
-				.body("[2].categories[1].name", equalTo("y")) //
-				.body("[2].categories[2].name", equalTo("z"));
+				.body("[0][0].name", equalTo("a")) //
+				.body("[0][1].name", equalTo("b")) //
+				.body("[0][2].name", equalTo("c")) //
+				.body("[1][0].name", equalTo("x")) //
+				.body("[1][1].name", equalTo("y")) //
+				.body("[2][0].name", equalTo("x")) //
+				.body("[2][1].name", equalTo("y")) //
+				.body("[2][2].name", equalTo("z"));
 	}
 
 	private static ResponseFieldsSnippet categoriesResponseFields() {
-		return responseFields(fieldWithPath("[].categories").description("Categories"),
-				fieldWithPath("[].categories[].name").description("Category name"));
+		return responseFields(fieldWithPath("[][].name").description("Category name"));
 	}
 
 	private OperationRequestPreprocessor uri() {

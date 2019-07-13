@@ -60,14 +60,12 @@ public class TagV2ControllerTest {
 				.when().port(this.port).get("/tags").then() //
 				.log().all() //
 				.assertThat().statusCode(200).body("size", equalTo(3))
-				.body("[0].tag.name", equalTo("test1"))
-				.body("[1].tag.name", equalTo("test2"))
-				.body("[2].tag.name", equalTo("test3"));
+				.body("[0].name", equalTo("test1")).body("[1].name", equalTo("test2"))
+				.body("[2].name", equalTo("test3"));
 	}
 
 	private static ResponseFieldsSnippet tagsResponseFields() {
-		return responseFields(fieldWithPath("[].tag").description("A tag"),
-				fieldWithPath("[].tag.name").description("Tag name"));
+		return responseFields(fieldWithPath("[].name").description("Tag name"));
 	}
 
 	private OperationRequestPreprocessor uri() {

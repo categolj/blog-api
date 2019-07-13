@@ -18,7 +18,7 @@ import static org.springframework.web.reactive.function.server.RouterFunctions.r
 @Component
 public class TagV2Handler {
 	private final TagMapper tagMapper;
-	private final ParameterizedTypeReference<List<Map<String, Map<String, String>>>> typeReference = new ParameterizedTypeReference<>() {
+	private final ParameterizedTypeReference<List<Map<String, String>>> typeReference = new ParameterizedTypeReference<>() {
 
 	};
 
@@ -33,10 +33,8 @@ public class TagV2Handler {
 	}
 
 	public Mono<ServerResponse> getTags(ServerRequest request) {
-		Mono<List<Map<String, Map<String, String>>>> tags = tagMapper
-				.findOrderByTagNameAsc()
-				.map(x -> x.stream()
-						.map(tag -> Map.of("tag", Map.of("name", tag.getValue())))
+		Mono<List<Map<String, String>>> tags = tagMapper.findOrderByTagNameAsc()
+				.map(x -> x.stream().map(tag -> Map.of("name", tag.getValue()))
 						.collect(toList()));
 		return ServerResponse.ok().body(tags, typeReference);
 	}

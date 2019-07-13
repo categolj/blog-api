@@ -18,7 +18,7 @@ import static org.springframework.web.reactive.function.server.RouterFunctions.r
 @Component
 public class CategoryV2Handler {
 	private final CategoryMapper categoryMapper;
-	private final ParameterizedTypeReference<List<Map<String, List<Map<String, String>>>>> typeReference = new ParameterizedTypeReference<>() {
+	private final ParameterizedTypeReference<List<List<Map<String, String>>>> typeReference = new ParameterizedTypeReference<>() {
 	};
 
 	public CategoryV2Handler(CategoryMapper categoryMapper) {
@@ -32,11 +32,11 @@ public class CategoryV2Handler {
 	}
 
 	public Mono<ServerResponse> getCategories(ServerRequest request) {
-		Mono<List<Map<String, List<Map<String, String>>>>> categories = categoryMapper
-				.findAll().map(x -> x.stream().map(c -> {
+		Mono<List<List<Map<String, String>>>> categories = categoryMapper.findAll()
+				.map(x -> x.stream().map(c -> {
 					List<Map<String, String>> category = c.getValue().stream()
 							.map(a -> Map.of("name", a.getValue())).collect(toList());
-					return Map.of("categories", category);
+					return category;
 				}).collect(toList()));
 		return ServerResponse.ok().body(categories, typeReference);
 	}
