@@ -5,12 +5,12 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import brave.Span;
 import brave.Tracer;
-import net.ttddyy.dsproxy.r2dbc.core.ConnectionInfo;
-import net.ttddyy.dsproxy.r2dbc.core.ExecutionType;
-import net.ttddyy.dsproxy.r2dbc.core.MethodExecutionInfo;
-import net.ttddyy.dsproxy.r2dbc.core.QueryExecutionInfo;
-import net.ttddyy.dsproxy.r2dbc.core.QueryInfo;
-import net.ttddyy.dsproxy.r2dbc.support.LifeCycleListener;
+import io.r2dbc.proxy.core.ConnectionInfo;
+import io.r2dbc.proxy.core.ExecutionType;
+import io.r2dbc.proxy.core.MethodExecutionInfo;
+import io.r2dbc.proxy.core.QueryExecutionInfo;
+import io.r2dbc.proxy.core.QueryInfo;
+import io.r2dbc.proxy.listener.LifeCycleListener;
 
 import static java.util.stream.Collectors.joining;
 
@@ -175,9 +175,7 @@ public class TracingExecutionListener implements LifeCycleListener {
 		}
 
 		Span connectionSpan = this.connectionSpans.get(connectionId);
-		if (connectionSpan != null) {
-			connectionSpan.annotate("Transaction commit");
-		}
+		connectionSpan.annotate("Transaction commit");
 	}
 
 	@Override
@@ -193,9 +191,7 @@ public class TracingExecutionListener implements LifeCycleListener {
 		}
 
 		Span connectionSpan = this.connectionSpans.get(connectionId);
-		if (connectionSpan != null) {
-			connectionSpan.annotate("Transaction rollback");
-		}
+		connectionSpan.annotate("Transaction rollback");
 	}
 
 	@Override
@@ -214,8 +210,6 @@ public class TracingExecutionListener implements LifeCycleListener {
 		}
 
 		Span connectionSpan = this.connectionSpans.get(connectionId);
-		if (connectionSpan != null) {
-			connectionSpan.annotate("Transaction rollback to savepoint");
-		}
+		connectionSpan.annotate("Transaction rollback to savepoint");
 	}
 }

@@ -5,7 +5,7 @@ import java.util.stream.Stream;
 
 import reactor.core.publisher.Mono;
 
-import org.springframework.data.r2dbc.function.DatabaseClient;
+import org.springframework.data.r2dbc.core.DatabaseClient;
 import org.springframework.stereotype.Component;
 
 import static java.util.stream.Collectors.toList;
@@ -19,7 +19,7 @@ public class CategoryMapper {
 	}
 
 	public Mono<List<Categories>> findAll() {
-		return this.databaseClient.execute().sql(
+		return this.databaseClient.execute(
 				"SELECT DISTINCT ARRAY_TO_STRING(ARRAY(SELECT category_name FROM category WHERE category.entry_id = e.entry_id ORDER BY category_order ASC), ',') AS category FROM entry AS e ORDER BY category")
 				.map((row, metadata) -> row.get("category", String.class)).all()
 				.map(s -> new Categories(

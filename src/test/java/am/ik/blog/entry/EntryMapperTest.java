@@ -1,19 +1,6 @@
 package am.ik.blog.entry;
 
 import am.ik.blog.config.R2dbcConfig;
-import am.ik.blog.entry.Author;
-import am.ik.blog.entry.Categories;
-import am.ik.blog.entry.Category;
-import am.ik.blog.entry.Content;
-import am.ik.blog.entry.Entry;
-import am.ik.blog.entry.EntryId;
-import am.ik.blog.entry.EntryMapper;
-import am.ik.blog.entry.EventTime;
-import am.ik.blog.entry.FrontMatter;
-import am.ik.blog.entry.Name;
-import am.ik.blog.entry.Tag;
-import am.ik.blog.entry.Tags;
-import am.ik.blog.entry.Title;
 import am.ik.blog.entry.criteria.SearchCriteria;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -27,9 +14,10 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.r2dbc.function.TransactionalDatabaseClient;
+import org.springframework.data.r2dbc.core.DatabaseClient;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.transaction.reactive.TransactionalOperator;
 
 import static am.ik.blog.entry.Asserts.assertEntry99997;
 import static am.ik.blog.entry.Asserts.assertEntry99998;
@@ -98,9 +86,9 @@ public class EntryMapperTest {
 	@Configuration
 	static class Config {
 		@Bean
-		public EntryMapper reactiveEntryMapper(
-				TransactionalDatabaseClient databaseClient) {
-			return new EntryMapper(databaseClient);
+		public EntryMapper reactiveEntryMapper(DatabaseClient databaseClient,
+				TransactionalOperator transactionalOperator) {
+			return new EntryMapper(databaseClient, transactionalOperator);
 		}
 	}
 }

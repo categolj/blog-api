@@ -4,7 +4,7 @@ import java.util.List;
 
 import reactor.core.publisher.Mono;
 
-import org.springframework.data.r2dbc.function.DatabaseClient;
+import org.springframework.data.r2dbc.core.DatabaseClient;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -16,8 +16,8 @@ public class TagMapper {
 	}
 
 	public Mono<List<Tag>> findOrderByTagNameAsc() {
-		return this.databaseClient.execute()
-				.sql("SELECT tag_name FROM tag ORDER BY tag_name ASC")
+		return this.databaseClient
+				.execute("SELECT tag_name FROM tag ORDER BY tag_name ASC")
 				.map((row, meta) -> new Tag(row.get("tag_name", String.class))).all()
 				.collectList();
 	}

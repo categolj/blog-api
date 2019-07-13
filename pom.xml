@@ -24,6 +24,7 @@
 		<java.version>11</java.version>
 		<blog-mapper.version>4.8.1</blog-mapper.version>
 		<spring-cloud.version>Hoxton.M1</spring-cloud.version>
+		<r2dbc-releasetrain.version>Arabba-M8</r2dbc-releasetrain.version>
 		<restdocs-api-spec.version>0.8.0</restdocs-api-spec.version>
 		<restdocs-spec.version>0.10</restdocs-spec.version>
 		<restdoc.scheme>http</restdoc.scheme>
@@ -97,18 +98,20 @@
 		<dependency>
 			<groupId>io.r2dbc</groupId>
 			<artifactId>r2dbc-postgresql</artifactId>
-			<version>1.0.0.M6</version>
+		</dependency>
+		<dependency>
+			<groupId>io.r2dbc</groupId>
+			<artifactId>r2dbc-pool</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>io.r2dbc</groupId>
+			<artifactId>r2dbc-proxy</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.data</groupId>
 			<artifactId>spring-data-r2dbc</artifactId>
-			<version>1.0.0.M1</version>
+			<version>1.0.0.BUILD-SNAPSHOT</version>
 		</dependency>
-		<dependency>
-            <groupId>net.ttddyy</groupId>
-            <artifactId>datasource-proxy-r2dbc</artifactId>
-            <version>0.1</version>
-        </dependency>
 		<dependency>
 			<groupId>org.flywaydb</groupId>
 			<artifactId>flyway-core</artifactId>
@@ -136,6 +139,11 @@
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-jdbc</artifactId>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
@@ -173,6 +181,13 @@
 				<groupId>org.springframework.cloud</groupId>
 				<artifactId>spring-cloud-dependencies</artifactId>
 				<version>${spring-cloud.version}</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+			<dependency>
+				<groupId>io.r2dbc</groupId>
+				<artifactId>r2dbc-bom</artifactId>
+				<version>${r2dbc-releasetrain.version}</version>
 				<type>pom</type>
 				<scope>import</scope>
 			</dependency>
