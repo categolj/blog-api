@@ -28,8 +28,7 @@ public class FrontMatterV2Deserializer extends JsonObjectDeserializer<FrontMatte
 		JsonNode tagsNode = jsonNode.get("tags");
 		Tags tags = tagsNode == null ? new Tags()
 				: new Tags(stream(tagsNode.spliterator(), false)
-						.map(n -> new Tag(n.get("tag").get("name").asText()))
-						.collect(toList()));
+						.map(n -> new Tag(n.get("name").asText())).collect(toList()));
 		JsonNode categoriesNode = jsonNode.get("categories");
 		Categories categories = categoriesNode == null ? new Categories()
 				: new Categories(stream(categoriesNode.spliterator(), false)

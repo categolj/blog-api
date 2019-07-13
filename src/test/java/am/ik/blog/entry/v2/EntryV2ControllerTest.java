@@ -93,9 +93,9 @@ public class EntryV2ControllerTest {
 				.body("content[0].frontMatter.categories[1].name", equalTo("y"))
 				.body("content[0].frontMatter.categories[2].name", equalTo("z"))
 				.body("content[0].frontMatter.tags", hasSize(3))
-				.body("content[0].frontMatter.tags[0].tag.name", equalTo("test1"))
-				.body("content[0].frontMatter.tags[1].tag.name", equalTo("test2"))
-				.body("content[0].frontMatter.tags[2].tag.name", equalTo("test3"))
+				.body("content[0].frontMatter.tags[0].name", equalTo("test1"))
+				.body("content[0].frontMatter.tags[1].name", equalTo("test2"))
+				.body("content[0].frontMatter.tags[2].name", equalTo("test3"))
 				.body("content[1].entryId", equalTo(99998))
 				.body("content[1].created.name", equalTo("making"))
 				.body("content[1].created.date", equalTo("2017-04-01T00:00:00+09:00"))
@@ -107,8 +107,8 @@ public class EntryV2ControllerTest {
 				.body("content[1].frontMatter.categories[1].name", equalTo("b"))
 				.body("content[1].frontMatter.categories[2].name", equalTo("c"))
 				.body("content[1].frontMatter.tags", hasSize(2))
-				.body("content[1].frontMatter.tags[0].tag.name", equalTo("test1"))
-				.body("content[1].frontMatter.tags[1].tag.name", equalTo("test2"))
+				.body("content[1].frontMatter.tags[0].name", equalTo("test1"))
+				.body("content[1].frontMatter.tags[1].name", equalTo("test2"))
 				.body("content[2].entryId", equalTo(99997))
 				.body("content[2].created.name", equalTo("admin"))
 				.body("content[2].created.date", equalTo("2017-03-31T00:00:00+09:00"))
@@ -119,8 +119,8 @@ public class EntryV2ControllerTest {
 				.body("content[2].frontMatter.categories[0].name", equalTo("x"))
 				.body("content[2].frontMatter.categories[1].name", equalTo("y"))
 				.body("content[2].frontMatter.tags", hasSize(2))
-				.body("content[2].frontMatter.tags[0].tag.name", equalTo("test1"))
-				.body("content[2].frontMatter.tags[1].tag.name", equalTo("test3"));
+				.body("content[2].frontMatter.tags[0].name", equalTo("test1"))
+				.body("content[2].frontMatter.tags[1].name", equalTo("test3"));
 	}
 
 	@Test
@@ -156,9 +156,9 @@ public class EntryV2ControllerTest {
 				.body("content[0].frontMatter.categories[1].name", equalTo("y"))
 				.body("content[0].frontMatter.categories[2].name", equalTo("z"))
 				.body("content[0].frontMatter.tags", hasSize(3))
-				.body("content[0].frontMatter.tags[0].tag.name", equalTo("test1"))
-				.body("content[0].frontMatter.tags[1].tag.name", equalTo("test2"))
-				.body("content[0].frontMatter.tags[2].tag.name", equalTo("test3"))
+				.body("content[0].frontMatter.tags[0].name", equalTo("test1"))
+				.body("content[0].frontMatter.tags[1].name", equalTo("test2"))
+				.body("content[0].frontMatter.tags[2].name", equalTo("test3"))
 				.body("content[1].entryId", equalTo(99998))
 				.body("content[1].created.name", equalTo("making"))
 				.body("content[1].created.date", equalTo("2017-04-01T00:00:00+09:00"))
@@ -170,8 +170,8 @@ public class EntryV2ControllerTest {
 				.body("content[1].frontMatter.categories[1].name", equalTo("b"))
 				.body("content[1].frontMatter.categories[2].name", equalTo("c"))
 				.body("content[1].frontMatter.tags", hasSize(2))
-				.body("content[1].frontMatter.tags[0].tag.name", equalTo("test1"))
-				.body("content[1].frontMatter.tags[1].tag.name", equalTo("test2"))
+				.body("content[1].frontMatter.tags[0].name", equalTo("test1"))
+				.body("content[1].frontMatter.tags[1].name", equalTo("test2"))
 				.body("content[2].entryId", equalTo(99997))
 				.body("content[2].created.name", equalTo("admin"))
 				.body("content[2].created.date", equalTo("2017-03-31T00:00:00+09:00"))
@@ -182,8 +182,8 @@ public class EntryV2ControllerTest {
 				.body("content[2].frontMatter.categories[0].name", equalTo("x"))
 				.body("content[2].frontMatter.categories[1].name", equalTo("y"))
 				.body("content[2].frontMatter.tags", hasSize(2))
-				.body("content[2].frontMatter.tags[0].tag.name", equalTo("test1"))
-				.body("content[2].frontMatter.tags[1].tag.name", equalTo("test3"));
+				.body("content[2].frontMatter.tags[0].name", equalTo("test1"))
+				.body("content[2].frontMatter.tags[1].name", equalTo("test3"));
 	}
 
 	@Test
@@ -205,9 +205,9 @@ public class EntryV2ControllerTest {
 				.body("content[0].frontMatter.categories[1].name", equalTo("y"))
 				.body("content[0].frontMatter.categories[2].name", equalTo("z"))
 				.body("content[0].frontMatter.tags", hasSize(3))
-				.body("content[0].frontMatter.tags[0].tag.name", equalTo("test1"))
-				.body("content[0].frontMatter.tags[1].tag.name", equalTo("test2"))
-				.body("content[0].frontMatter.tags[2].tag.name", equalTo("test3"))
+				.body("content[0].frontMatter.tags[0].name", equalTo("test1"))
+				.body("content[0].frontMatter.tags[1].name", equalTo("test2"))
+				.body("content[0].frontMatter.tags[2].name", equalTo("test3"))
 				.body("content[1].entryId", equalTo(99997))
 				.body("content[1].created.name", equalTo("admin"))
 				.body("content[1].created.date", equalTo("2017-03-31T00:00:00+09:00"))
@@ -218,8 +218,8 @@ public class EntryV2ControllerTest {
 				.body("content[1].frontMatter.categories[0].name", equalTo("x"))
 				.body("content[1].frontMatter.categories[1].name", equalTo("y"))
 				.body("content[1].frontMatter.tags", hasSize(2))
-				.body("content[1].frontMatter.tags[0].tag.name", equalTo("test1"))
-				.body("content[1].frontMatter.tags[1].tag.name", equalTo("test3"));
+				.body("content[1].frontMatter.tags[0].name", equalTo("test1"))
+				.body("content[1].frontMatter.tags[1].name", equalTo("test3"));
 	}
 
 	@Test
@@ -246,9 +246,9 @@ public class EntryV2ControllerTest {
 				.body("content[0].frontMatter.categories[1].name", equalTo("y"))
 				.body("content[0].frontMatter.categories[2].name", equalTo("z"))
 				.body("content[0].frontMatter.tags", hasSize(3))
-				.body("content[0].frontMatter.tags[0].tag.name", equalTo("test1"))
-				.body("content[0].frontMatter.tags[1].tag.name", equalTo("test2"))
-				.body("content[0].frontMatter.tags[2].tag.name", equalTo("test3"))
+				.body("content[0].frontMatter.tags[0].name", equalTo("test1"))
+				.body("content[0].frontMatter.tags[1].name", equalTo("test2"))
+				.body("content[0].frontMatter.tags[2].name", equalTo("test3"))
 				.body("content[1].entryId", equalTo(99998))
 				.body("content[1].created.name", equalTo("making"))
 				.body("content[1].created.date", equalTo("2017-04-01T00:00:00+09:00"))
@@ -260,8 +260,8 @@ public class EntryV2ControllerTest {
 				.body("content[1].frontMatter.categories[1].name", equalTo("b"))
 				.body("content[1].frontMatter.categories[2].name", equalTo("c"))
 				.body("content[1].frontMatter.tags", hasSize(2))
-				.body("content[1].frontMatter.tags[0].tag.name", equalTo("test1"))
-				.body("content[1].frontMatter.tags[1].tag.name", equalTo("test2"));
+				.body("content[1].frontMatter.tags[0].name", equalTo("test1"))
+				.body("content[1].frontMatter.tags[1].name", equalTo("test2"));
 	}
 
 	@Test
@@ -289,9 +289,9 @@ public class EntryV2ControllerTest {
 				.body("content[0].frontMatter.categories[1].name", equalTo("y"))
 				.body("content[0].frontMatter.categories[2].name", equalTo("z"))
 				.body("content[0].frontMatter.tags", hasSize(3))
-				.body("content[0].frontMatter.tags[0].tag.name", equalTo("test1"))
-				.body("content[0].frontMatter.tags[1].tag.name", equalTo("test2"))
-				.body("content[0].frontMatter.tags[2].tag.name", equalTo("test3"))
+				.body("content[0].frontMatter.tags[0].name", equalTo("test1"))
+				.body("content[0].frontMatter.tags[1].name", equalTo("test2"))
+				.body("content[0].frontMatter.tags[2].name", equalTo("test3"))
 				.body("content[1].entryId", equalTo(99998))
 				.body("content[1].created.name", equalTo("making"))
 				.body("content[1].created.date", equalTo("2017-04-01T00:00:00+09:00"))
@@ -303,8 +303,8 @@ public class EntryV2ControllerTest {
 				.body("content[1].frontMatter.categories[1].name", equalTo("b"))
 				.body("content[1].frontMatter.categories[2].name", equalTo("c"))
 				.body("content[1].frontMatter.tags", hasSize(2))
-				.body("content[1].frontMatter.tags[0].tag.name", equalTo("test1"))
-				.body("content[1].frontMatter.tags[1].tag.name", equalTo("test2"))
+				.body("content[1].frontMatter.tags[0].name", equalTo("test1"))
+				.body("content[1].frontMatter.tags[1].name", equalTo("test2"))
 				.body("content[2].entryId", equalTo(99997))
 				.body("content[2].created.name", equalTo("admin"))
 				.body("content[2].created.date", equalTo("2017-03-31T00:00:00+09:00"))
@@ -315,8 +315,8 @@ public class EntryV2ControllerTest {
 				.body("content[2].frontMatter.categories[0].name", equalTo("x"))
 				.body("content[2].frontMatter.categories[1].name", equalTo("y"))
 				.body("content[2].frontMatter.tags", hasSize(2))
-				.body("content[2].frontMatter.tags[0].tag.name", equalTo("test1"))
-				.body("content[2].frontMatter.tags[1].tag.name", equalTo("test3"));
+				.body("content[2].frontMatter.tags[0].name", equalTo("test1"))
+				.body("content[2].frontMatter.tags[1].name", equalTo("test3"));
 	}
 
 	@Test
@@ -342,9 +342,9 @@ public class EntryV2ControllerTest {
 				.body("content[0].frontMatter.categories[1].name", equalTo("y"))
 				.body("content[0].frontMatter.categories[2].name", equalTo("z"))
 				.body("content[0].frontMatter.tags", hasSize(3))
-				.body("content[0].frontMatter.tags[0].tag.name", equalTo("test1"))
-				.body("content[0].frontMatter.tags[1].tag.name", equalTo("test2"))
-				.body("content[0].frontMatter.tags[2].tag.name", equalTo("test3"))
+				.body("content[0].frontMatter.tags[0].name", equalTo("test1"))
+				.body("content[0].frontMatter.tags[1].name", equalTo("test2"))
+				.body("content[0].frontMatter.tags[2].name", equalTo("test3"))
 				.body("content[1].entryId", equalTo(99997))
 				.body("content[1].created.name", equalTo("admin"))
 				.body("content[1].created.date", equalTo("2017-03-31T00:00:00+09:00"))
@@ -355,8 +355,8 @@ public class EntryV2ControllerTest {
 				.body("content[1].frontMatter.categories[0].name", equalTo("x"))
 				.body("content[1].frontMatter.categories[1].name", equalTo("y"))
 				.body("content[1].frontMatter.tags", hasSize(2))
-				.body("content[1].frontMatter.tags[0].tag.name", equalTo("test1"))
-				.body("content[1].frontMatter.tags[1].tag.name", equalTo("test3"));
+				.body("content[1].frontMatter.tags[0].name", equalTo("test1"))
+				.body("content[1].frontMatter.tags[1].name", equalTo("test3"));
 	}
 
 	@Test
@@ -384,9 +384,9 @@ public class EntryV2ControllerTest {
 				.body("content[0].frontMatter.categories[1].name", equalTo("y"))
 				.body("content[0].frontMatter.categories[2].name", equalTo("z"))
 				.body("content[0].frontMatter.tags", hasSize(3))
-				.body("content[0].frontMatter.tags[0].tag.name", equalTo("test1"))
-				.body("content[0].frontMatter.tags[1].tag.name", equalTo("test2"))
-				.body("content[0].frontMatter.tags[2].tag.name", equalTo("test3"))
+				.body("content[0].frontMatter.tags[0].name", equalTo("test1"))
+				.body("content[0].frontMatter.tags[1].name", equalTo("test2"))
+				.body("content[0].frontMatter.tags[2].name", equalTo("test3"))
 				.body("content[1].entryId", equalTo(99997))
 				.body("content[1].created.name", equalTo("admin"))
 				.body("content[1].created.date", equalTo("2017-03-31T00:00:00+09:00"))
@@ -397,8 +397,8 @@ public class EntryV2ControllerTest {
 				.body("content[1].frontMatter.categories[0].name", equalTo("x"))
 				.body("content[1].frontMatter.categories[1].name", equalTo("y"))
 				.body("content[1].frontMatter.tags", hasSize(2))
-				.body("content[1].frontMatter.tags[0].tag.name", equalTo("test1"))
-				.body("content[1].frontMatter.tags[1].tag.name", equalTo("test3"));
+				.body("content[1].frontMatter.tags[0].name", equalTo("test1"))
+				.body("content[1].frontMatter.tags[1].name", equalTo("test3"));
 	}
 
 	@Test
@@ -422,9 +422,9 @@ public class EntryV2ControllerTest {
 				.body("frontMatter.categories[1].name", equalTo("y"))
 				.body("frontMatter.categories[2].name", equalTo("z"))
 				.body("frontMatter.tags", hasSize(3))
-				.body("frontMatter.tags[0].tag.name", equalTo("test1"))
-				.body("frontMatter.tags[1].tag.name", equalTo("test2"))
-				.body("frontMatter.tags[2].tag.name", equalTo("test3"));
+				.body("frontMatter.tags[0].name", equalTo("test1"))
+				.body("frontMatter.tags[1].name", equalTo("test2"))
+				.body("frontMatter.tags[2].name", equalTo("test3"));
 	}
 
 	@Test
@@ -579,8 +579,7 @@ public class EntryV2ControllerTest {
 				fieldWithPath("frontMatter.categories[].name")
 						.description("Category name"),
 				fieldWithPath("frontMatter.tags").description("Tags"),
-				fieldWithPath("frontMatter.tags[].tag").description("A tag"),
-				fieldWithPath("frontMatter.tags[].tag.name").description("Tag name"),
+				fieldWithPath("frontMatter.tags[].name").description("Tag name"),
 				fieldWithPath("created.name").description("Creator's name"),
 				fieldWithPath("created.date").description("Created date"),
 				fieldWithPath("updated.name").description("Updater's name"),
@@ -596,8 +595,7 @@ public class EntryV2ControllerTest {
 				fieldWithPath("content[].frontMatter.categories[].name")
 						.description("Category name"),
 				fieldWithPath("content[].frontMatter.tags").description("Tags"),
-				fieldWithPath("content[].frontMatter.tags[].tag").description("A tag"),
-				fieldWithPath("content[].frontMatter.tags[].tag.name")
+				fieldWithPath("content[].frontMatter.tags[].name")
 						.description("Tag name"),
 				fieldWithPath("content[].created.name").description("Creator's name"),
 				fieldWithPath("content[].created.date").description("Created date"),

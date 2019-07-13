@@ -22,10 +22,7 @@ public class FrontMatterV2Serializer extends JsonObjectSerializer<FrontMatterV2>
 			tags.stream().forEach(tag -> {
 				try {
 					jsonGenerator.writeStartObject();
-					jsonGenerator.writeFieldName("tag");
-					jsonGenerator.writeStartObject();
 					jsonGenerator.writeStringField("name", tag.toString());
-					jsonGenerator.writeEndObject();
 					jsonGenerator.writeEndObject();
 				}
 				catch (IOException e) {
