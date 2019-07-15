@@ -40,6 +40,11 @@ public class EntryMapper {
 		this.transactionalOperator = transactionalOperator;
 	}
 
+	public Mono<Long> nextId() {
+		return this.databaseClient.execute("SELECT max(entry_id) + 1 FROM entry")
+				.as(Long.class).fetch().one();
+	}
+
 	public Mono<Long> count(SearchCriteria criteria) {
 		SearchCriteria.ClauseAndParams clauseAndParams = criteria.toWhereClause();
 		String sql = String.format(

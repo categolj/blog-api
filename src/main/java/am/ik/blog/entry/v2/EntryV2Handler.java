@@ -1,5 +1,6 @@
 package am.ik.blog.entry.v2;
 
+import java.net.URI;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
@@ -41,6 +42,8 @@ import static org.springframework.http.MediaType.TEXT_EVENT_STREAM;
 import static org.springframework.web.reactive.function.server.RequestPredicates.accept;
 import static org.springframework.web.reactive.function.server.RequestPredicates.queryParam;
 import static org.springframework.web.reactive.function.server.RouterFunctions.route;
+import static org.springframework.web.reactive.function.server.ServerResponse.ok;
+import static org.springframework.web.reactive.function.server.ServerResponse.seeOther;
 
 @Component
 public class EntryV2Handler {
@@ -58,6 +61,10 @@ public class EntryV2Handler {
 
 	public RouterFunction<ServerResponse> routes(EntryHandler v1) {
 		return route() //
+				.GET("/entries/next", req -> this.entryMapper.nextId()
+						.flatMap(id -> seeOther(URI.create(String.format(
+								"https://github.com/making/blog.ik.am/new/master/content/%05d.md",
+								id))).build()))
 				.HEAD("/entries/{entryId}", v1::headEntry) //
 				.GET("/entries/{entryId}", this::getEntry) //
 				.HEAD("/entries", v1::headEntries) //
@@ -83,7 +90,7 @@ public class EntryV2Handler {
 		Mono<Entry> entry = entryMapper.findOne(entryId, excludeContent);
 		return entry.flatMap(e -> {
 			String rfc1123 = e.getUpdated().getDate().rfc1123();
-			return ServerResponse.ok() //
+			return ok() //
 					.header(LAST_MODIFIED, rfc1123) //
 					.header(CACHE_CONTROL, "max-age=0") //
 					.header(EXPIRES, rfc1123) //
@@ -98,7 +105,7 @@ public class EntryV2Handler {
 		Pageable pageable = new PageableImpl(request);
 		Mono<Page<EntryV2>> entries = entryMapper.findPage(criteria, pageable)
 				.map(this::toEntryV2Page);
-		return ServerResponse.ok().body(entries, typeReference);
+		return ok().body(entries, typeReference);
 	}
 
 	public Mono<ServerResponse> searchEntries(ServerRequest request) {
@@ -107,7 +114,7 @@ public class EntryV2Handler {
 				.build();
 		Pageable pageable = new PageableImpl(request);
 		Mono<Page<Entry>> entries = entryMapper.findPage(criteria, pageable);
-		return ServerResponse.ok().body(entries.map(this::toEntryV2Page), typeReference);
+		return ok().body(entries.map(this::toEntryV2Page), typeReference);
 	}
 
 	private Mono<ServerResponse> streamEntries(ServerRequest request,
@@ -115,7 +122,7 @@ public class EntryV2Handler {
 		SearchCriteria criteria = SearchCriteria.builder().excludeContent(true).build();
 		Pageable pageable = new PageableImpl(request);
 		Flux<Entry> entries = entryMapper.collectAll(criteria, pageable);
-		return ServerResponse.ok() //
+		return ok() //
 				.contentType(mediaType) //
 				.body(entries.map(EntryV2::from), EntryV2.class);
 	}
@@ -137,7 +144,7 @@ public class EntryV2Handler {
 				.excludeContent(excludeContent).build();
 		Pageable pageable = new PageableImpl(request);
 		Mono<Page<Entry>> entries = entryMapper.findPage(criteria, pageable);
-		return ServerResponse.ok().body(entries.map(this::toEntryV2Page), typeReference);
+		return ok().body(entries.map(this::toEntryV2Page), typeReference);
 	}
 
 	public Mono<ServerResponse> getEntriesByUpdatedBy(ServerRequest request) {
@@ -148,7 +155,7 @@ public class EntryV2Handler {
 				.excludeContent(excludeContent).build();
 		Pageable pageable = new PageableImpl(request);
 		Mono<Page<Entry>> entries = entryMapper.findPage(criteria, pageable);
-		return ServerResponse.ok().body(entries.map(this::toEntryV2Page), typeReference);
+		return ok().body(entries.map(this::toEntryV2Page), typeReference);
 	}
 
 	public Mono<ServerResponse> getEntriesByTag(ServerRequest request) {
@@ -157,7 +164,7 @@ public class EntryV2Handler {
 				.build();
 		Pageable pageable = new PageableImpl(request);
 		Mono<Page<Entry>> entries = entryMapper.findPage(criteria, pageable);
-		return ServerResponse.ok().body(entries.map(this::toEntryV2Page), typeReference);
+		return ok().body(entries.map(this::toEntryV2Page), typeReference);
 	}
 
 	public Mono<ServerResponse> getEntriesByCategories(ServerRequest request) {
@@ -171,7 +178,7 @@ public class EntryV2Handler {
 				.excludeContent(true).build();
 		Pageable pageable = new PageableImpl(request);
 		Mono<Page<Entry>> entries = entryMapper.findPage(criteria, pageable);
-		return ServerResponse.ok().body(entries.map(this::toEntryV2Page), typeReference);
+		return ok().body(entries.map(this::toEntryV2Page), typeReference);
 	}
 
 	public Page<EntryV2> toEntryV2Page(Page<Entry> page) {
