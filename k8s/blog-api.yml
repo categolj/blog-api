@@ -74,8 +74,10 @@ spec:
           value: "8080"
         - name: SPRING_PROFILES_ACTIVE
           value: kubernetes
-        - name: _JAVA_OPTIONS
-          value: "-Duser.timezone=Asia/Tokyo -Duser.language=ja -Duser.country=JP -Dinfo.docker.digest=INFO_DOCKER_DIGEST"
+        - name: JAVA_OPTS
+          value: " -XX:ReservedCodeCacheSize=32M -Xss512k -XX:+PrintCodeCache -Duser.timezone=Asia/Tokyo -Duser.language=ja -Duser.country=JP -Dinfo.docker.digest=INFO_DOCKER_DIGEST"
+        - name: BPL_THREAD_COUNT
+          value: "32"
         - name: SPRING_ZIPKIN_SERVICE_NAME
           value: "${INFO_K8S_NAMESPACE}:blog-api"
         - name: SPRING_DATASOURCE_URL
