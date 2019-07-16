@@ -343,6 +343,7 @@ jobs:
     - get: nexus
       passed:
       - upload-to-nexus-snapshots
+      trigger: true
     - get: builder
       params:
         save: true
@@ -640,12 +641,16 @@ jobs:
     - get: nexus
       passed:
       - upload-to-nexus-releases
+      trigger: true
     - get: builder
       params:
         save: true
     - get: run
       params:
         save: true
+    - get: repo-version
+      passed:
+      - upload-to-nexus-releases
   - task: build-image
     privileged: true
     config:
@@ -672,7 +677,7 @@ jobs:
       - upload-to-nexus-releases
     - get: repo-version
       passed:
-      - upload-to-nexus-releases
+      - docker-push-master
     - get: docker
       passed:
       - docker-push-master
