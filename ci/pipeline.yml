@@ -112,6 +112,21 @@ resources:
     source:
       url: https://repo1.maven.org/maven2
       artifact: org.springframework.cloud:spring-cloud-dependencies:pom
+  - name: pack
+    type: github-release
+    source:
+      owner: buildpack
+      repository: pack
+      access_token: ((github-access-token))
+  - name: builder
+    type: docker-image
+    source:
+      repository: ((cnb-builder-image))
+  - name: run
+    type: docker-image
+    source:
+      repository: ((cnb-run-image))
+      tag: ((cnb-run-tag))
 jobs:
 ### Check Spring Boot
 - name: check-spring-boot-version
@@ -318,17 +333,22 @@ jobs:
         params:
           <<: *SLACK_FAILURE
 - name: docker-push-develop
+  build_logs_to_retain: 5
   plan:
   - aggregate:
-    - get: repo
-      resource: repo-develop
-      passed:
-      - upload-to-nexus-snapshots
-      trigger: true
-    - get: repo-version
+    - get: pack
+      params:
+        globs:
+        - pack-*-linux.tgz
     - get: nexus
       passed:
       - upload-to-nexus-snapshots
+    - get: builder
+      params:
+        save: true
+    - get: run
+      params:
+        save: true
   - task: build-image
     privileged: true
     config: &BUILD_IMAGE
@@ -336,35 +356,39 @@ jobs:
       image_resource:
         type: docker-image
         source:
-          repository: springci/spring-boot-ci-image
-          tag: master
+          repository: concourse/docker-image-resource
       inputs:
-      - name: repo
+      - name: pack
       - name: nexus
+      - name: builder
+      - name: run
       outputs:
       - name: image
-      caches:
-      - path: repo/packs
       run:
         path: bash
         args:
         - -c
         - |
           set -e
-          cd repo
-          curl -L -J -s -o cf-cli.tgz "https://cli.run.pivotal.io/stable?release=linux64-binary&version=6.40.0"
-          tar -zxf cf-cli.tgz -C /usr/local/bin
-          cf install-plugin -f cflocal
-          source /docker-lib.sh
-          start_docker
+          source /opt/resource/common.sh
+          start_docker 3 3
 
-          mv packs/.*.cache ./ || true
-          cf local stage blog-api -p $(ls ../nexus/*.jar)
-          cf local export blog-api -r making/blog-api:latest
-          mv .*.cache packs/ || true
+          tar xzf ./pack/pack-*.tgz -C /usr/local/bin/
+
+          docker load -i builder/image
+          docker tag "$(cat builder/image-id)" "$(cat builder/repository):$(cat builder/tag)"
+          docker load -i run/image
+          docker tag "$(cat run/image-id)" "$(cat run/repository):$(cat run/tag)"
           docker images
-          docker save making/blog-api:latest  > ../image/image
-          docker images --no-trunc --digests making/blog-api --format "{{.ID}}" > ../image/image-id
+
+          pack build making/blog-api \
+            --no-pull \
+            --builder ((cnb-builder-image)) \
+            -p nexus
+
+          docker images
+          docker save making/blog-api:latest  > ./image/image
+          docker images --no-trunc --digests making/blog-api --format "{{.ID}}" > ./image/image-id
   - put: docker
     params:
       load: image
@@ -609,17 +633,22 @@ jobs:
 - name: docker-push-master
   plan:
   - aggregate:
-    - get: repo
-      resource: repo-master
+    - get: pack
+      params:
+        globs:
+        - pack-*-linux.tgz
+    - get: nexus
       passed:
-      - upload-to-nexus-releases
-      trigger: true
-    - get: repo-version
-      passed:
-      - upload-to-nexus-releases
+      - upload-to-nexus-snapshots
     - get: nexus
       passed:
       - upload-to-nexus-releases
+    - get: builder
+      params:
+        save: true
+    - get: run
+      params:
+        save: true
   - task: build-image
     privileged: true
     config:
