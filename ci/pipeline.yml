@@ -1,4 +1,21 @@
 ---
+params:
+  git: &GIT_PARAMS
+    GIT_EMAIL: ((git-email))
+    GIT_NAME: ((git-name))
+    SRC_BRANCH: develop
+  java_opts: &JAVA_OPS
+    _JAVA_OPTIONS: -Duser.timezone=Asia/Tokyo -Duser.language=ja -Duser.country=JP -Djava.security.egd=file:/dev/./urandom
+    SPRING_DATASOURCE_USERNAME: postgres
+    SPRING_DATASOURCE_PASSWORD: testdb
+  slack_on_success_params: &SLACK_SUCCESS
+    channel: '#concourse'
+    text: |
+      <!here> :white_check_mark: *$BUILD_PIPELINE_NAME/$BUILD_JOB_NAME* succeeded with build <$ATC_EXTERNAL_URL/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME|$BUILD_NAME>!
+  slack_on_failure_params: &SLACK_FAILURE
+    channel: '#concourse'
+    text: |
+      <!here> :rotating_light: *$BUILD_PIPELINE_NAME/$BUILD_JOB_NAME* failed with build <$ATC_EXTERNAL_URL/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME|$BUILD_NAME>!
 resource_types:
 - name: slack-notification
   type: docker-image
@@ -394,6 +411,7 @@ jobs:
           sed "s/INFO_DOCKER_DIGEST/${DIGEST}/g" | \
           sed "s/namespace: blog/namespace: blog-dev/g" | \
           sed "s/ik.am/k8s.bosh.tokyo/g" | \
+          sed "s/cloud.k8s.bosh.tokyo/cloud.ik.am/g" | \
           sed "s/3008/3058/g" > updated/blog-api.yml
   - put: k8s-develop
     params:
@@ -408,6 +426,28 @@ jobs:
       put: slack-alert
       params:
         <<: *SLACK_SUCCESS
+- name: load-test-develop
+  plan:
+  - get: repo-src
+    resource: repo-develop
+    passed:
+    - deploy-k8s-develop
+    trigger: true
+  - task: wrk
+    params:
+    config:
+      platform: linux
+      image_resource:
+        type: registry-image
+        source:
+          repository: skandyla/wrk
+      run:
+        path: sh
+        args:
+        - -c
+        - |
+          wrk -t16 -c200 -d30s https://blog-api.k8s.bosh.tokyo/entries --latency
+          
 ### Prod
 - name: merge-develop-to-master
   plan:
@@ -415,7 +455,7 @@ jobs:
     - get: repo-src
       resource: repo-develop
       passed:
-      - deploy-k8s-develop
+      - load-test-develop
     - get: repo-dest
       resource: repo-master
   - task: merge-develop-to-master
@@ -646,13 +686,34 @@ jobs:
       put: slack-alert
       params:
         <<: *SLACK_SUCCESS
+- name: load-test-master
+  plan:
+  - get: repo-src
+    resource: repo-master
+    passed:
+    - deploy-k8s-master
+    trigger: true
+  - task: wrk
+    params:
+    config:
+      platform: linux
+      image_resource:
+        type: registry-image
+        source:
+          repository: skandyla/wrk
+      run:
+        path: sh
+        args:
+        - -c
+        - |
+          wrk -t16 -c200 -d30s https://blog-api.ik.am/entries --latency
 - name: bump-to-next-patch-version
   plan:
   - aggregate:
     - get: repo-src
       resource: repo-master
       passed:
-      - deploy-k8s-master
+      - load-test-master
       trigger: true
     - get: repo-dest
       resource: repo-develop
@@ -840,21 +901,3 @@ jobs:
       - put: slack-alert
         params:
           <<: *SLACK_FAILURE
-
-params:
-  git: &GIT_PARAMS
-    GIT_EMAIL: ((git-email))
-    GIT_NAME: ((git-name))
-    SRC_BRANCH: develop
-  java_opts: &JAVA_OPS
-    _JAVA_OPTIONS: -Duser.timezone=Asia/Tokyo -Duser.language=ja -Duser.country=JP -Djava.security.egd=file:/dev/./urandom
-    SPRING_DATASOURCE_USERNAME: postgres
-    SPRING_DATASOURCE_PASSWORD: testdb
-  slack_on_success_params: &SLACK_SUCCESS
-    channel: '#concourse'
-    text: |
-      <!here> :white_check_mark: *$BUILD_PIPELINE_NAME/$BUILD_JOB_NAME* succeeded with build <$ATC_EXTERNAL_URL/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME|$BUILD_NAME>!
-  slack_on_failure_params: &SLACK_FAILURE
-    channel: '#concourse'
-    text: |
-      <!here> :rotating_light: *$BUILD_PIPELINE_NAME/$BUILD_JOB_NAME* failed with build <$ATC_EXTERNAL_URL/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME|$BUILD_NAME>!
