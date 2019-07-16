@@ -406,11 +406,11 @@ jobs:
     - get: repo
       resource: repo-develop
       passed:
-      - docker-push-develop
-      trigger: true
+      - upload-to-nexus-snapshots
     - get: docker
       passed:
       - docker-push-develop
+      trigger: true
   - task: update-k8s-manifest
     config:
       platform: linux
@@ -639,9 +639,6 @@ jobs:
         - pack-*-linux.tgz
     - get: nexus
       passed:
-      - upload-to-nexus-snapshots
-    - get: nexus
-      passed:
       - upload-to-nexus-releases
     - get: builder
       params:
@@ -672,14 +669,14 @@ jobs:
     - get: repo
       resource: repo-master
       passed:
-      - docker-push-master
-      trigger: true
+      - upload-to-nexus-releases
     - get: repo-version
       passed:
-      - docker-push-master
+      - upload-to-nexus-releases
     - get: docker
       passed:
       - docker-push-master
+      trigger: true
   - task: update-k8s-manifest
     config:
       platform: linux
