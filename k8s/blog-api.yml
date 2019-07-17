@@ -1,7 +1,7 @@
 kind: Service
 apiVersion: v1
 metadata:
-  name: blog-api-service
+  name: blog-api
   namespace: blog
   labels:
     app: blog-api
@@ -21,7 +21,7 @@ metadata:
   name: blog-api
   namespace: blog
 spec:
-  serviceName: blog-api-service
+  serviceName: blog-api
   route:
     predicates:
       - Host=blog-api.ik.am
