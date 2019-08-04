@@ -61,6 +61,9 @@ public class EntryV2Handler {
 
 	public RouterFunction<ServerResponse> routes(EntryHandler v1) {
 		return route() //
+				.OPTIONS("/entries/**", req -> ServerResponse.ok().build())
+				.OPTIONS("/tags/**", req -> ServerResponse.ok().build())
+				.OPTIONS("/categories/**", req -> ServerResponse.ok().build())
 				.GET("/entries/next", req -> this.entryMapper.nextId()
 						.flatMap(id -> seeOther(URI.create(String.format(
 								"https://github.com/making/blog.ik.am/new/master/content/%05d.md",
