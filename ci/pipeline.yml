@@ -76,9 +76,9 @@ resources:
   - name: docker
     type: docker-image
     source:
-      repository: asia.gcr.io/fe-tmaki/blog-api
-      username: _json_key
-      password: ((gcr-key))
+      repository: making/blog-api
+      username: ((docker-username))
+      password: ((docker-password))
   - name: k8s-master
     type: kubernetes
     source:
@@ -112,26 +112,20 @@ resources:
     source:
       url: https://repo1.maven.org/maven2
       artifact: org.springframework.cloud:spring-cloud-dependencies:pom
-  - name: pack
-    type: github-release
-    source:
-      owner: buildpack
-      repository: pack
-      access_token: ((github-access-token))
   - name: builder
     type: docker-image
     source:
       repository: ((cnb-builder-image))
-  - name: run
-    type: docker-image
+      tag: ((cnb-builder-tag))
+  - name: cnb-on-concourse
+    type: git
     source:
-      repository: ((cnb-run-image))
-      tag: ((cnb-run-tag))
+      uri: https://github.com/making/cnb-on-concourse.git
 jobs:
 ### Check Spring Boot
 - name: check-spring-boot-version
   plan:
-  - aggregate:
+  - in_parallel:
     - get: pom
       resource: spring-boot
       trigger: true
@@ -179,7 +173,7 @@ jobs:
 ### Check Spring Cloud
 - name: check-spring-cloud-version
   plan:
-  - aggregate:
+  - in_parallel:
     - get: pom
       resource: spring-cloud
       trigger: true
@@ -228,7 +222,7 @@ jobs:
 - name: unit-test-develop
   build_logs_to_retain: 5
   plan:
-    - aggregate:
+    - in_parallel:
       - get: repo
         resource: repo-develop
         trigger: true
@@ -323,8 +317,9 @@ jobs:
           cd repo
           ./mvnw -f pom.xml package -Drestdoc.scheme=${RESTDOC_SCHEME} -Drestdoc.host=${RESTDOC_HOST} -Drestdoc.port=${RESTDOC_PORT}
           cp target/*.jar ../build/
-  - aggregate:
+  - in_parallel:
     - put: nexus
+      attempts: 5
       params:
         file: build/*.jar
         pom_file: repo/pom.xml
@@ -335,64 +330,32 @@ jobs:
 - name: docker-push-develop
   build_logs_to_retain: 5
   plan:
-  - aggregate:
-    - get: pack
-      params:
-        globs:
-        - pack-*-linux.tgz
-    - get: nexus
+  - in_parallel:
+    - get: workspace
+      resource: nexus
       passed:
       - upload-to-nexus-snapshots
       trigger: true
+    - get: cnb-on-concourse
     - get: builder
-      params:
-        save: true
-    - get: run
-      params:
-        save: true
-  - task: build-image
+  - task: build
+    image: builder
+    file: cnb-on-concourse/tasks/pack-build.yml
+    params:
+      USE_CRED_HELPERS: false
+      IMAGE: making/blog-api
+      DOCKER_REGISTRY: index.docker.io
+      DOCKER_USERNAME: ((docker-username))
+      DOCKER_PASSWORD: ((docker-password))
+  - task: pull-and-export-image
     privileged: true
-    config: &BUILD_IMAGE
-      platform: linux
-      image_resource:
-        type: docker-image
-        source:
-          repository: concourse/docker-image-resource
-      inputs:
-      - name: pack
-      - name: nexus
-      - name: builder
-      - name: run
-      outputs:
-      - name: image
-      run:
-        path: bash
-        args:
-        - -c
-        - |
-          set -e
-          source /opt/resource/common.sh
-          start_docker 3 3
-
-          tar xzf ./pack/pack-*.tgz -C /usr/local/bin/
-
-          docker load -i builder/image
-          docker tag "$(cat builder/image-id)" "$(cat builder/repository):$(cat builder/tag)"
-          docker load -i run/image
-          docker tag "$(cat run/image-id)" "$(cat run/repository):$(cat run/tag)"
-          docker images
-
-          pack build making/blog-api \
-            --no-pull \
-            --builder ((cnb-builder-image)) \
-            -p nexus
-
-          docker images
-          docker save making/blog-api:latest  > ./image/image
-          docker images --no-trunc --digests making/blog-api --format "{{.ID}}" > ./image/image-id
+    file: cnb-on-concourse/tasks/pull-and-export-image.yml
+    params:
+      USE_CRED_HELPERS: false
+      IMAGE: making/blog-api
   - put: docker
     params:
-      load: image
+      load: out
     on_failure:
       put: slack-alert
       params:
@@ -403,7 +366,7 @@ jobs:
         <<: *SLACK_SUCCESS
 - name: deploy-k8s-develop
   plan:
-  - aggregate:
+  - in_parallel:
     - get: repo
       resource: repo-develop
       passed:
@@ -437,6 +400,7 @@ jobs:
           sed "s/namespace: blog/namespace: blog-dev/g" | \
           sed "s/ik.am/k8s.bosh.tokyo/g" | \
           sed "s/cloud.k8s.bosh.tokyo/cloud.ik.am/g" | \
+          sed "s|asia.gcr.io/fe-tmaki|making|g" | \
           sed "s/3008/3058/g" > updated/blog-api.yml
   - put: k8s-develop
     params:
@@ -476,7 +440,7 @@ jobs:
 ### Prod
 - name: merge-develop-to-master
   plan:
-  - aggregate:
+  - in_parallel:
     - get: repo-src
       resource: repo-develop
       passed:
@@ -525,7 +489,7 @@ jobs:
 - name: unit-test-master
   build_logs_to_retain: 5
   plan:
-  - aggregate:
+  - in_parallel:
     - get: repo
       resource: repo-master
       trigger: true
@@ -544,7 +508,7 @@ jobs:
         <<: *SLACK_FAILURE 
 - name: tag-master
   plan:
-  - aggregate:
+  - in_parallel:
     - get: repo
       resource: repo-master
       trigger: true
@@ -601,7 +565,7 @@ jobs:
         <<: *SLACK_FAILURE 
 - name: upload-to-nexus-releases
   plan:
-  - aggregate:
+  - in_parallel:
     - get: repo
       resource: repo-master
       passed:
@@ -624,6 +588,7 @@ jobs:
       params:
         <<: *SLACK_FAILURE 
   - put: nexus
+    attempts: 5
     params:
       file: build/*.jar
       pom_file: repo/pom.xml
@@ -633,31 +598,35 @@ jobs:
         <<: *SLACK_FAILURE
 - name: docker-push-master
   plan:
-  - aggregate:
-    - get: pack
-      params:
-        globs:
-        - pack-*-linux.tgz
-    - get: nexus
+  - in_parallel:
+    - get: workspace
+      resource: nexus
       passed:
       - upload-to-nexus-releases
       trigger: true
+    - get: cnb-on-concourse
     - get: builder
-      params:
-        save: true
-    - get: run
-      params:
-        save: true
     - get: repo-version
       passed:
       - upload-to-nexus-releases
-  - task: build-image
+  - task: build
+    image: builder
+    file: cnb-on-concourse/tasks/pack-build.yml
+    params:
+      USE_CRED_HELPERS: false
+      IMAGE: making/blog-api
+      DOCKER_REGISTRY: index.docker.io
+      DOCKER_USERNAME: ((docker-username))
+      DOCKER_PASSWORD: ((docker-password))
+  - task: pull-and-export-image
     privileged: true
-    config:
-      <<: *BUILD_IMAGE
+    file: cnb-on-concourse/tasks/pull-and-export-image.yml
+    params:
+      USE_CRED_HELPERS: false
+      IMAGE: making/blog-api
   - put: docker
     params:
-      load: image
+      load: out
       tag: repo-version/number
       tag_as_latest: true
     on_failure:
@@ -670,7 +639,7 @@ jobs:
         <<: *SLACK_SUCCESS
 - name: deploy-k8s-master
   plan:
-  - aggregate:
+  - in_parallel:
     - get: repo
       resource: repo-master
       passed:
@@ -703,7 +672,10 @@ jobs:
           set -e
           VERSION=`cat repo-version/number`
           DIGEST=`cat docker/digest`
-          sed "s/latest/${VERSION}/g" repo/k8s/blog-api.yml | sed "s/FIXME/Bump to ${VERSION} $(date)/g" | sed "s/INFO_DOCKER_DIGEST/${DIGEST}/g" > updated/blog-api.yml
+          sed "s/latest/${VERSION}/g" repo/k8s/blog-api.yml | \
+           sed "s|asia.gcr.io/fe-tmaki|making|g" | \
+           sed "s/FIXME/Bump to ${VERSION} $(date)/g" | \
+           sed "s/INFO_DOCKER_DIGEST/${DIGEST}/g" > updated/blog-api.yml
   - put: k8s-master
     params:
       kubectl: apply -f updated/blog-api.yml
@@ -740,7 +712,7 @@ jobs:
           wrk -t16 -c200 -d30s https://blog-api.ik.am/entries --latency
 - name: bump-to-next-patch-version
   plan:
-  - aggregate:
+  - in_parallel:
     - get: repo-src
       resource: repo-master
       passed:
@@ -846,7 +818,7 @@ jobs:
         <<: *SLACK_SUCCESS
 - name: bump-to-next-minor-version
   plan:
-  - aggregate:
+  - in_parallel:
     - get: repo
       resource: repo-develop
     - get: repo-version
@@ -865,7 +837,7 @@ jobs:
       file: repo-version/number
 - name: bump-to-next-major-version
   plan:
-  - aggregate:
+  - in_parallel:
     - get: repo
       resource: repo-develop
     - get: repo-version
@@ -895,7 +867,7 @@ jobs:
 - name: unit-test-pr
   build_logs_to_retain: 5
   plan:
-  - aggregate:
+  - in_parallel:
     - get: repo
       resource: repo-pr
       trigger: true
