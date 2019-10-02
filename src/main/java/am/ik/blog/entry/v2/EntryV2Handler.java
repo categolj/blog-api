@@ -15,6 +15,9 @@ import am.ik.blog.entry.Tag;
 import am.ik.blog.entry.criteria.CategoryOrders;
 import am.ik.blog.entry.criteria.SearchCriteria;
 import am.ik.blog.support.PageableImpl;
+import io.github.resilience4j.circuitbreaker.CircuitBreaker;
+import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
+import io.github.resilience4j.reactor.circuitbreaker.operator.CircuitBreakerOperator;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -48,12 +51,16 @@ import static org.springframework.web.reactive.function.server.ServerResponse.se
 @Component
 public class EntryV2Handler {
 	private final EntryMapper entryMapper;
+	private final CircuitBreaker circuitBreakerFindOne;
+	private final CircuitBreaker circuitBreakerFindPage;
 	private final ParameterizedTypeReference<Page<EntryV2>> typeReference = new ParameterizedTypeReference<>() {
 	};
 	private static final boolean DEFAULT_EXCLUDE_CONTENT = false;
 
-	public EntryV2Handler(EntryMapper entryMapper) {
+	public EntryV2Handler(EntryMapper entryMapper, CircuitBreakerRegistry circuitBreakerRegistry) {
 		this.entryMapper = entryMapper;
+		this.circuitBreakerFindOne = circuitBreakerRegistry.circuitBreaker("findOne");
+		this.circuitBreakerFindPage = circuitBreakerRegistry.circuitBreaker("findPage");
 	}
 
 	private static final RequestPredicate notAcceptAll = RequestPredicates
@@ -65,21 +72,17 @@ public class EntryV2Handler {
 				.OPTIONS("/tags/**", req -> ServerResponse.ok().build())
 				.OPTIONS("/categories/**", req -> ServerResponse.ok().build())
 				.GET("/entries/next", req -> this.entryMapper.nextId()
-						.flatMap(id -> seeOther(URI.create(String.format(
-								"https://github.com/making/blog.ik.am/new/master/content/%05d.md",
-								id))).build()))
+						.flatMap(id -> seeOther(URI.create(
+								String.format("https://github.com/making/blog.ik.am/new/master/content/%05d.md", id)))
+										.build()))
 				.HEAD("/entries/{entryId}", v1::headEntry) //
 				.GET("/entries/{entryId}", this::getEntry) //
 				.HEAD("/entries", v1::headEntries) //
 				.GET("/entries", queryParam("q", Objects::nonNull), this::searchEntries) //
-				.GET("/entries", notAcceptAll.and(accept(APPLICATION_STREAM_JSON)),
-						this::jsonStreamEntries)
-				.GET("/entries", notAcceptAll.and(accept(TEXT_EVENT_STREAM)),
-						this::textEventStreamEntries) //
+				.GET("/entries", notAcceptAll.and(accept(APPLICATION_STREAM_JSON)), this::jsonStreamEntries)
+				.GET("/entries", notAcceptAll.and(accept(TEXT_EVENT_STREAM)), this::textEventStreamEntries) //
 				.GET("/entries", accept(APPLICATION_JSON), this::getEntries) //
-				.GET("/users/{updatedBy}/entries",
-						queryParam("updated", Objects::nonNull),
-						this::getEntriesByUpdatedBy) //
+				.GET("/users/{updatedBy}/entries", queryParam("updated", Objects::nonNull), this::getEntriesByUpdatedBy) //
 				.GET("/users/{createdBy}/entries", this::getEntriesByCreatedBy) //
 				.GET("/tags/{tag}/entries", this::getEntriesByTag) //
 				.GET("/categories/{categories}/entries", this::getEntriesByCategories) //
@@ -87,10 +90,11 @@ public class EntryV2Handler {
 	}
 
 	public Mono<ServerResponse> getEntry(ServerRequest request) {
-		boolean excludeContent = request.queryParam("excludeContent")
-				.map(Boolean::valueOf).orElse(DEFAULT_EXCLUDE_CONTENT);
+		boolean excludeContent = request.queryParam("excludeContent").map(Boolean::valueOf)
+				.orElse(DEFAULT_EXCLUDE_CONTENT);
 		EntryId entryId = new EntryId(request.pathVariable("entryId"));
-		Mono<Entry> entry = entryMapper.findOne(entryId, excludeContent);
+		Mono<Entry> entry = entryMapper.findOne(entryId, excludeContent)
+				.transformDeferred(CircuitBreakerOperator.of(this.circuitBreakerFindOne));
 		return entry.flatMap(e -> {
 			String rfc1123 = e.getUpdated().getDate().rfc1123();
 			return ok() //
@@ -99,29 +103,28 @@ public class EntryV2Handler {
 					.header(EXPIRES, rfc1123) //
 					.bodyValue(EntryV2.from(e));
 		}) //
-				.switchIfEmpty(Mono.error(() -> new ResponseStatusException(NOT_FOUND,
-						"entry " + entryId + " is not found.")));
+				.switchIfEmpty(Mono
+						.error(() -> new ResponseStatusException(NOT_FOUND, "entry " + entryId + " is not found.")));
 	}
 
 	public Mono<ServerResponse> getEntries(ServerRequest request) {
 		SearchCriteria criteria = SearchCriteria.builder().excludeContent(true).build();
 		Pageable pageable = new PageableImpl(request);
-		Mono<Page<EntryV2>> entries = entryMapper.findPage(criteria, pageable)
-				.map(this::toEntryV2Page);
+		Mono<Page<EntryV2>> entries = entryMapper.findPage(criteria, pageable).map(this::toEntryV2Page)
+				.transformDeferred(CircuitBreakerOperator.of(this.circuitBreakerFindPage));
 		return ok().body(entries, typeReference);
 	}
 
 	public Mono<ServerResponse> searchEntries(ServerRequest request) {
 		String q = request.queryParam("q").orElse("");
-		SearchCriteria criteria = SearchCriteria.builder().excludeContent(true).keyword(q)
-				.build();
+		SearchCriteria criteria = SearchCriteria.builder().excludeContent(true).keyword(q).build();
 		Pageable pageable = new PageableImpl(request);
-		Mono<Page<Entry>> entries = entryMapper.findPage(criteria, pageable);
+		Mono<Page<Entry>> entries = entryMapper.findPage(criteria, pageable)
+				.transformDeferred(CircuitBreakerOperator.of(this.circuitBreakerFindPage));
 		return ok().body(entries.map(this::toEntryV2Page), typeReference);
 	}
 
-	private Mono<ServerResponse> streamEntries(ServerRequest request,
-			MediaType mediaType) {
+	private Mono<ServerResponse> streamEntries(ServerRequest request, MediaType mediaType) {
 		SearchCriteria criteria = SearchCriteria.builder().excludeContent(true).build();
 		Pageable pageable = new PageableImpl(request);
 		Flux<Entry> entries = entryMapper.collectAll(criteria, pageable);
@@ -140,52 +143,52 @@ public class EntryV2Handler {
 	}
 
 	public Mono<ServerResponse> getEntriesByCreatedBy(ServerRequest request) {
-		boolean excludeContent = request.queryParam("excludeContent")
-				.map(Boolean::valueOf).orElse(DEFAULT_EXCLUDE_CONTENT);
+		boolean excludeContent = request.queryParam("excludeContent").map(Boolean::valueOf)
+				.orElse(DEFAULT_EXCLUDE_CONTENT);
 		Name createdBy = new Name(request.pathVariable("createdBy"));
-		SearchCriteria criteria = SearchCriteria.builder().createdBy(createdBy)
-				.excludeContent(excludeContent).build();
+		SearchCriteria criteria = SearchCriteria.builder().createdBy(createdBy).excludeContent(excludeContent).build();
 		Pageable pageable = new PageableImpl(request);
-		Mono<Page<Entry>> entries = entryMapper.findPage(criteria, pageable);
+		Mono<Page<Entry>> entries = entryMapper.findPage(criteria, pageable)
+				.transformDeferred(CircuitBreakerOperator.of(this.circuitBreakerFindPage));
 		return ok().body(entries.map(this::toEntryV2Page), typeReference);
 	}
 
 	public Mono<ServerResponse> getEntriesByUpdatedBy(ServerRequest request) {
-		boolean excludeContent = request.queryParam("excludeContent")
-				.map(Boolean::valueOf).orElse(DEFAULT_EXCLUDE_CONTENT);
+		boolean excludeContent = request.queryParam("excludeContent").map(Boolean::valueOf)
+				.orElse(DEFAULT_EXCLUDE_CONTENT);
 		Name updatedBy = new Name(request.pathVariable("updatedBy"));
-		SearchCriteria criteria = SearchCriteria.builder().lastModifiedBy(updatedBy)
-				.excludeContent(excludeContent).build();
+		SearchCriteria criteria = SearchCriteria.builder().lastModifiedBy(updatedBy).excludeContent(excludeContent)
+				.build();
 		Pageable pageable = new PageableImpl(request);
-		Mono<Page<Entry>> entries = entryMapper.findPage(criteria, pageable);
+		Mono<Page<Entry>> entries = entryMapper.findPage(criteria, pageable)
+				.transformDeferred(CircuitBreakerOperator.of(this.circuitBreakerFindPage));
 		return ok().body(entries.map(this::toEntryV2Page), typeReference);
 	}
 
 	public Mono<ServerResponse> getEntriesByTag(ServerRequest request) {
 		Tag tag = new Tag(request.pathVariable("tag"));
-		SearchCriteria criteria = SearchCriteria.builder().tag(tag).excludeContent(true)
-				.build();
+		SearchCriteria criteria = SearchCriteria.builder().tag(tag).excludeContent(true).build();
 		Pageable pageable = new PageableImpl(request);
-		Mono<Page<Entry>> entries = entryMapper.findPage(criteria, pageable);
+		Mono<Page<Entry>> entries = entryMapper.findPage(criteria, pageable)
+				.transformDeferred(CircuitBreakerOperator.of(this.circuitBreakerFindPage));
 		return ok().body(entries.map(this::toEntryV2Page), typeReference);
 	}
 
 	public Mono<ServerResponse> getEntriesByCategories(ServerRequest request) {
-		List<Category> categories = Arrays
-				.stream(request.pathVariable("categories").split(",")).map(Category::new)
+		List<Category> categories = Arrays.stream(request.pathVariable("categories").split(",")).map(Category::new)
 				.collect(toList());
 		int order = categories.size() - 1;
 		Category category = categories.get(order);
 		SearchCriteria criteria = SearchCriteria.builder()
-				.categoryOrders(new CategoryOrders().add(category, order) /* TODO */)
-				.excludeContent(true).build();
+				.categoryOrders(new CategoryOrders().add(category, order) /* TODO */).excludeContent(true).build();
 		Pageable pageable = new PageableImpl(request);
-		Mono<Page<Entry>> entries = entryMapper.findPage(criteria, pageable);
+		Mono<Page<Entry>> entries = entryMapper.findPage(criteria, pageable)
+				.transformDeferred(CircuitBreakerOperator.of(this.circuitBreakerFindPage));
 		return ok().body(entries.map(this::toEntryV2Page), typeReference);
 	}
 
 	public Page<EntryV2> toEntryV2Page(Page<Entry> page) {
-		return new PageImpl<>(page.stream().map(EntryV2::from).collect(toList()),
-				page.getPageable(), page.getTotalElements());
+		return new PageImpl<>(page.stream().map(EntryV2::from).collect(toList()), page.getPageable(),
+				page.getTotalElements());
 	}
 }

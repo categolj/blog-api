@@ -34,6 +34,7 @@
 		<restdoc.host>localhost</restdoc.host>
 		<restdoc.port>8080</restdoc.port>
 		<docs.resources.version>0.1.2.RELEASE</docs.resources.version>
+		<resilience4j.version>1.1.0</resilience4j.version>
 	</properties>
 	<dependencies>
 		<dependency>
@@ -124,6 +125,16 @@
 			<groupId>org.springframework.data</groupId>
 			<artifactId>spring-data-r2dbc</artifactId>
 			<version>1.0.0.RC1</version>
+		</dependency>
+		<dependency>
+			<groupId>io.github.resilience4j</groupId>
+			<artifactId>resilience4j-circuitbreaker</artifactId>
+			<version>${resilience4j.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>io.github.resilience4j</groupId>
+			<artifactId>resilience4j-reactor</artifactId>
+			<version>${resilience4j.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.flywaydb</groupId>

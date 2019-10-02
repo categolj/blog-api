@@ -3,6 +3,7 @@ package am.ik.blog.exception;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import reactor.core.publisher.Mono;
 
 import org.springframework.core.Ordered;
@@ -19,15 +20,16 @@ public class RestWebExceptionHandler implements WebExceptionHandler {
 	@Override
 	public Mono<Void> handle(ServerWebExchange exchange, Throwable ex) {
 		if (ex instanceof NumberFormatException) {
-			Matcher matcher = Pattern.compile("For input string: \"(.+)\"")
-					.matcher(ex.getMessage());
+			Matcher matcher = Pattern.compile("For input string: \"(.+)\"").matcher(ex.getMessage());
 			if (matcher.find()) {
 				String variableName = matcher.group(1);
 				return Mono.error(new ResponseStatusException(HttpStatus.BAD_REQUEST,
-						String.format("The given request (%s) is not valid.",
-								variableName),
-						ex));
+						String.format("The given request (%s) is not valid.", variableName), ex));
 			}
+		}
+		if (ex instanceof CallNotPermittedException) {
+			return Mono.error(new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE,
+					"The service is temporarily unavailable.", ex));
 		}
 		return Mono.error(ex);
 	}
