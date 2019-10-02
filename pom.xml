@@ -25,6 +25,7 @@
 		<blog-mapper.version>4.8.1</blog-mapper.version>
 		<spring-cloud.version>Hoxton.M2</spring-cloud.version>
 		<r2dbc-releasetrain.version>Arabba-RC1</r2dbc-releasetrain.version>
+		<spring-framework.version>5.2.0.RELEASE</spring-framework.version>
 		<jackson.version>2.9.10</jackson.version>
 		<restdocs-api-spec.version>0.9.4</restdocs-api-spec.version>
 		<restdocs-spec.version>0.14</restdocs-spec.version>
@@ -73,6 +74,10 @@
 					<!--<artifactId>hibernate-validator</artifactId>-->
 				<!--</exclusion>-->
 			<!--</exclusions>-->
+		</dependency>
+		<dependency>
+			<groupId>io.projectreactor.netty</groupId>
+			<artifactId>reactor-netty</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
