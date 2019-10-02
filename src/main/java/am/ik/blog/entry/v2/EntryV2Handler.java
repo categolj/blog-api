@@ -97,7 +97,7 @@ public class EntryV2Handler {
 					.header(LAST_MODIFIED, rfc1123) //
 					.header(CACHE_CONTROL, "max-age=0") //
 					.header(EXPIRES, rfc1123) //
-					.syncBody(EntryV2.from(e));
+					.bodyValue(EntryV2.from(e));
 		}) //
 				.switchIfEmpty(Mono.error(() -> new ResponseStatusException(NOT_FOUND,
 						"entry " + entryId + " is not found.")));
