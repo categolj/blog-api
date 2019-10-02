@@ -27,6 +27,7 @@
 		<r2dbc-releasetrain.version>Arabba-RC1</r2dbc-releasetrain.version>
 		<spring-framework.version>5.2.0.RELEASE</spring-framework.version>
 		<jackson.version>2.9.10</jackson.version>
+		<reactor-bom.version>Dysprosium-RELEASE</reactor-bom.version>
 		<restdocs-api-spec.version>0.9.4</restdocs-api-spec.version>
 		<restdocs-spec.version>0.14</restdocs-spec.version>
 		<restdoc.scheme>http</restdoc.scheme>
