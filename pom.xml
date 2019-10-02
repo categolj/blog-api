@@ -14,7 +14,7 @@
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>2.2.0.M5</version>
+		<version>2.2.0.M6</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 
@@ -23,8 +23,9 @@
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 		<java.version>11</java.version>
 		<blog-mapper.version>4.8.1</blog-mapper.version>
-		<spring-cloud.version>Hoxton.M1</spring-cloud.version>
-		<r2dbc-releasetrain.version>Arabba-M8</r2dbc-releasetrain.version>
+		<spring-cloud.version>Hoxton.M2</spring-cloud.version>
+		<r2dbc-releasetrain.version>Arabba-RC1</r2dbc-releasetrain.version>
+		<jackson.version>2.9.10</jackson.version>
 		<restdocs-api-spec.version>0.9.4</restdocs-api-spec.version>
 		<restdocs-spec.version>0.14</restdocs-spec.version>
 		<restdoc.scheme>http</restdoc.scheme>
@@ -116,7 +117,7 @@
 		<dependency>
 			<groupId>org.springframework.data</groupId>
 			<artifactId>spring-data-r2dbc</artifactId>
-			<version>1.0.0.BUILD-SNAPSHOT</version>
+			<version>1.0.0.RC1</version>
 		</dependency>
 		<dependency>
 			<groupId>org.flywaydb</groupId>

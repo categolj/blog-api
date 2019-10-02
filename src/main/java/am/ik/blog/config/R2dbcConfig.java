@@ -21,8 +21,7 @@ import org.springframework.transaction.reactive.TransactionalOperator;
 @Configuration
 public class R2dbcConfig {
 	@Bean
-	public ConnectionFactory connectionFactory(
-			@Value("${spring.datasource.url}") String uriString,
+	public ConnectionFactory connectionFactory(@Value("${spring.datasource.url}") String uriString,
 			@Value("${spring.datasource.username}") String username,
 			@Value("${spring.datasource.password}") String password, Tracer tracer) {
 		final URI uri = URI.create(uriString.replace("jdbc:", ""));
@@ -34,8 +33,7 @@ public class R2dbcConfig {
 						.password(password) //
 						.database(uri.getPath().replace("/", "")) //
 						.build());
-		final ConnectionFactory factory = ProxyConnectionFactory
-				.builder(connectionFactory) //
+		final ConnectionFactory factory = ProxyConnectionFactory.builder(connectionFactory) //
 				.listener(new TracingExecutionListener(tracer)) //
 				.build();
 		return new ConnectionPool(ConnectionPoolConfiguration.builder(factory) //
@@ -51,9 +49,7 @@ public class R2dbcConfig {
 	}
 
 	@Bean
-	public TransactionalOperator transactionalOperator(
-			ConnectionFactory connectionFactory) {
-		return TransactionalOperator
-				.create(new R2dbcTransactionManager(connectionFactory));
+	public TransactionalOperator transactionalOperator(ConnectionFactory connectionFactory) {
+		return TransactionalOperator.create(new R2dbcTransactionManager(connectionFactory));
 	}
 }

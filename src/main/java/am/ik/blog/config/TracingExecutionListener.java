@@ -47,14 +47,13 @@ public class TracingExecutionListener implements LifeCycleListener {
 		Span connectionSpan = this.tracer.nextSpan().kind(Span.Kind.CLIENT).start();
 
 		// store the span for retrieval at "afterCreateOnConnectionFactory"
-		methodExecutionInfo.addCustomValue("connectionSpan", connectionSpan);
+		methodExecutionInfo.getValueStore().put("connectionSpan", connectionSpan);
 	}
 
 	@Override
 	public void afterCreateOnConnectionFactory(MethodExecutionInfo methodExecutionInfo) {
 		// retrieve the span created at "beforeCreateOnConnectionFactory"
-		Span connectionSpan = methodExecutionInfo.getCustomValue("connectionSpan",
-				Span.class);
+		Span connectionSpan = methodExecutionInfo.getValueStore().get("connectionSpan", Span.class);
 
 		Throwable thrown = methodExecutionInfo.getThrown();
 		if (thrown != null) {
@@ -66,8 +65,7 @@ public class TracingExecutionListener implements LifeCycleListener {
 
 		connectionSpan.name("r2dbc:connection").tag(TAG_CONNECTION_ID, connectionId)
 				.tag(TAG_THREAD_ID, String.valueOf(methodExecutionInfo.getThreadId()))
-				.tag(TAG_THREAD_NAME, methodExecutionInfo.getThreadName())
-				.annotate("Connection Acquired");
+				.tag(TAG_THREAD_NAME, methodExecutionInfo.getThreadName()).annotate("Connection Acquired");
 
 		this.connectionSpans.put(connectionId, connectionSpan);
 	}
@@ -87,12 +85,9 @@ public class TracingExecutionListener implements LifeCycleListener {
 		connectionSpan.tag(TAG_CONNECTION_ID, connectionId)
 				.tag(TAG_THREAD_ID, String.valueOf(methodExecutionInfo.getThreadId()))
 				.tag(TAG_THREAD_NAME, methodExecutionInfo.getThreadName())
-				.tag(TAG_TRANSACTION_COUNT,
-						String.valueOf(connectionInfo.getTransactionCount()))
+				.tag(TAG_TRANSACTION_COUNT, String.valueOf(connectionInfo.getTransactionCount()))
 				.tag(TAG_COMMIT_COUNT, String.valueOf(connectionInfo.getCommitCount()))
-				.tag(TAG_ROLLBACK_COUNT,
-						String.valueOf(connectionInfo.getRollbackCount()))
-				.finish();
+				.tag(TAG_ROLLBACK_COUNT, String.valueOf(connectionInfo.getRollbackCount())).finish();
 	}
 
 	@Override
@@ -108,20 +103,17 @@ public class TracingExecutionListener implements LifeCycleListener {
 	private void beforeExecuteQuery(QueryExecutionInfo queryExecutionInfo) {
 		String connectionId = queryExecutionInfo.getConnectionInfo().getConnectionId();
 
-		String queries = queryExecutionInfo.getQueries().stream().map(QueryInfo::getQuery)
-				.collect(joining(", "));
+		String queries = queryExecutionInfo.getQueries().stream().map(QueryInfo::getQuery).collect(joining(", "));
 
 		Span querySpan = this.tracer.nextSpan().name("r2dbc:query").kind(Span.Kind.CLIENT)
-				.tag(TAG_CONNECTION_ID, connectionId)
-				.tag(TAG_QUERY_TYPE, queryExecutionInfo.getType().toString())
+				.tag(TAG_CONNECTION_ID, connectionId).tag(TAG_QUERY_TYPE, queryExecutionInfo.getType().toString())
 				.tag(TAG_QUERIES, queries).start();
 
 		if (ExecutionType.BATCH == queryExecutionInfo.getType()) {
-			querySpan.tag(TAG_BATCH_SIZE,
-					Integer.toString(queryExecutionInfo.getBatchSize()));
+			querySpan.tag(TAG_BATCH_SIZE, Integer.toString(queryExecutionInfo.getBatchSize()));
 		}
 
-		queryExecutionInfo.addCustomValue("querySpan", querySpan);
+		queryExecutionInfo.getValueStore().put("querySpan", querySpan);
 	}
 
 	@Override
@@ -135,7 +127,7 @@ public class TracingExecutionListener implements LifeCycleListener {
 	}
 
 	private void afterExecuteQuery(QueryExecutionInfo queryExecutionInfo) {
-		Span querySpan = queryExecutionInfo.getCustomValue("querySpan", Span.class);
+		Span querySpan = queryExecutionInfo.getValueStore().get("querySpan", Span.class);
 
 		querySpan.tag(TAG_THREAD_ID, String.valueOf(queryExecutionInfo.getThreadId()))
 				.tag(TAG_THREAD_NAME, queryExecutionInfo.getThreadName())
@@ -144,8 +136,7 @@ public class TracingExecutionListener implements LifeCycleListener {
 		Throwable thrown = queryExecutionInfo.getThrowable();
 		if (thrown != null) {
 			querySpan.error(thrown);
-		}
-		else {
+		} else {
 			// TODO: impl result count if possible
 			// querySpan.tag(TAG_QUERY_RESULT_COUNT,
 			// Integer.toString(queryExecutionInfo.getCurrentResultCount()));
@@ -154,8 +145,7 @@ public class TracingExecutionListener implements LifeCycleListener {
 	}
 
 	@Override
-	public void beforeBeginTransactionOnConnection(
-			MethodExecutionInfo methodExecutionInfo) {
+	public void beforeBeginTransactionOnConnection(MethodExecutionInfo methodExecutionInfo) {
 		String connectionId = methodExecutionInfo.getConnectionInfo().getConnectionId();
 		Span transactionSpan = this.tracer.nextSpan().name("r2dbc:transaction").start();
 
@@ -163,8 +153,7 @@ public class TracingExecutionListener implements LifeCycleListener {
 	}
 
 	@Override
-	public void afterCommitTransactionOnConnection(
-			MethodExecutionInfo methodExecutionInfo) {
+	public void afterCommitTransactionOnConnection(MethodExecutionInfo methodExecutionInfo) {
 		String connectionId = methodExecutionInfo.getConnectionInfo().getConnectionId();
 
 		Span transactionSpan = this.transactionSpans.remove(connectionId);
@@ -175,12 +164,13 @@ public class TracingExecutionListener implements LifeCycleListener {
 		}
 
 		Span connectionSpan = this.connectionSpans.get(connectionId);
-		connectionSpan.annotate("Transaction commit");
+		if (connectionSpan != null) {
+			connectionSpan.annotate("Transaction commit");
+		}
 	}
 
 	@Override
-	public void afterRollbackTransactionOnConnection(
-			MethodExecutionInfo methodExecutionInfo) {
+	public void afterRollbackTransactionOnConnection(MethodExecutionInfo methodExecutionInfo) {
 		String connectionId = methodExecutionInfo.getConnectionInfo().getConnectionId();
 
 		Span transactionSpan = this.transactionSpans.remove(connectionId);
@@ -191,25 +181,27 @@ public class TracingExecutionListener implements LifeCycleListener {
 		}
 
 		Span connectionSpan = this.connectionSpans.get(connectionId);
-		connectionSpan.annotate("Transaction rollback");
+		if (connectionSpan != null) {
+			connectionSpan.annotate("Transaction rollback");
+		}
 	}
 
 	@Override
-	public void afterRollbackTransactionToSavepointOnConnection(
-			MethodExecutionInfo methodExecutionInfo) {
+	public void afterRollbackTransactionToSavepointOnConnection(MethodExecutionInfo methodExecutionInfo) {
 		String connectionId = methodExecutionInfo.getConnectionInfo().getConnectionId();
 		String savepoint = (String) methodExecutionInfo.getMethodArgs()[0];
 
 		Span transactionSpan = this.transactionSpans.remove(connectionId);
 		if (transactionSpan != null) {
-			transactionSpan.annotate("rollback to savepoint")
-					.tag(TAG_TRANSACTION_SAVEPOINT, savepoint)
+			transactionSpan.annotate("rollback to savepoint").tag(TAG_TRANSACTION_SAVEPOINT, savepoint)
 					.tag(TAG_CONNECTION_ID, connectionId)
 					.tag(TAG_THREAD_ID, String.valueOf(methodExecutionInfo.getThreadId()))
 					.tag(TAG_THREAD_NAME, methodExecutionInfo.getThreadName()).finish();
 		}
 
 		Span connectionSpan = this.connectionSpans.get(connectionId);
-		connectionSpan.annotate("Transaction rollback to savepoint");
+		if (connectionSpan != null) {
+			connectionSpan.annotate("Transaction rollback to savepoint");
+		}
 	}
 }
