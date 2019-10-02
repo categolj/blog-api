@@ -4,6 +4,7 @@ import org.springframework.boot.actuate.autoconfigure.security.reactive.Endpoint
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.web.server.ServerHttpSecurity;
 import org.springframework.security.web.server.SecurityWebFilterChain;
 
@@ -16,6 +17,7 @@ public class SecurityConfig {
 				.httpBasic() //
 				.and() //
 				.authorizeExchange() //
+				.pathMatchers(HttpMethod.OPTIONS, "/**").permitAll() //
 				.matchers(EndpointRequest.to("health", "info")).permitAll() //
 				.matchers(EndpointRequest.toAnyEndpoint()).hasRole("ACTUATOR") //
 				.pathMatchers("/admin/**").hasRole("ACTUATOR") //
