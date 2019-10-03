@@ -21,7 +21,7 @@ public class Resilience4jConfig {
 				.failureRateThreshold(30) //
 				.slidingWindow(20, 10, COUNT_BASED) //
 				.waitDurationInOpenState(Duration.ofSeconds(10)) //
-				.permittedNumberOfCallsInHalfOpenState(3) //
+				.permittedNumberOfCallsInHalfOpenState(2) //
 				.build();
 		return CircuitBreakerRegistry.of(config);
 	}
