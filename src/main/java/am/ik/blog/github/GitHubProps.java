@@ -1,7 +1,7 @@
 package am.ik.blog.github;
 
+import am.ik.yavi.builder.ValidatorBuilder;
 import am.ik.yavi.constraint.base.ContainerConstraintBase;
-import am.ik.yavi.core.Validator;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.validation.Errors;
@@ -36,12 +36,9 @@ public class GitHubProps implements org.springframework.validation.Validator {
 
 	@Override
 	public void validate(Object target, Errors errors) {
-		Validator.builder(GitHubProps.class)
-				.constraint(GitHubProps::getAccessToken, "accessToken",
-						ContainerConstraintBase::notEmpty)
-				.constraint(GitHubProps::getWebhookSecret, "webhookSecret",
-						ContainerConstraintBase::notEmpty)
-				.build() //
+		ValidatorBuilder.of(GitHubProps.class)
+				.constraint(GitHubProps::getAccessToken, "accessToken", ContainerConstraintBase::notEmpty)
+				.constraint(GitHubProps::getWebhookSecret, "webhookSecret", ContainerConstraintBase::notEmpty).build() //
 				.validateToEither((GitHubProps) target) //
 				.left() //
 				.ifPresent(violations -> violations.apply(errors::rejectValue));
