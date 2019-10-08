@@ -33,14 +33,14 @@ public class R2dbcConfig {
 						.password(password) //
 						.database(uri.getPath().replace("/", "")) //
 						.build());
-		final ConnectionFactory factory = ProxyConnectionFactory.builder(connectionFactory) //
-				.listener(new TracingExecutionListener(tracer)) //
-				.build();
-		return new ConnectionPool(ConnectionPoolConfiguration.builder(factory) //
+		final ConnectionPool connectionPool = new ConnectionPool(ConnectionPoolConfiguration.builder(connectionFactory) //
 				.maxSize(40) //
 				.maxIdleTime(Duration.ofSeconds(5)) //
 				.validationQuery("SELECT 1") //
 				.build());
+		return ProxyConnectionFactory.builder(connectionPool) //
+				.listener(new TracingExecutionListener(tracer)) //
+				.build();
 	}
 
 	@Bean
