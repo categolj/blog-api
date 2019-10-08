@@ -16,14 +16,13 @@ public class SecurityConfig {
 		return http //
 				.httpBasic() //
 				.and() //
-				.authorizeExchange() //
-				.pathMatchers(HttpMethod.OPTIONS, "/**").permitAll() //
-				.matchers(EndpointRequest.to("health", "info")).permitAll() //
-				.matchers(EndpointRequest.toAnyEndpoint()).hasRole("ACTUATOR") //
-				.pathMatchers("/admin/**").hasRole("ACTUATOR") //
-				.anyExchange().permitAll() //
-				.and() //
-				.csrf().disable() //
+				.authorizeExchange(authorization -> authorization //
+						.pathMatchers(HttpMethod.OPTIONS, "/**").permitAll() //
+						.matchers(EndpointRequest.to("health", "info")).permitAll() //
+						.matchers(EndpointRequest.toAnyEndpoint()).hasRole("ACTUATOR") //
+						.pathMatchers("/admin/**").hasRole("ACTUATOR") //
+						.anyExchange().permitAll()) //
+				.csrf(csrf -> csrf.disable()) //
 				.build();
 	}
 }
