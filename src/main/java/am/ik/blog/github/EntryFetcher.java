@@ -30,24 +30,18 @@ import org.springframework.util.MimeTypeUtils;
 @Component
 public class EntryFetcher {
 	private final GitHubClient gitHubClient;
-	private final Jackson2JsonDecoder jsonDecoder;
 
-	public EntryFetcher(GitHubClient gitHubClient, ObjectMapper objectMapper) {
+	public EntryFetcher(GitHubClient gitHubClient) {
 		this.gitHubClient = gitHubClient;
-		this.jsonDecoder = new Jackson2JsonDecoder(objectMapper);
 	}
 
 	public Mono<Entry> fetch(String owner, String repo, String path) {
 		EntryId entryId = EntryId.fromFilePath(Paths.get(path));
 		Mono<File> file = this.gitHubClient.file(owner, repo, path).get();
-		Flux<DataBuffer> commits = this.gitHubClient.commits(owner, repo).get(p -> p.path(path))
-				.cast(DataBuffer.class /* TODO why?? */);
+		Flux<Commit> commits = this.gitHubClient.commits(owner, repo).get(p -> p.path(path));
 		Mono<EntryBuilder> entryBuilder = file.flatMap(f -> this.toEntryBuilder(entryId, f));
 
-		Mono<Tuple2<Author, Author>> authors = this.jsonDecoder
-				.decode(commits, ResolvableType.forClass(Commit.class), MimeTypeUtils.APPLICATION_JSON,
-						Collections.emptyMap())
-				.cast(Commit.class) //
+		Mono<Tuple2<Author, Author>> authors = commits
 				.collectList() //
 				.filter(l -> !l.isEmpty()) //
 				.map(l -> Tuples.of(toAuthor(l.get(0)) /* updated */, toAuthor(l.get(l.size() - 1)) /* created */));
