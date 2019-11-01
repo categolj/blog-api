@@ -73,8 +73,8 @@ spec:
           value: "8080"
         - name: SPRING_PROFILES_ACTIVE
           value: kubernetes
-        - name: _JAVA_OPTIONS
-          value: " -XX:ReservedCodeCacheSize=32M -Xss512k -XX:+PrintCodeCache -Duser.timezone=Asia/Tokyo -Duser.language=ja -Duser.country=JP -Dfile.encoding=UTF-8 -Dinfo.docker.digest=INFO_DOCKER_DIGEST -XX:MaxDirectMemorySize=10M -XX:MaxMetaspaceSize=107950K -Xmx94801K -XX:ActiveProcessorCount=2"
+        - name: JAVA_OPTS
+          value: " -XX:ReservedCodeCacheSize=32M -Xss512k -XX:+PrintCodeCache -Duser.timezone=Asia/Tokyo -Duser.language=ja -Duser.country=JP -Dfile.encoding=UTF-8 -Dinfo.docker.digest=INFO_DOCKER_DIGEST" #-XX:ActiveProcessorCount=2"
         - name: BPL_THREAD_COUNT
           value: "32"
         - name: SPRING_ZIPKIN_SERVICE_NAME
@@ -155,7 +155,7 @@ spec:
           failureThreshold: 3
         livenessProbe:
           httpGet:
-            path: /actuator/health
+            path: /actuator/info
             port: 8080
           initialDelaySeconds: 180
           timeoutSeconds: 3
