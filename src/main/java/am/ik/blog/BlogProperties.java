@@ -1,8 +1,10 @@
 package am.ik.blog;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.stereotype.Component;
 
 @ConfigurationProperties(prefix = "blog")
+@Component
 public class BlogProperties {
 	public static class Service {
 		private String url;
