@@ -209,7 +209,7 @@
 		<dependency>
 			<groupId>io.zipkin.brave</groupId>
 			<artifactId>brave-instrumentation-netty-codec-http</artifactId>
-			<version>5.9.0</version>
+			<version>5.9.1</version>
 		</dependency>
 	</dependencies>
 
