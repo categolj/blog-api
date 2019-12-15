@@ -17,10 +17,9 @@ spec:
 apiVersion: gateway.cloud.ik.am/v1beta1
 kind: RouteDefinition
 metadata:
-  name: blog-rsocket-http
+  name: blog-rsocket-actuator
   namespace: blog
 spec:
-  serviceName: blog-rsocket
   route:
     uri: http://blog-rsocket.blog.svc.cluster.local:8080
     predicates:
@@ -39,17 +38,18 @@ metadata:
   name: blog-rsocket
   namespace: blog
 spec:
-  serviceName: blog-rsocket
   route:
+    order: -100
     uri: ws://blog-rsocket.blog.svc.cluster.local:8080
     predicates:
-      - Host=blog-rsocket.ik.am
+    - Host=blog.ik.am
+    - Path=/rsocket
     filters:
-      - RequestLogging=
-      - name: Retry
-        args:
-          retries: "3"
-          statuses: BAD_GATEWAY
+    - RequestLogging=
+    - name: Retry
+      args:
+        retries: "3"
+        statuses: BAD_GATEWAY
 ---
 apiVersion: extensions/v1beta1
 kind: Deployment
