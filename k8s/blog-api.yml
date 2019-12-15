@@ -1,0 +1,266 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: blog-rsocket
+  namespace: blog
+  labels:
+    app: blog-rsocket
+spec:
+  selector:
+    app: blog-rsocket
+  ports:
+  - protocol: TCP
+    port: 8080
+    name: http
+  type: NodePort
+---
+apiVersion: gateway.cloud.ik.am/v1beta1
+kind: RouteDefinition
+metadata:
+  name: blog-rsocket-http
+  namespace: blog
+spec:
+  serviceName: blog-rsocket
+  route:
+    uri: http://blog-rsocket.blog.svc.cluster.local:8080
+    predicates:
+    - Host=blog-rsocket.ik.am
+    - Path=/actuator/*
+    filters:
+    - RequestLogging=
+    - name: Retry
+      args:
+        retries: "3"
+        statuses: BAD_GATEWAY
+---
+apiVersion: gateway.cloud.ik.am/v1beta1
+kind: RouteDefinition
+metadata:
+  name: blog-rsocket
+  namespace: blog
+spec:
+  serviceName: blog-rsocket
+  route:
+    uri: ws://blog-rsocket.blog.svc.cluster.local:8080
+    predicates:
+      - Host=blog-rsocket.ik.am
+    filters:
+      - RequestLogging=
+      - name: Retry
+        args:
+          retries: "3"
+          statuses: BAD_GATEWAY
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: blog-rsocket
+  namespace: blog
+  labels:
+    app: blog-rsocket
+spec:
+  replicas: 2
+  revisionHistoryLimit: 4
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: blog-rsocket
+      annotations:
+        kubernetes.io/change-cause: "FIXME"
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8080"
+        prometheus.io/path: /actuator/prometheus
+    spec:
+      imagePullSecrets:
+      - name: harbor-secret
+      containers:
+      - name: blog-rsocket
+        image: making/blog-api:5.0.0-SNAPSHOT
+        ports:
+        - containerPort: 8080
+          name: http
+        env:
+        - name: DATABASE_URL
+          value: "postgresql://${POSTGRES_USERNAME}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:5432/${POSTGRES_DB}"
+        - name: SERVER_PORT
+          value: "8080"
+        - name: SPRING_PROFILES_ACTIVE
+          value: kubernetes
+        - name: JAVA_OPTS
+          value: " -XX:ReservedCodeCacheSize=32M -Xss512k -XX:+PrintCodeCache -Duser.timezone=Asia/Tokyo -Duser.language=ja -Duser.country=JP -Dfile.encoding=UTF-8 -Dinfo.docker.digest=INFO_DOCKER_DIGEST -XX:ActiveProcessorCount=2"
+        - name: BPL_THREAD_COUNT
+          value: "32"
+        - name: SPRING_ZIPKIN_SERVICE_NAME
+          value: "${INFO_K8S_NAMESPACE}:blog-rsocket"
+        - name: SPRING_DATASOURCE_URL
+          value: "jdbc:postgresql://${POSTGRES_HOST}:5432/${POSTGRES_DB}"
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: blog-db-secret
+              key: postgres-password
+        - name: POSTGRES_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: blog-db-secret
+              key: postgres-user
+        - name: POSTGRES_DB
+          valueFrom:
+            secretKeyRef:
+              name: blog-db-secret
+              key: postgres-db
+        - name: POSTGRES_HOST
+          valueFrom:
+            secretKeyRef:
+              name: blog-db-secret
+              key: postgres-host
+        - name: SPRING_SECURITY_USER_NAME
+          valueFrom:
+            secretKeyRef:
+              name: blog-config-secret
+              key: ops-username
+        - name: SPRING_SECURITY_USER_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: blog-config-secret
+              key: ops-password
+        - name: BLOG_GITHUB_ACCESS_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: blog-config-secret
+              key: github-access-token
+        - name: BLOG_GITHUB_WEBHOOK_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: blog-config-secret
+              key: github-webhook-secret
+        - name: INFO_K8S_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: INFO_K8S_POD
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: INFO_K8S_APP
+          value: "${spring.application.name}"
+        - name: MANAGEMENT_METRICS_TAGS_NAMESPACE
+          value: "${INFO_K8S_NAMESPACE}"
+        - name: MANAGEMENT_METRICS_TAGS_POD
+          value: "${INFO_K8S_POD}"
+        - name: MANAGEMENT_METRICS_TAGS_APP
+          value: "${INFO_K8S_APP}"
+        - name: USER
+          value: vcap
+        volumeMounts:
+        - name: tmp
+          mountPath: /home/vcap/tmp
+        resources:
+          limits:
+            memory: "256Mi"
+          requests:
+            memory: "256Mi"
+        readinessProbe:
+          httpGet:
+            path: /actuator/health
+            port: 8080
+          initialDelaySeconds: 15
+          timeoutSeconds: 3
+          periodSeconds: 10
+          failureThreshold: 3
+        livenessProbe:
+          httpGet:
+            path: /actuator/info
+            port: 8080
+          initialDelaySeconds: 180
+          timeoutSeconds: 3
+          periodSeconds: 10
+          failureThreshold: 3
+      affinity:
+         podAntiAffinity:
+           requiredDuringSchedulingIgnoredDuringExecution:
+             - labelSelector:
+                 matchExpressions:
+                   - key: "app"
+                     operator: In
+                     values:
+                     - blog-rsocket
+               topologyKey: "kubernetes.io/hostname"
+
+      volumes:
+      - name: tmp
+        emptyDir: {}
+---
+apiVersion: policy/v1beta1
+kind: PodDisruptionBudget
+metadata:
+  name: blog-rsocket
+  namespace: blog
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: blog-rsocket
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  labels:
+    k8s-app: blog-rsocket
+  name: blog-rsocket
+  namespace: blog
+spec:
+  endpoints:
+    - interval: 30s
+      port: http
+      path: /actuator/prometheus
+      basicAuth:
+        username:
+          name: blog-config-secret
+          key: ops-username
+        password:
+          name: blog-config-secret
+          key: ops-password
+  namespaceSelector:
+    matchNames:
+      - blog
+  selector:
+    matchLabels:
+      app: blog-rsocket
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: prometheus-k8s
+  namespace: blog
+rules:
+  - apiGroups:
+      - ""
+    resources:
+      - nodes
+      - services
+      - endpoints
+      - pods
+    verbs:
+      - get
+      - list
+      - watch
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: prometheus-k8s
+  namespace: blog
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: prometheus-k8s
+subjects:
+  - kind: ServiceAccount
+    name: prometheus-k8s
+    namespace: monitoring
