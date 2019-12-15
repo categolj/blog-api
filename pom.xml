@@ -31,7 +31,7 @@
 		<restdoc.host>localhost</restdoc.host>
 		<restdoc.port>8080</restdoc.port>
 		<docs.resources.version>0.1.2.RELEASE</docs.resources.version>
-		<resilience4j.version>1.1.0</resilience4j.version>
+		<resilience4j.version>1.2.0</resilience4j.version>
 	</properties>
 	<dependencies>
 		<dependency>
