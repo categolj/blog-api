@@ -52,7 +52,7 @@
         <dependency>
             <groupId>am.ik.yavi</groupId>
             <artifactId>yavi</artifactId>
-            <version>0.2.6</version>
+            <version>0.2.7</version>
         </dependency>
         <dependency>
             <groupId>org.yaml</groupId>
