@@ -78,4 +78,5 @@ jobs:
         kubeconfig: ${{ secrets.KUBE_CONFIG }}    
     - uses: azure/k8s-deploy@v1
       with:
+        namespace: blog
         manifests: manifest.yml
