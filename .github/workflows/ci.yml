@@ -54,14 +54,17 @@ jobs:
         ./mvnw -V package -DskipTests -Dspring-boot.version=${BOOT_VERSION}
     - name: pack build
       env:
-        PACK_VERSION: "0.6.0" 
+        PACK_VERSION: "0.6.0"
+        DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+        DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
       run: |
         set -e
+        docker login -u ${DOCKER_USERNAME} -p ${DOCKER_PASSWORD}
         VERSION=$(grep '<version>' pom.xml | head -n 2 | tail -n 1 | sed -e 's|<version>||g' -e 's|</version>||g' -e 's| ||g' |  tr -d '\t')
         wget -q https://github.com/buildpacks/pack/releases/download/v${PACK_VERSION}/pack-v${PACK_VERSION}-linux.tgz
         tar xzf pack-*.tgz
         rm -f pack-*.tgz
         ./pack build making/blog-api:${VERSION} \
           -p target/blog-api-*.jar \
-          --builder making/java-cnb-builder
-        docker images
+          --builder making/java-cnb-builder \
+          --publish
