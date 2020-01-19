@@ -30,7 +30,9 @@ jobs:
           -e "POSTGRES_DB=blog_test" \
           -e "POSTGRES_PASSWORD=testdb" \
           -e "TZ=Japan" \
+          -v $(pwd):/tmp \
           -p 5432:5432 \
           postgres:9.6.10
-        docker ps        
+        docker exec postgres \
+          psql -U postgres -d blog_test -f /tmp/src/main/resources/schema.sql
         mvn test
