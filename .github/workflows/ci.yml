@@ -66,10 +66,19 @@ jobs:
           -p target/blog-api-*.jar \
           --builder making/java-cnb-builder \
           --publish
+    - name: kbld
+      env:
+        KBLD_VERSION: 0.13.0
+      run: |
+        set -e
+        wget -q https://github.com/k14s/kbld/releases/download/v${KBLD_VERSION}/kbld-linux-amd64 -O kbld
+        chmod +x kbld
+        kbld -f k8s > manifest.yml
     - uses: azure/k8s-set-context@v1
       with:
         method: kubeconfig
-        kubeconfig: ${{ secrets.KUBE_CONFIG }}      
+        kubeconfig: ${{ secrets.KUBE_CONFIG }}    
     - name: deploy to k8s
       run: |
+        cat manifest.yml
         kubectl cluster-info
