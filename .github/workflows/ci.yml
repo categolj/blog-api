@@ -11,23 +11,22 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
-    - name: Set up JDK 11
+    - name: setup jdk
       uses: actions/setup-java@v1
       with:
         java-version: '11.x'
-    - name: Cache Maven
+    - name: cache maven
       uses: actions/cache@v1
       with:
         path: ~/.m2/repository
         key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
         restore-keys: |
           ${{ runner.os }}-maven-
-    - name: Unit Test
+    - name: mvn test
       env:
         DATABASE_URL: postgresql://postgres:testdb@localhost:5432/blog_test
       run: |
         set -e
-        
         docker run -d \
           --name postgres \
           -e "POSTGRES_DB=blog_test" \
@@ -35,19 +34,35 @@ jobs:
           -e "TZ=Japan" \
           -v $(pwd):/tmp \
           -p 5432:5432 \
-          postgres:9.6.10
-        
+          postgres:9.6.10        
         until nc -z $(docker inspect --format='{{.NetworkSettings.IPAddress}}' postgres) 5432
         do
           echo "waiting for postgres container..."
           sleep 0.5
-        done
-        
+        done        
         docker exec postgres \
-          psql -U postgres -d blog_test -f /tmp/src/main/resources/schema.sql
-        
+          psql -U postgres -d blog_test -f /tmp/src/main/resources/schema.sql        
         ./mvnw -V test
-    - name: Package
+    - name: mvn package
+      if: github.ref == 'refs/heads/rsocket'      
       run: |
         set -e
-        ./mvnw -V package -DskipTests
+        BOOT_VERSION=$(grep '<version>' pom.xml | head -n 1 | sed -e 's|<version>||g' -e 's|</version>||g' -e 's|<.*>||g' -e 's| ||g')
+        ./mvnw -V package -DskipTests -Dspring-boot.version=${BOOT_VERSION}
+    - name: pack build
+      if: github.ref == 'refs/heads/rsocket'
+      env:
+        PACK_VERSION: "0.6.0"
+        DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+        DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+      run: |
+        set -e
+        docker login -u ${DOCKER_USERNAME} -p ${DOCKER_PASSWORD}
+        VERSION=$(grep '<version>' pom.xml | head -n 2 | tail -n 1 | sed -e 's|<version>||g' -e 's|</version>||g' -e 's| ||g' |  tr -d '\t')
+        wget -q https://github.com/buildpacks/pack/releases/download/v${PACK_VERSION}/pack-v${PACK_VERSION}-linux.tgz
+        tar xzf pack-*.tgz
+        rm -f pack-*.tgz
+        ./pack build making/blog-api:${VERSION} \
+          -p target/blog-api-*.jar \
+          --builder making/java-cnb-builder \
+          --publish
