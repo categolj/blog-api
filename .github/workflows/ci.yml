@@ -66,3 +66,13 @@ jobs:
           -p target/blog-api-*.jar \
           --builder making/java-cnb-builder \
           --publish
+    - name: deploy to k8s
+      env:
+        KUBE_CONFIG: ${{ secrets.KUBE_CONFIG }}
+      run: |
+        set -e
+        mkdir -p ~/.kube
+        cat <<EOF > ~/.kube/config
+        ${KUBE_CONFIG}
+        EOF
+        kubectl cluster-info
