@@ -84,4 +84,4 @@ jobs:
         set -e
         wget -q https://raw.githubusercontent.com/zlabjp/kubernetes-resource/master/assets/common.sh
         source common.sh
-        wait_until_pods_ready 120 3 app=blog-api
+        wait_until_pods_ready 120 3 app=blog-rsocket
