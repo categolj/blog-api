@@ -73,15 +73,12 @@ jobs:
       if: github.ref == 'refs/heads/rsocket'
       env:
         KBLD_VERSION: 0.13.0
+        WAIT_UNTIL_READY_SELECTOR: app=blog-rsocket
       run: |
         set -e
         wget -q https://github.com/k14s/kbld/releases/download/v${KBLD_VERSION}/kbld-linux-amd64 -O kbld
         chmod +x kbld
         ./kbld -f k8s | kubectl apply -f -
-    - name: wait until pods get ready
-      if: github.ref == 'refs/heads/rsocket'
-      run: |
-        set -e
         wget -q https://raw.githubusercontent.com/zlabjp/kubernetes-resource/master/assets/common.sh
         source common.sh
-        wait_until_pods_ready 120 3 app=blog-rsocket
+        wait_until_pods_ready 120 5 ${WAIT_UNTIL_READY_SELECTOR}
