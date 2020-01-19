@@ -83,3 +83,4 @@ jobs:
       with:
         namespace: blog
         manifests: manifest.yml
+        kubectl-version: v1.15.8
