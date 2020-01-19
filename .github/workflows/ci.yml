@@ -2,8 +2,10 @@ name: CI
 on:
   push:
     branches:
-    - '**'
-  pull_request: {}
+    - rsocket
+  pull_request:
+    branches:
+    - rsocket
 jobs:
   build:
     runs-on: ubuntu-latest
