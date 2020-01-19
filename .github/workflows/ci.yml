@@ -33,6 +33,7 @@ jobs:
           -v $(pwd):/tmp \
           -p 5432:5432 \
           postgres:9.6.10
+        docker wait postgres
         docker exec postgres \
           psql -U postgres -d blog_test -f /tmp/src/main/resources/schema.sql
         mvn test
