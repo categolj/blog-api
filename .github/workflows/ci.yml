@@ -53,5 +53,15 @@ jobs:
         BOOT_VERSION=$(grep '<version>' pom.xml | head -n 1 | sed -e 's|<version>||g' -e 's|</version>||g' -e 's|<.*>||g' -e 's| ||g')
         ./mvnw -V package -DskipTests -Dspring-boot.version=${BOOT_VERSION}
     - name: Pack
+      env:
+        PACK_VERSION: "0.6.0" 
       run: |
-        ls -la target/blog-api-*.jar
+        set -e
+        VERSION=$(grep '<version>' pom.xml | head -n 2 | tail -n 1 | sed -e 's|<version>||g' -e 's|</version>||g' -e 's| ||g' |  tr -d '\t')
+        wget https://github.com/buildpacks/pack/releases/download/v${PACK_VERSION}/pack-v${PACK_VERSION}-linux.tgz
+        tar xzf pack-*.tgz
+        rm -f pack-*.tgz
+        ./pack build making/blog-api:${VERSION} \
+          -p target/blog-api-*.jar \
+          --builder making/java-cnb-builder
+        docker images
