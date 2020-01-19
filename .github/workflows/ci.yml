@@ -35,7 +35,7 @@ jobs:
           -p 5432:5432 \
           postgres:9.6.10
         
-        until nc -z $(docker inspect --format='{{.NetworkSettings.IPAddress}}' postgres) 5432
+        until nc -z localhost 5432
         do
           echo "waiting for postgres container..."
           sleep 0.5
