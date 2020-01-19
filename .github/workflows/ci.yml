@@ -44,11 +44,13 @@ jobs:
           psql -U postgres -d blog_test -f /tmp/src/main/resources/schema.sql        
         ./mvnw -V test
     - name: mvn package
+      if: github.ref == 'refs/heads/rsocket'      
       run: |
         set -e
         BOOT_VERSION=$(grep '<version>' pom.xml | head -n 1 | sed -e 's|<version>||g' -e 's|</version>||g' -e 's|<.*>||g' -e 's| ||g')
         ./mvnw -V package -DskipTests -Dspring-boot.version=${BOOT_VERSION}
     - name: pack build
+      if: github.ref == 'refs/heads/rsocket'
       env:
         PACK_VERSION: "0.6.0"
         DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
