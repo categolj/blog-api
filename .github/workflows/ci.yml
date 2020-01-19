@@ -11,18 +11,18 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
-    - name: Set up JDK 11
+    - name: setup jdk
       uses: actions/setup-java@v1
       with:
         java-version: '11.x'
-    - name: Cache Maven
+    - name: cache maven
       uses: actions/cache@v1
       with:
         path: ~/.m2/repository
         key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
         restore-keys: |
           ${{ runner.os }}-maven-
-    - name: Unit Test
+    - name: mvn test
       env:
         DATABASE_URL: postgresql://postgres:testdb@localhost:5432/blog_test
       run: |
@@ -47,18 +47,18 @@ jobs:
           psql -U postgres -d blog_test -f /tmp/src/main/resources/schema.sql
         
         ./mvnw -V test
-    - name: Package
+    - name: mvn package
       run: |
         set -e
         BOOT_VERSION=$(grep '<version>' pom.xml | head -n 1 | sed -e 's|<version>||g' -e 's|</version>||g' -e 's|<.*>||g' -e 's| ||g')
         ./mvnw -V package -DskipTests -Dspring-boot.version=${BOOT_VERSION}
-    - name: Pack
+    - name: pack build
       env:
         PACK_VERSION: "0.6.0" 
       run: |
         set -e
         VERSION=$(grep '<version>' pom.xml | head -n 2 | tail -n 1 | sed -e 's|<version>||g' -e 's|</version>||g' -e 's| ||g' |  tr -d '\t')
-        wget https://github.com/buildpacks/pack/releases/download/v${PACK_VERSION}/pack-v${PACK_VERSION}-linux.tgz
+        wget -q https://github.com/buildpacks/pack/releases/download/v${PACK_VERSION}/pack-v${PACK_VERSION}-linux.tgz
         tar xzf pack-*.tgz
         rm -f pack-*.tgz
         ./pack build making/blog-api:${VERSION} \
