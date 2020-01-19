@@ -73,7 +73,7 @@ jobs:
         set -e
         wget -q https://github.com/k14s/kbld/releases/download/v${KBLD_VERSION}/kbld-linux-amd64 -O kbld
         chmod +x kbld
-        kbld -f k8s > manifest.yml
+        ./kbld -f k8s > manifest.yml
     - uses: azure/k8s-set-context@v1
       with:
         method: kubeconfig
