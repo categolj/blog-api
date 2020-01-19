@@ -11,12 +11,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
-    - name: setup jdk
-      uses: actions/setup-java@v1
+    - uses: actions/setup-java@v1
       with:
         java-version: '11.x'
-    - name: cache maven
-      uses: actions/cache@v1
+    - uses: actions/cache@v1
       with:
         path: ~/.m2/repository
         key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
@@ -52,7 +50,7 @@ jobs:
     - name: pack build
       if: github.ref == 'refs/heads/rsocket'
       env:
-        PACK_VERSION: "0.6.0"
+        PACK_VERSION: 0.6.0
         DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
         DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
       run: |
@@ -66,3 +64,22 @@ jobs:
           -p target/blog-api-*.jar \
           --builder making/java-cnb-builder \
           --publish
+    - name: kbld
+      if: github.ref == 'refs/heads/rsocket'
+      env:
+        KBLD_VERSION: 0.13.0
+      run: |
+        set -e
+        wget -q https://github.com/k14s/kbld/releases/download/v${KBLD_VERSION}/kbld-linux-amd64 -O kbld
+        chmod +x kbld
+        ./kbld -f k8s > manifest.yml
+    - uses: azure/k8s-set-context@v1
+      if: github.ref == 'refs/heads/rsocket'
+      with:
+        method: kubeconfig
+        kubeconfig: ${{ secrets.KUBE_CONFIG }}    
+    - uses: azure/k8s-deploy@v1
+      if: github.ref == 'refs/heads/rsocket'
+      with:
+        namespace: blog
+        manifests: manifest.yml
