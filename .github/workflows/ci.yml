@@ -11,12 +11,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
-    - name: setup jdk
-      uses: actions/setup-java@v1
+    - uses: actions/setup-java@v1
       with:
         java-version: '11.x'
-    - name: cache maven
-      uses: actions/cache@v1
+    - uses: actions/cache@v1
       with:
         path: ~/.m2/repository
         key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
@@ -78,7 +76,6 @@ jobs:
       with:
         method: kubeconfig
         kubeconfig: ${{ secrets.KUBE_CONFIG }}    
-    - name: deploy to k8s
-      run: |
-        cat manifest.yml
-        kubectl cluster-info
+    - uses: azure/k8s-deploy@v1
+      with:
+        manifests: manifest.yml
