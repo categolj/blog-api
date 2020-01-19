@@ -51,7 +51,7 @@ spec:
         retries: "3"
         statuses: BAD_GATEWAY
 ---
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: blog-rsocket
@@ -60,6 +60,9 @@ metadata:
     app: blog-rsocket
 spec:
   replicas: 2
+  selector:
+    matchLabels:
+      app: blog-rsocket  
   revisionHistoryLimit: 4
   strategy:
     rollingUpdate:
@@ -72,9 +75,6 @@ spec:
         app: blog-rsocket
       annotations:
         kubernetes.io/change-cause: "FIXME"
-        prometheus.io/scrape: "true"
-        prometheus.io/port: "8080"
-        prometheus.io/path: /actuator/prometheus
     spec:
       imagePullSecrets:
       - name: harbor-secret
