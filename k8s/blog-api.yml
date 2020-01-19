@@ -12,7 +12,7 @@ spec:
   - protocol: TCP
     port: 8080
     name: http
-  type: NodePort
+  type: ClusterIP
 ---
 apiVersion: gateway.cloud.ik.am/v1beta1
 kind: RouteDefinition
