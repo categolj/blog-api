@@ -46,4 +46,4 @@ jobs:
         docker exec postgres \
           psql -U postgres -d blog_test -f /tmp/src/main/resources/schema.sql
         
-        mvn test
+        ./mvnw test
