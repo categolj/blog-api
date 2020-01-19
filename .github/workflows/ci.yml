@@ -47,3 +47,7 @@ jobs:
           psql -U postgres -d blog_test -f /tmp/src/main/resources/schema.sql
         
         ./mvnw -V test
+    - name: Package
+      run: |
+        set -e
+        ./mvnw -V package -DskipTests
