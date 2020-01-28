@@ -50,7 +50,7 @@ jobs:
     - name: pack build
       if: github.ref == 'refs/heads/rsocket'
       env:
-        PACK_VERSION: 0.7.0
+        PACK_VERSION: 0.8.0
         DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
         DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
       run: |
@@ -62,7 +62,7 @@ jobs:
         rm -f pack-*.tgz
         ./pack build making/blog-api:${VERSION} \
           -p target/blog-api-*.jar \
-          --builder making/java-cnb-builder \
+          --builder cloudfoundry/cnb:bionic \
           --publish
     - uses: azure/k8s-set-context@v1
       if: github.ref == 'refs/heads/rsocket'
