@@ -50,7 +50,7 @@ jobs:
     - name: pack build
       if: github.ref == 'refs/heads/rsocket'
       env:
-        PACK_VERSION: 0.8.0
+        PACK_VERSION: 0.8.1
         DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
         DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
       run: |
