@@ -42,7 +42,7 @@ spec:
     uri: http://blog-rsocket.blog.svc.cluster.local:8080
     predicates:
     - Host=blog-rsocket.ik.am
-    - Path=/webhook/*
+    - Path=/webhook
     filters:
     - RequestLogging=
     - name: Retry
