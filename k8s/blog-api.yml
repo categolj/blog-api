@@ -35,6 +35,24 @@ spec:
 apiVersion: gateway.cloud.ik.am/v1beta1
 kind: RouteDefinition
 metadata:
+  name: blog-rsocket-webhook
+  namespace: blog
+spec:
+  route:
+    uri: http://blog-rsocket.blog.svc.cluster.local:8080
+    predicates:
+    - Host=blog-rsocket.ik.am
+    - Path=/webhook/*
+    filters:
+    - RequestLogging=
+    - name: Retry
+      args:
+        retries: "3"
+        statuses: BAD_GATEWAY        
+---
+apiVersion: gateway.cloud.ik.am/v1beta1
+kind: RouteDefinition
+metadata:
   name: blog-rsocket
   namespace: blog
 spec:
