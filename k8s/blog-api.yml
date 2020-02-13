@@ -167,12 +167,14 @@ spec:
               fieldPath: metadata.name
         - name: INFO_K8S_APP
           value: "${spring.application.name}"
-        - name: MANAGEMENT_METRICS_TAGS_NAMESPACE
+        - name: MANAGEMENT_METRICS_TAGS_ORGANIZATION
+          value: cfcr-aws
+        - name: MANAGEMENT_METRICS_TAGS_SPACE
           value: "${INFO_K8S_NAMESPACE}"
-        - name: MANAGEMENT_METRICS_TAGS_POD
-          value: "${INFO_K8S_POD}"
-        - name: MANAGEMENT_METRICS_TAGS_APP
+        - name: MANAGEMENT_METRICS_TAGS_APPLICATION
           value: "${INFO_K8S_APP}"
+        - name: MANAGEMENT_METRICS_TAGS_INSTANCE_ID
+          value: "${INFO_K8S_POD}"
         - name: USER
           value: vcap
         volumeMounts:
