@@ -2,6 +2,7 @@ package am.ik.blog.service.github;
 
 import am.ik.yavi.builder.ValidatorBuilder;
 import am.ik.yavi.constraint.base.ContainerConstraintBase;
+import am.ik.yavi.meta.ConstraintTarget;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.Errors;
@@ -16,6 +17,7 @@ public class GitHubProps implements org.springframework.validation.Validator {
 
     private String webhookSecret;
 
+    @ConstraintTarget
     public String getAccessToken() {
         return accessToken;
     }
@@ -24,6 +26,7 @@ public class GitHubProps implements org.springframework.validation.Validator {
         this.accessToken = accessToken;
     }
 
+    @ConstraintTarget
     public String getWebhookSecret() {
         return webhookSecret;
     }
@@ -40,8 +43,8 @@ public class GitHubProps implements org.springframework.validation.Validator {
     @Override
     public void validate(Object target, Errors errors) {
         ValidatorBuilder.of(GitHubProps.class)
-            .constraint(GitHubProps::getAccessToken, "accessToken", ContainerConstraintBase::notEmpty)
-            .constraint(GitHubProps::getWebhookSecret, "webhookSecret", ContainerConstraintBase::notEmpty).build() //
+            .constraint(_GitHubPropsMeta.ACCESSTOKEN, ContainerConstraintBase::notEmpty)
+            .constraint(_GitHubPropsMeta.WEBHOOKSECRET, ContainerConstraintBase::notEmpty).build() //
             .validateToEither((GitHubProps) target) //
             .left() //
             .ifPresent(violations -> violations.apply(errors::rejectValue));
