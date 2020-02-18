@@ -167,6 +167,8 @@ spec:
               fieldPath: metadata.name
         - name: INFO_K8S_APP
           value: "${spring.application.name}"
+        - name: MANAGEMENT_METRICS_EXPORT_PROMETHEUS_RSOCKET_HOST
+          value: prometheus-proxy.dev.bosh.tokyo
         - name: MANAGEMENT_METRICS_TAGS_ORGANIZATION
           value: cfcr-aws
         - name: MANAGEMENT_METRICS_TAGS_SPACE
@@ -226,61 +228,3 @@ spec:
   selector:
     matchLabels:
       app: blog-rsocket
----
-apiVersion: monitoring.coreos.com/v1
-kind: ServiceMonitor
-metadata:
-  labels:
-    k8s-app: blog-rsocket
-  name: blog-rsocket
-  namespace: blog
-spec:
-  endpoints:
-    - interval: 30s
-      port: http
-      path: /actuator/prometheus
-      basicAuth:
-        username:
-          name: blog-config-secret
-          key: ops-username
-        password:
-          name: blog-config-secret
-          key: ops-password
-  namespaceSelector:
-    matchNames:
-      - blog
-  selector:
-    matchLabels:
-      app: blog-rsocket
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: Role
-metadata:
-  name: prometheus-k8s
-  namespace: blog
-rules:
-  - apiGroups:
-      - ""
-    resources:
-      - nodes
-      - services
-      - endpoints
-      - pods
-    verbs:
-      - get
-      - list
-      - watch
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: RoleBinding
-metadata:
-  name: prometheus-k8s
-  namespace: blog
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: Role
-  name: prometheus-k8s
-subjects:
-  - kind: ServiceAccount
-    name: prometheus-k8s
-    namespace: monitoring
