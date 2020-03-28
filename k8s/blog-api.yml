@@ -115,6 +115,8 @@ spec:
           value: "32"
         - name: SPRING_ZIPKIN_SERVICE_NAME
           value: "${INFO_K8S_NAMESPACE}:blog-rsocket"
+        - name: SPRING_ZIPKIN_BASE_URL
+          value: https://zipkin.dev.ik.am          
         - name: SPRING_DATASOURCE_URL
           value: "jdbc:postgresql://${POSTGRES_HOST}:5432/${POSTGRES_DB}"
         - name: POSTGRES_PASSWORD
