@@ -1,6 +1,7 @@
 package am.ik.blog.service.tag;
 
 import am.ik.blog.model.Tag;
+import org.springframework.cloud.sleuth.annotation.NewSpan;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.web.bind.annotation.RestController;
 import reactor.core.publisher.Mono;
@@ -17,6 +18,7 @@ public class TagController {
     }
 
     @MessageMapping("tags")
+    @NewSpan
     public Mono<List<Tag>> tags() {
         return this.tagMapper.findOrderByTagNameAsc().collectList();
     }

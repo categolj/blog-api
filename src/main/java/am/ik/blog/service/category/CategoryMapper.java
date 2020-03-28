@@ -1,6 +1,7 @@
 package am.ik.blog.service.category;
 
 import am.ik.blog.model.Category;
+import org.springframework.cloud.sleuth.annotation.NewSpan;
 import org.springframework.data.r2dbc.core.DatabaseClient;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
@@ -19,6 +20,7 @@ public class CategoryMapper {
         this.databaseClient = databaseClient;
     }
 
+    @NewSpan
     public Flux<List<Category>> findAll() {
         return this.databaseClient.execute(
             "SELECT DISTINCT ARRAY_TO_STRING(ARRAY(SELECT category_name FROM category WHERE category.entry_id = e.entry_id ORDER BY category_order ASC), ',') AS category FROM entry AS e ORDER BY " +

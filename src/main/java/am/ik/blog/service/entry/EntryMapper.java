@@ -12,6 +12,7 @@ import am.ik.blog.service.entry.search.SearchCriteria;
 import io.r2dbc.spi.Row;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.cloud.sleuth.annotation.NewSpan;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -56,6 +57,7 @@ public class EntryMapper {
             .as(Long.class).fetch().one();
     }
 
+    @NewSpan
     public Mono<Long> count(SearchCriteria criteria) {
         SearchCriteria.ClauseAndParams clauseAndParams = criteria.toWhereClause();
         String sql = String.format(
@@ -71,7 +73,7 @@ public class EntryMapper {
             .one();
     }
 
-
+    @NewSpan
     public Mono<Page<Entry>> findPage(SearchCriteria criteria, Pageable pageable) {
         return this.count(criteria)
             .zipWith(this.findAll(criteria, pageable).collectList()
@@ -80,6 +82,7 @@ public class EntryMapper {
             .map(tpl -> new PageImpl<>(tpl.getT2(), pageable, tpl.getT1()));
     }
 
+    @NewSpan
     public Mono<Entry> findOne(Long entryId, boolean excludeContent) {
         List<Long> ids = Collections.singletonList(entryId);
         Mono<List<Tag>> tagsMono = this.tagsMap(ids)
@@ -110,6 +113,7 @@ public class EntryMapper {
             .doOnError(e -> log.error("Failed to fetch an entry!", e));
     }
 
+    @NewSpan
     public Mono<OffsetDateTime> findLastModifiedDate(Long entryId) {
         return this.databaseClient
             .execute("SELECT last_modified_date FROM entry WHERE entry_id = $1") //
@@ -118,6 +122,7 @@ public class EntryMapper {
             .one();
     }
 
+    @NewSpan
     public Mono<OffsetDateTime> findLatestModifiedDate() {
         return this.databaseClient.execute(
             "SELECT last_modified_date FROM entry ORDER BY last_modified_date DESC LIMIT 1") //
@@ -125,6 +130,7 @@ public class EntryMapper {
             .one();
     }
 
+    @NewSpan
     public Flux<Entry> findAll(SearchCriteria criteria, Pageable pageable) {
         SearchCriteria.ClauseAndParams clauseAndParams = criteria.toWhereClause();
         return this.entryIds(criteria, pageable, clauseAndParams) //
@@ -162,6 +168,7 @@ public class EntryMapper {
                 }));
     }
 
+    @NewSpan
     public Mono<Entry> save(Entry entry) {
         FrontMatter frontMatter = entry.getFrontMatter();
         Author created = entry.getCreated();
@@ -248,6 +255,7 @@ public class EntryMapper {
             .then(Mono.just(entry));
     }
 
+    @NewSpan
     public Mono<Long> delete(Long entryId) {
         return this.databaseClient.execute("DELETE FROM entry WHERE entry_id = $1") //
             .bind("$1", entryId) //
