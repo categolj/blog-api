@@ -1,6 +1,7 @@
 package am.ik.blog.service.tag;
 
 import am.ik.blog.model.Tag;
+import org.springframework.cloud.sleuth.annotation.NewSpan;
 import org.springframework.data.r2dbc.core.DatabaseClient;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
@@ -14,6 +15,7 @@ public class TagMapper {
         this.databaseClient = databaseClient;
     }
 
+    @NewSpan
     public Flux<Tag> findOrderByTagNameAsc() {
         return this.databaseClient
             .execute("SELECT tag_name FROM tag ORDER BY tag_name ASC")

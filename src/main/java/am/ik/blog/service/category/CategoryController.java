@@ -1,6 +1,7 @@
 package am.ik.blog.service.category;
 
 import am.ik.blog.model.Category;
+import org.springframework.cloud.sleuth.annotation.NewSpan;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.web.bind.annotation.RestController;
 import reactor.core.publisher.Mono;
@@ -17,6 +18,7 @@ public class CategoryController {
     }
 
     @MessageMapping("categories")
+    @NewSpan
     public Mono<List<List<Category>>> categories() {
         return this.categoryMapper.findAll().collectList();
     }
