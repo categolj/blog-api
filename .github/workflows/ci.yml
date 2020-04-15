@@ -21,25 +21,8 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-maven-
     - name: mvn test
-      env:
-        DATABASE_URL: postgresql://postgres:testdb@localhost:5432/blog_test
       run: |
         set -e
-        docker run -d \
-          --name postgres \
-          -e "POSTGRES_DB=blog_test" \
-          -e "POSTGRES_PASSWORD=testdb" \
-          -e "TZ=Japan" \
-          -v $(pwd):/tmp \
-          -p 5432:5432 \
-          postgres:9.6.10        
-        until nc -z $(docker inspect --format='{{.NetworkSettings.IPAddress}}' postgres) 5432
-        do
-          echo "waiting for postgres container..."
-          sleep 0.5
-        done        
-        docker exec postgres \
-          psql -U postgres -d blog_test -f /tmp/src/main/resources/schema.sql        
         ./mvnw -V test
     - name: mvn package
       if: github.ref == 'refs/heads/rsocket'      

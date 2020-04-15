@@ -1,0 +1,9 @@
+{
+  "properties": [
+    {
+      "name": "script.location",
+      "type": "org.springframework.core.io.Resource",
+      "description": "Location of the script to initialize database."
+    }
+  ]
+}
