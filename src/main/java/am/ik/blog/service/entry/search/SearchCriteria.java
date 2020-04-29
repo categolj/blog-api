@@ -6,12 +6,13 @@ import org.springframework.util.StringUtils;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.StringJoiner;
+import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class SearchCriteria {
 
     public static final SearchCriteria DEFAULT = defaults().build();
+    public static final String SERIES = "Series";
 
     private boolean excludeContent;
 
@@ -67,11 +68,13 @@ public class SearchCriteria {
         return this.excludeContent;
     }
 
+    boolean isExcludeSeries() {
+        return this.tag == null || !Objects.equals(this.tag.getName(), SERIES);
+    }
+
     public String toJoinClause() {
         StringBuilder sb = new StringBuilder();
-        if (this.tag != null) {
-            sb.append("LEFT JOIN entry_tag AS et ON e.entry_id = et.entry_id ");
-        }
+        sb.append("LEFT JOIN entry_tag AS et ON e.entry_id = et.entry_id ");
         if (this.categoryOrders != null) {
             sb.append("LEFT JOIN category AS c ON e.entry_id = c.entry_id ");
         }
@@ -82,6 +85,11 @@ public class SearchCriteria {
         AtomicInteger i = new AtomicInteger(1);
         Map<String, String> clause = new LinkedHashMap<>();
         Map<String, Object> params = new HashMap<>();
+        if (this.isExcludeSeries()) {
+            params.put("$" + i, SERIES);
+            clause.put("$" + i, "AND et.tag_name <> $" + i);
+            i.incrementAndGet();
+        }
         if (!StringUtils.isEmpty(this.keyword)) {
             params.put("$" + i, "%" + this.keyword + "%");
             clause.put("$" + i, "AND e.content LIKE $" + i);
@@ -110,8 +118,7 @@ public class SearchCriteria {
                 params.put(categoryStringKey, c.getCategory().getName());
                 clause.put(categoryStringKey, "AND c.category_name = " + categoryStringKey);
                 params.put(categoryOrderKey, categoryOrder);
-                clause.put(categoryOrderKey,
-                    "AND c.category_order = " + categoryOrderKey);
+                clause.put(categoryOrderKey, "AND c.category_order = " + categoryOrderKey);
                 i.incrementAndGet();
             });
         }
@@ -157,7 +164,7 @@ public class SearchCriteria {
 
         public SearchCriteria build() {
             return new SearchCriteria(excludeContent, createdBy, lastModifiedBy, tag,
-                categoryOrders, keyword);
+                    categoryOrders, keyword);
         }
 
         public SearchCriteriaBuilder categoryOrders(CategoryOrders categoryOrders) {
@@ -191,16 +198,15 @@ public class SearchCriteria {
         }
     }
 
-
     @Override
     public String toString() {
-        return new StringJoiner(", ", SearchCriteria.class.getSimpleName() + "[", "]")
-            .add("excludeContent=" + excludeContent)
-            .add("createdBy='" + createdBy + "'")
-            .add("lastModifiedBy='" + lastModifiedBy + "'")
-            .add("tag=" + tag)
-            .add("categoryOrders=" + categoryOrders)
-            .add("keyword='" + keyword + "'")
-            .toString();
+        return "SearchCriteria{" +
+                "excludeContent=" + excludeContent +
+                ", createdBy='" + createdBy + '\'' +
+                ", lastModifiedBy='" + lastModifiedBy + '\'' +
+                ", tag=" + tag +
+                ", categoryOrders=" + categoryOrders +
+                ", keyword='" + keyword + '\'' +
+                '}';
     }
 }
