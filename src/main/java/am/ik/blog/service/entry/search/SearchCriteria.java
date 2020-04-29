@@ -6,7 +6,6 @@ import org.springframework.util.StringUtils;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class SearchCriteria {
@@ -69,7 +68,11 @@ public class SearchCriteria {
     }
 
     boolean isExcludeSeries() {
-        return this.tag == null || !Objects.equals(this.tag.getName(), SERIES);
+        return this.categoryOrders == null && !this.hasKeyword();
+    }
+
+    boolean hasKeyword() {
+        return !StringUtils.isEmpty(this.keyword);
     }
 
     public String toJoinClause() {
@@ -85,12 +88,8 @@ public class SearchCriteria {
         AtomicInteger i = new AtomicInteger(1);
         Map<String, String> clause = new LinkedHashMap<>();
         Map<String, Object> params = new HashMap<>();
-        if (this.isExcludeSeries()) {
-            params.put("$" + i, SERIES);
-            clause.put("$" + i, "AND et.tag_name <> $" + i);
-            i.incrementAndGet();
-        }
-        if (!StringUtils.isEmpty(this.keyword)) {
+
+        if (this.hasKeyword()) {
             params.put("$" + i, "%" + this.keyword + "%");
             clause.put("$" + i, "AND e.content LIKE $" + i);
             i.incrementAndGet();
@@ -108,6 +107,10 @@ public class SearchCriteria {
         if (this.tag != null) {
             params.put("$" + i, this.tag.getName());
             clause.put("$" + i, "AND et.tag_name = $" + i);
+            i.incrementAndGet();
+        } else if (this.isExcludeSeries()) {
+            params.put("$" + i, SERIES);
+            clause.put("$" + i, "AND et.tag_name <> $" + i);
             i.incrementAndGet();
         }
         if (this.categoryOrders != null) {
