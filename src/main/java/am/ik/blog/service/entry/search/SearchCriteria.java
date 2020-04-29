@@ -68,7 +68,7 @@ public class SearchCriteria {
     }
 
     boolean isExcludeSeries() {
-        return this.categoryOrders == null && !this.hasKeyword();
+        return this.tag == null && this.categoryOrders == null && !this.hasKeyword();
     }
 
     boolean hasKeyword() {
@@ -77,7 +77,9 @@ public class SearchCriteria {
 
     public String toJoinClause() {
         StringBuilder sb = new StringBuilder();
-        sb.append("LEFT JOIN entry_tag AS et ON e.entry_id = et.entry_id ");
+        if (this.tag != null) {
+            sb.append("LEFT JOIN entry_tag AS et ON e.entry_id = et.entry_id ");
+        }
         if (this.categoryOrders != null) {
             sb.append("LEFT JOIN category AS c ON e.entry_id = c.entry_id ");
         }
@@ -110,7 +112,7 @@ public class SearchCriteria {
             i.incrementAndGet();
         } else if (this.isExcludeSeries()) {
             params.put("$" + i, SERIES);
-            clause.put("$" + i, "AND et.tag_name <> $" + i);
+            clause.put("$" + i, "AND e.entry_id NOT IN (SELECT entry_id FROM entry_tag WHERE tag_name = $" + i + ")");
             i.incrementAndGet();
         }
         if (this.categoryOrders != null) {
