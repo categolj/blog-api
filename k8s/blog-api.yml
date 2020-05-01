@@ -114,7 +114,7 @@ spec:
         - name: BPL_THREAD_COUNT
           value: "32"
         - name: SPRING_ZIPKIN_SERVICE_NAME
-          value: "${INFO_K8S_NAMESPACE}:blog-rsocket"
+          value: "${INFO_K8S_NAMESPACE}:rsocket"
         - name: SPRING_ZIPKIN_BASE_URL
           value: https://zipkin.dev.ik.am          
         - name: SPRING_DATASOURCE_URL
