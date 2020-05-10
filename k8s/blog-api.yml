@@ -111,7 +111,7 @@ spec:
           value: kubernetes
         - name: JAVA_OPTS
           value: " -XX:ReservedCodeCacheSize=32M -Xss512k -XX:+PrintCodeCache -Duser.timezone=Asia/Tokyo -Duser.language=ja -Duser.country=JP -Dfile.encoding=UTF-8 -Dinfo.docker.digest=INFO_DOCKER_DIGEST -XX:ActiveProcessorCount=2"
-        - name: BPL_THREAD_COUNT
+        - name: BPL_JVM_THREAD_COUNT
           value: "32"
         - name: SPRING_ZIPKIN_SERVICE_NAME
           value: "${INFO_K8S_NAMESPACE}:rsocket"
