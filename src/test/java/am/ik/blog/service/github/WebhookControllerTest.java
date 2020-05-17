@@ -18,8 +18,8 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, properties = {
-    "blog.github.access-token=foo",
-    "blog.github.webhook-secret=bar"})
+        "blog.github.access-token=foo",
+        "blog.github.webhook-secret=bar"})
 @TestConstructor(autowireMode = TestConstructor.AutowireMode.ALL)
 public class WebhookControllerTest {
 
@@ -36,15 +36,15 @@ public class WebhookControllerTest {
     public WebhookControllerTest(ObjectMapper objectMapper, @LocalServerPort int port) {
         this.objectMapper = objectMapper;
         this.webClient = WebTestClient.bindToServer() //
-            .baseUrl("http://localhost:" + port) //
-            .build();
+                .baseUrl("http://localhost:" + port) //
+                .build();
     }
 
     @Test
     void webhookAdded() throws Exception {
         Entry entry = Fixtures.entry(100L);
         given(entryFetcher.fetch("example", "blog.example.com", "content/00100.md"))
-            .willReturn(Mono.just(entry));
+                .willReturn(Mono.just(entry));
         given(entryRepository.save(entry)).willReturn(Mono.just(entry));
 
         ObjectNode body = this.objectMapper.createObjectNode();
@@ -57,17 +57,17 @@ public class WebhookControllerTest {
 
         WebhookVerifier verifier = new WebhookVerifier("bar");
         this.webClient.post() //
-            .uri("/webhook") //
-            .syncBody(body) //
-            .accept(MediaType.APPLICATION_JSON) //
-            .header("X-Hub-Signature", verifier.signature(body.toString())) //
-            .exchange() //
-            .expectStatus() //
-            .isOk() //
-            .expectBody() //
-            .jsonPath("$").isArray() //
-            .jsonPath("$.length()").isEqualTo(1) //
-            .jsonPath("$[0].added").isEqualTo(100);
+                .uri("/webhook") //
+                .bodyValue(body) //
+                .accept(MediaType.APPLICATION_JSON) //
+                .header("X-Hub-Signature", verifier.signature(body.toString())) //
+                .exchange() //
+                .expectStatus() //
+                .isOk() //
+                .expectBody() //
+                .jsonPath("$").isArray() //
+                .jsonPath("$.length()").isEqualTo(1) //
+                .jsonPath("$[0].added").isEqualTo(100);
 
         verify(entryRepository).save(entry);
     }
@@ -76,7 +76,7 @@ public class WebhookControllerTest {
     void webhookModified() throws Exception {
         Entry entry = Fixtures.entry(100L);
         given(entryFetcher.fetch("example", "blog.example.com", "content/00100.md"))
-            .willReturn(Mono.just(entry));
+                .willReturn(Mono.just(entry));
         given(entryRepository.save(entry)).willReturn(Mono.just(entry));
 
         ObjectNode body = this.objectMapper.createObjectNode();
@@ -89,17 +89,17 @@ public class WebhookControllerTest {
 
         WebhookVerifier verifier = new WebhookVerifier("bar");
         this.webClient.post() //
-            .uri("/webhook") //
-            .syncBody(body) //
-            .accept(MediaType.APPLICATION_JSON) //
-            .header("X-Hub-Signature", verifier.signature(body.toString())) //
-            .exchange() //
-            .expectStatus() //
-            .isOk() //
-            .expectBody() //
-            .jsonPath("$").isArray() //
-            .jsonPath("$.length()").isEqualTo(1) //
-            .jsonPath("$[0].modified").isEqualTo(100);
+                .uri("/webhook") //
+                .bodyValue(body) //
+                .accept(MediaType.APPLICATION_JSON) //
+                .header("X-Hub-Signature", verifier.signature(body.toString())) //
+                .exchange() //
+                .expectStatus() //
+                .isOk() //
+                .expectBody() //
+                .jsonPath("$").isArray() //
+                .jsonPath("$.length()").isEqualTo(1) //
+                .jsonPath("$[0].modified").isEqualTo(100);
 
         verify(entryRepository).save(entry);
     }
@@ -108,7 +108,7 @@ public class WebhookControllerTest {
     void webhookRemoved() throws Exception {
         Entry entry = Fixtures.entry(100L);
         given(entryFetcher.fetch("example", "blog.example.com", "content/00100.md"))
-            .willReturn(Mono.just(entry));
+                .willReturn(Mono.just(entry));
         Long entryId = entry.getEntryId();
         given(entryRepository.delete(entryId)).willReturn(Mono.just(entryId));
 
@@ -122,17 +122,17 @@ public class WebhookControllerTest {
 
         WebhookVerifier verifier = new WebhookVerifier("bar");
         this.webClient.post() //
-            .uri("/webhook") //
-            .syncBody(body) //
-            .accept(MediaType.APPLICATION_JSON) //
-            .header("X-Hub-Signature", verifier.signature(body.toString())) //
-            .exchange() //
-            .expectStatus() //
-            .isOk() //
-            .expectBody() //
-            .jsonPath("$").isArray() //
-            .jsonPath("$.length()").isEqualTo(1) //
-            .jsonPath("$[0].removed").isEqualTo(100);
+                .uri("/webhook") //
+                .syncBody(body) //
+                .accept(MediaType.APPLICATION_JSON) //
+                .header("X-Hub-Signature", verifier.signature(body.toString())) //
+                .exchange() //
+                .expectStatus() //
+                .isOk() //
+                .expectBody() //
+                .jsonPath("$").isArray() //
+                .jsonPath("$.length()").isEqualTo(1) //
+                .jsonPath("$[0].removed").isEqualTo(100);
 
         verify(entryRepository).delete(entry.getEntryId());
     }
@@ -141,7 +141,7 @@ public class WebhookControllerTest {
     void webhookForbidden() throws Exception {
         Entry entry = Fixtures.entry(100L);
         given(entryFetcher.fetch("example", "blog.example.com", "content/00100.md"))
-            .willReturn(Mono.just(entry));
+                .willReturn(Mono.just(entry));
 
         ObjectNode body = this.objectMapper.createObjectNode();
         body.putObject("repository").put("full_name", "example/blog.example.com");
@@ -154,7 +154,7 @@ public class WebhookControllerTest {
         WebhookVerifier verifier = new WebhookVerifier("foo");
         this.webClient.post() //
             .uri("/webhook") //
-            .syncBody(body) //
+            .bodyValue(body) //
             .accept(MediaType.APPLICATION_JSON) //
             .header("X-Hub-Signature", verifier.signature(body.toString())) //
             .exchange() //
