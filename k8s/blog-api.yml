@@ -171,6 +171,10 @@ spec:
               fieldPath: metadata.name
         - name: INFO_K8S_APP
           value: "${spring.application.name}"
+        - name: INFO_JAVA_VERSION
+          value: "${java.runtime.version}"
+        - name: INFO_JAVA_VENDOR
+          value: "${java.vm.vendor}"
         - name: MANAGEMENT_METRICS_EXPORT_PROMETHEUS_RSOCKET_HOST
           value: prometheus-proxy.dev.bosh.tokyo
         - name: MANAGEMENT_METRICS_TAGS_ORGANIZATION
