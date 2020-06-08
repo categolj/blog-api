@@ -45,19 +45,22 @@ public class TracingExecutionListener implements LifeCycleListener {
 
 	private static final String TAG_ROLLBACK_COUNT = "rollbackCount";
 
-	private Tracer tracer;
+	private final Tracer tracer;
+
+	private final String remoteServiceName;
 
 	private Map<String, Span> connectionSpans = new ConcurrentHashMap<>();
 
 	private Map<String, Span> transactionSpans = new ConcurrentHashMap<>();
 
-	public TracingExecutionListener(Tracer tracer) {
+	public TracingExecutionListener(Tracer tracer, String remoteServiceName) {
 		this.tracer = tracer;
+		this.remoteServiceName = remoteServiceName;
 	}
 
 	@Override
 	public void beforeCreateOnConnectionFactory(MethodExecutionInfo methodExecutionInfo) {
-		Span connectionSpan = this.tracer.nextSpan().kind(Span.Kind.CLIENT).start();
+		Span connectionSpan = this.tracer.nextSpan().kind(Span.Kind.CLIENT).remoteServiceName(remoteServiceName).start();
 
 		// store the span for retrieval at "afterCreateOnConnectionFactory"
 		methodExecutionInfo.getValueStore().put("connectionSpan", connectionSpan);
