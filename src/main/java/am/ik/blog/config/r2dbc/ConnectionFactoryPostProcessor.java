@@ -20,7 +20,7 @@ public class ConnectionFactoryPostProcessor implements BeanPostProcessor {
 	public Object postProcessAfterInitialization(Object bean, String beanName) throws BeansException {
 		if (bean instanceof ConnectionFactory) {
 			return ProxyConnectionFactory.builder((ConnectionFactory) bean)
-					.listener(new TracingExecutionListener(tracer, "blog-db"))
+					.listener(new TracingExecutionListener(tracer, "blog:db"))
 					.build();
 		}
 		return bean;
