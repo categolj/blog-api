@@ -191,7 +191,7 @@ spec:
             memory: "256Mi"
         readinessProbe:
           httpGet:
-            path: /actuator/health
+            path: /actuator/health/readiness
             port: 8080
           initialDelaySeconds: 15
           timeoutSeconds: 3
@@ -199,7 +199,7 @@ spec:
           failureThreshold: 3
         livenessProbe:
           httpGet:
-            path: /actuator/info
+            path: /actuator/health/liveness
             port: 8080
           initialDelaySeconds: 180
           timeoutSeconds: 3
