@@ -3,6 +3,7 @@ package am.ik.blog.service.entry;
 import am.ik.blog.model.Entry;
 import io.rsocket.exceptions.ApplicationErrorException;
 import org.springframework.cloud.sleuth.annotation.NewSpan;
+import org.springframework.cloud.sleuth.annotation.SpanTag;
 import org.springframework.data.domain.Page;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
@@ -39,7 +40,7 @@ public class EntryController {
 
     @MessageMapping("entries.{entryId}")
     @NewSpan
-    public Mono<Entry> responseEntry(@DestinationVariable("entryId") Long entryId) {
+    public Mono<Entry> responseEntry(@SpanTag("entryId") @DestinationVariable("entryId") Long entryId) {
         return this.entryMapper.findOne(entryId, false)
             .switchIfEmpty(errorResponse(entryId));
     }
