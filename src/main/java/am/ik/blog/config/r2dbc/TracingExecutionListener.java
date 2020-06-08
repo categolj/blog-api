@@ -122,6 +122,7 @@ public class TracingExecutionListener implements LifeCycleListener {
 		String queries = queryExecutionInfo.getQueries().stream().map(QueryInfo::getQuery).collect(joining(", "));
 
 		Span querySpan = this.tracer.nextSpan().name("r2dbc:query").kind(Span.Kind.CLIENT)
+				.remoteServiceName(remoteServiceName)
 				.tag(TAG_CONNECTION_ID, connectionId).tag(TAG_QUERY_TYPE, queryExecutionInfo.getType().toString())
 				.tag(TAG_QUERIES, queries).start();
 
@@ -164,7 +165,7 @@ public class TracingExecutionListener implements LifeCycleListener {
 	@Override
 	public void beforeBeginTransactionOnConnection(MethodExecutionInfo methodExecutionInfo) {
 		String connectionId = methodExecutionInfo.getConnectionInfo().getConnectionId();
-		Span transactionSpan = this.tracer.nextSpan().name("r2dbc:transaction").start();
+		Span transactionSpan = this.tracer.nextSpan().name("r2dbc:transaction").remoteServiceName(remoteServiceName).start();
 
 		this.transactionSpans.put(connectionId, transactionSpan);
 	}
