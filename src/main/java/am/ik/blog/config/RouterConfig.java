@@ -1,7 +1,7 @@
 package am.ik.blog.config;
 
-import am.ik.blog.service.admin.EntryImportHandler;
-import am.ik.blog.service.github.WebhookHandler;
+import am.ik.blog.admin.web.EntryImportHandler;
+import am.ik.blog.github.web.WebhookHandler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.reactive.function.server.RouterFunction;

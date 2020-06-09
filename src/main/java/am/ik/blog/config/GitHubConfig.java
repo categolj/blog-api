@@ -1,6 +1,6 @@
 package am.ik.blog.config;
 
-import am.ik.blog.service.github.GitHubProps;
+import am.ik.blog.github.GitHubProps;
 import am.ik.github.AccessToken;
 import am.ik.github.GitHubClient;
 import org.springframework.context.annotation.Bean;
