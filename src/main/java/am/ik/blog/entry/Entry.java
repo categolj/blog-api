@@ -78,15 +78,6 @@ public class Entry {
             .isBefore(OffsetDateTime.now());
     }
 
-    public EntryBuilder copy() {
-        return new EntryBuilder()
-            .withEntryId(this.entryId)
-            .withContent(this.content)
-            .withFrontMatter(this.frontMatter)
-            .withCreated(this.created)
-            .withUpdated(this.updated);
-    }
-
     @Override
     public String toString() {
         return new StringJoiner(", ", Entry.class.getSimpleName() + "[", "]")

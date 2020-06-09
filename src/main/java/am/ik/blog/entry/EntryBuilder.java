@@ -30,6 +30,14 @@ public class EntryBuilder {
 
     private Author updated;
 
+    public static EntryBuilder copyFrom(Entry entry) {
+		return new EntryBuilder()
+				.withEntryId(entry.getEntryId())
+				.withContent(entry.getContent())
+				.withFrontMatter(entry.getFrontMatter())
+				.withCreated(entry.getCreated())
+				.withUpdated(entry.getUpdated());
+	}
 
     public Entry build() {
         return new Entry(entryId, frontMatter, content, created, updated);

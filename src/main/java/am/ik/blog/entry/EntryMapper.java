@@ -95,7 +95,7 @@ public class EntryMapper {
         return entryMono.flatMap(entry -> Mono.zip(categoriesMono, tagsMono) //
             .map(tpl -> {
                 FrontMatter fm = entry.getFrontMatter();
-                return entry.copy() //
+                return EntryBuilder.copyFrom(entry) //
                     .withFrontMatter(
                         new FrontMatterBuilder()
                             .withTitle(fm.getTitle())
@@ -151,7 +151,7 @@ public class EntryMapper {
                         .map((row, meta) -> this.mapRow(row, true)).all()
                         .map(e -> {
                             FrontMatter frontMatter = e.getFrontMatter();
-                            return e.copy()
+                            return EntryBuilder.copyFrom(e)
                                 .withFrontMatter(new FrontMatterBuilder()
                                     .withTitle(frontMatter.getTitle())
                                     .withCategories(categoriesMap.get(e.getEntryId()))
