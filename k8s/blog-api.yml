@@ -113,6 +113,10 @@ spec:
           value: " -XX:ReservedCodeCacheSize=32M -Xss512k -XX:+PrintCodeCache -Duser.timezone=Asia/Tokyo -Duser.language=ja -Duser.country=JP -Dfile.encoding=UTF-8 -Dinfo.docker.digest=INFO_DOCKER_DIGEST -XX:ActiveProcessorCount=2"
         - name: BPL_JVM_THREAD_COUNT
           value: "32"
+        - name: LOGGING_EXCEPTION_CONVERSION_WORD
+          value: "\t%replace(%replace(%xEx){'\n','@n@'}){'\t','    '}%nopex"
+        - name: LOGGING_PATTERN_CONSOLE
+          value: "%clr(%d{yyyy-MM-dd HH:mm:ss.SSS}){faint} %clr(${logging.pattern.level:%5p}) %clr(${PID: }){magenta} %clr(---){faint} %clr([%15.15t]){faint} %clr(%-40.40logger{39}){cyan} %clr(:){faint} %replace(%m){'\n','@n@'}${logging.exception-conversion-word:%wEx}%n"
         - name: SPRING_ZIPKIN_ENABLED
           value: "true"
         - name: SPRING_ZIPKIN_SERVICE_NAME
