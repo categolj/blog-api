@@ -121,6 +121,8 @@ spec:
           value: https://zipkin.dev.ik.am
         - name: SPRING_DATASOURCE_URL
           value: "jdbc:postgresql://${POSTGRES_HOST}:5432/${POSTGRES_DB}"
+        - name: USER
+          value: vcap
         - name: POSTGRES_PASSWORD
           valueFrom:
             secretKeyRef:
