@@ -185,11 +185,6 @@ spec:
           value: "${INFO_K8S_APP}"
         - name: MANAGEMENT_METRICS_TAGS_INSTANCE_ID
           value: "${INFO_K8S_POD}"
-        - name: USER
-          value: vcap
-        volumeMounts:
-        - name: tmp
-          mountPath: /home/vcap/tmp
         resources:
           limits:
             memory: "256Mi"
@@ -221,10 +216,6 @@ spec:
                      values:
                      - blog-rsocket
                topologyKey: "kubernetes.io/hostname"
-
-      volumes:
-      - name: tmp
-        emptyDir: {}
 ---
 apiVersion: policy/v1beta1
 kind: PodDisruptionBudget
