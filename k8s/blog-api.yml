@@ -185,6 +185,20 @@ spec:
           value: "${INFO_K8S_APP}"
         - name: MANAGEMENT_METRICS_TAGS_INSTANCE_ID
           value: "${INFO_K8S_POD}"
+        - name: MANAGEMENT_METRICS_EXPORT_WAVEFRONT_ENABLED
+          value: "true"
+        - name: MANAGEMENT_METRICS_EXPORT_WAVEFRONT_APITOKEN
+          value: ea46143b-b308-4691-9da8-024a28a9bc03
+        - name: MANAGEMENT_METRICS_EXPORT_WAVEFRONT_URI
+          value: https://wavefront.surf
+        - name: WAVEFRONT_APPLICATION_CLUSTER
+          value: "${MANAGEMENT_METRICS_TAGS_ORGANIZATION}"
+        - name: WAVEFRONT_APPLICATION_NAME
+          value: "${MANAGEMENT_METRICS_TAGS_SPACE}"
+        - name: WAVEFRONT_APPLICATION_SERVICE
+          value: "${MANAGEMENT_METRICS_TAGS_APPLICATION}"
+        - name: WAVEFRONT_APPLICATION_SHARD
+          value: "${MANAGEMENT_METRICS_TAGS_INSTANCE_ID}"
         resources:
           limits:
             memory: "256Mi"
