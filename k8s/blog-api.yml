@@ -69,6 +69,52 @@ spec:
         retries: "3"
         statuses: BAD_GATEWAY
 ---
+apiVersion: gateway.cloud.ik.am/v1beta1
+kind: RouteDefinition
+metadata:
+  name: blog-api
+  namespace: blog
+spec:
+  route:
+    order: -100
+    predicates:
+    - Host=blog-api.ik.am
+    filters:
+    - RequestLogging=
+    - SetResponseHeader=Access-Control-Allow-Origin, *
+    - SetResponseHeader=Access-Control-Allow-Methods, GET, OPTIONS
+    - SetResponseHeader=Access-Control-Max-Age, 3600
+    - SetResponseHeader=Access-Control-Allow-Headers, *
+    - args:
+        retries: "3"
+        statuses: BAD_GATEWAY
+      name: Retry
+    uri: http://blog-rsocket.blog.svc.cluster.local:8080
+---
+apiVersion: gateway.cloud.ik.am/v1beta1
+kind: RouteDefinition
+metadata:
+  name: blog-api-lagacy
+  namespace: blog
+spec:
+  route:
+    order: -101
+    predicates:
+    - Host=blog-api.ik.am
+    - Path=/api/**
+    filters:
+    - RequestLogging=
+    - SetResponseHeader=Access-Control-Allow-Origin, *
+    - SetResponseHeader=Access-Control-Allow-Methods, GET, OPTIONS
+    - SetResponseHeader=Access-Control-Max-Age, 3600
+    - SetResponseHeader=Access-Control-Allow-Headers, *
+    - RewritePath=/api(?<segment>/?.*), $\{segment}
+    - name: Retry
+      args:
+        retries: "3"
+        statuses: BAD_GATEWAY
+    uri: http://blog-rsocket.blog.svc.cluster.local:8080
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
