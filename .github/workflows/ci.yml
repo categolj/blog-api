@@ -20,12 +20,6 @@ jobs:
         key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
         restore-keys: |
           ${{ runner.os }}-maven-
-    - uses: whoan/docker-build-with-cache-action@v5
-      with:
-        image_name: gcr.io/paketo-buildpacks/run:base-cnb
-    - uses: whoan/docker-build-with-cache-action@v5
-      with:
-        image_name: gcr.io/paketo-buildpacks/builder:base-platform-api-0.3
     - name: mvn test
       run: |
         set -e
