@@ -194,6 +194,11 @@
                         </goals>
                     </execution>
                 </executions>
+				<configuration>
+					<layers>
+						<enabled>true</enabled>
+					</layers>
+				</configuration>
             </plugin>
             <plugin>
                 <groupId>pl.project13.maven</groupId>

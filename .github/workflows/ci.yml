@@ -24,29 +24,23 @@ jobs:
       run: |
         set -e
         ./mvnw -V test
-    - name: mvn package
-      if: github.ref == 'refs/heads/rsocket'      
-      run: |
-        set -e
-        BOOT_VERSION=$(grep '<version>' pom.xml | head -n 1 | sed -e 's|<version>||g' -e 's|</version>||g' -e 's|<.*>||g' -e 's| ||g')
-        ./mvnw -V package -DskipTests -Dspring-boot.version=${BOOT_VERSION}
-    - name: pack build
+    - name: mvn spring-boot:build-image
       if: github.ref == 'refs/heads/rsocket'
       env:
-        PACK_VERSION: 0.10.0
         DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
         DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
       run: |
         set -e
         docker login -u ${DOCKER_USERNAME} -p ${DOCKER_PASSWORD}
         VERSION=$(grep '<version>' pom.xml | head -n 2 | tail -n 1 | sed -e 's|<version>||g' -e 's|</version>||g' -e 's| ||g' |  tr -d '\t')
-        wget -q https://github.com/buildpacks/pack/releases/download/v${PACK_VERSION}/pack-v${PACK_VERSION}-linux.tgz
-        tar xzf pack-*.tgz
-        rm -f pack-*.tgz
-        ./pack build making/blog-api:${VERSION} \
-          -p target/blog-api-*.jar \
-          --builder gcr.io/paketo-buildpacks/builder:base
-        docker push making/blog-api:${VERSION}
+        BOOT_VERSION=$(grep '<version>' pom.xml | head -n 1 | sed -e 's|<version>||g' -e 's|</version>||g' -e 's|<.*>||g' -e 's| ||g')
+        IMAGE_NAME=making/blog-api:${VERSION}
+        set +e
+        docker pull ${IMAGE_NAME}
+        set -e
+        ./mvnw -V spring-boot:build-image -Dspring-boot.build-image.imageName=${IMAGE_NAME} -Dmaven.test.skip=true -Dspring-boot.version=${BOOT_VERSION}
+        docker push ${IMAGE_NAME}
+
     - uses: azure/k8s-set-context@v1
       if: github.ref == 'refs/heads/rsocket'
       with:
