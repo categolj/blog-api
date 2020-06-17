@@ -25,8 +25,15 @@ public class EntryHandler {
 
 	public RouterFunction<ServerResponse> routes() {
 		return route() //
+				.GET("/entries/{entryId}", this::getEntry) //
 				.GET("/entries", this::getEntries) //
 				.build();
+	}
+
+	Mono<ServerResponse> getEntry(ServerRequest request) {
+		final long entryId = Long.parseLong(request.pathVariable("entryId"));
+		final Mono<Entry> entry = this.entryMapper.findOne(entryId, false);
+		return ServerResponse.ok().body(entry, Entry.class);
 	}
 
 	Mono<ServerResponse> getEntries(ServerRequest request) {
