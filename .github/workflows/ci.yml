@@ -22,13 +22,9 @@ jobs:
           ${{ runner.os }}-maven-
     - uses: whoan/docker-build-with-cache-action@v5
       with:
-        username: ${{ secrets.DOCKER_USERNAME }}
-        password: ${{ secrets.DOCKER_PASSWORD }}
         image_name: gcr.io/paketo-buildpacks/run:base-cnb
     - uses: whoan/docker-build-with-cache-action@v5
       with:
-        username: ${{ secrets.DOCKER_USERNAME }}
-        password: ${{ secrets.DOCKER_PASSWORD }}
         image_name: gcr.io/paketo-buildpacks/builder:base-platform-api-0.3
     - name: mvn test
       run: |
