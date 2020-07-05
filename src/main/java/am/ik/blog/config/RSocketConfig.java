@@ -1,5 +1,7 @@
 package am.ik.blog.config;
 
+import am.ik.blog.config.rsocket.TracingRSocketInterceptor;
+import brave.Tracer;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.rsocket.micrometer.MicrometerRSocketInterceptor;
 
@@ -11,8 +13,9 @@ import org.springframework.context.annotation.Configuration;
 public class RSocketConfig {
 
 	@Bean
-	public RSocketServerCustomizer serverRSocketFactoryProcessor(MeterRegistry meterRegistry) {
+	public RSocketServerCustomizer serverRSocketFactoryProcessor(Tracer tracer, MeterRegistry meterRegistry) {
 		return server -> server.interceptors(interceptorRegistry -> {
+			interceptorRegistry.forResponder(new TracingRSocketInterceptor(tracer));
 			interceptorRegistry.forResponder(new MicrometerRSocketInterceptor(meterRegistry));
 		});
 	}
