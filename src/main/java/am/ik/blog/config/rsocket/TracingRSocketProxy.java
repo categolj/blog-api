@@ -93,8 +93,7 @@ class TracingRSocketProxy extends RSocketProxy {
 				.map(this.tracer::newChild)
 				.orElse(this.tracer.newTrace())
 				.kind(Kind.SERVER)
-				.name("rsocket")
-				.tag("method", method);
+				.name(method);
 	}
 
 
