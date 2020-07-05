@@ -1,6 +1,5 @@
 package am.ik.blog.config.rsocket;
 
-import brave.Tracer;
 import brave.Tracing;
 import io.rsocket.RSocket;
 import io.rsocket.plugins.RSocketInterceptor;
