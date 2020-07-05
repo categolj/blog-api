@@ -1,12 +1,10 @@
-package am.ik.blog.config.rsocket;
+package org.springframework.cloud.sleuth.instrument.reactor;
 
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Function;
 
-import brave.Span;
-import brave.Span.Kind;
-import brave.Tracer;
-import brave.Tracer.SpanInScope;
+import brave.Tracing;
 import brave.propagation.TraceContext;
 import io.netty.buffer.ByteBuf;
 import io.rsocket.Payload;
@@ -22,79 +20,62 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.publisher.Operators;
+import reactor.util.context.Context;
 
 import static io.rsocket.metadata.WellKnownMimeType.MESSAGE_RSOCKET_TRACING_ZIPKIN;
 
-class TracingRSocketProxy extends RSocketProxy {
-	private final Tracer tracer;
+public class TracingRSocketProxy extends RSocketProxy {
+	private final Tracing tracing;
 
 	private final Logger log = LoggerFactory.getLogger(TracingRSocketProxy.class);
 
-	public TracingRSocketProxy(RSocket source, Tracer tracer) {
+	public TracingRSocketProxy(RSocket source, Tracing tracing) {
 		super(source);
-		this.tracer = tracer;
+		this.tracing = tracing;
 	}
 
 	@Override
 	public Mono<Void> fireAndForget(Payload payload) {
-		final Span span = this.createSpan(payload, "fire-and-forget");
-		final SpanInScope scope = this.tracer.withSpanInScope(span.start());
-		log.debug("Start span={}", span);
 		return super.fireAndForget(payload)
-				.doOnError(span::error)
-				.doFinally(__ -> {
-					log.debug("Finish span={}", span);
-					span.finish();
-					scope.close();
-				});
+				.transform(this.<Void>spanSubscriber("fire-and-forget"))
+				.subscriberContext(this.propagateContext(payload));
 	}
 
 	@Override
 	public Mono<Payload> requestResponse(Payload payload) {
-		final Span span = this.createSpan(payload, "request-response");
-		final SpanInScope scope = this.tracer.withSpanInScope(span.start());
-		log.debug("Start span={}", span);
 		return super.requestResponse(payload)
-				.doOnError(span::error)
-				.doFinally(__ -> {
-					log.debug("Finish span={}", span);
-					span.finish();
-					scope.close();
-				});
+				.transform(this.<Payload>spanSubscriber("request-response"))
+				.subscriberContext(this.propagateContext(payload));
 	}
 
 	@Override
 	public Flux<Payload> requestStream(Payload payload) {
-		final Span span = this.createSpan(payload, "request-stream");
-		final SpanInScope scope = this.tracer.withSpanInScope(span.start());
-		log.debug("Start span={}", span);
 		return super.requestStream(payload)
-				.doOnError(span::error)
-				.doFinally(__ -> {
-					log.debug("Finish span={}", span);
-					span.finish();
-					scope.close();
-				});
+				.transform(this.<Payload>spanSubscriber("request-stream"))
+				.subscriberContext(this.propagateContext(payload));
 	}
 
 	@Override
 	public Flux<Payload> requestChannel(Publisher<Payload> payloads) {
 		return Flux.from(payloads)
-				.switchOnFirst((signal, payloadFlux) -> {
-					final Span span = this.createSpan(signal.get(), "request-channel");
-					final SpanInScope scope = this.tracer.withSpanInScope(span.start());
-					log.debug("Start span={}", span);
-					return TracingRSocketProxy.super.requestChannel(payloadFlux)
-							.doOnError(span::error)
-							.doFinally(__ -> {
-								log.debug("Finish span={}", span);
-								span.finish();
-								scope.close();
-							});
-				});
+				.switchOnFirst((signal, payloadFlux) ->
+						TracingRSocketProxy.super.requestChannel(payloadFlux)
+								.transform(this.<Payload>spanSubscriber("request-channel"))
+								.subscriberContext(this.propagateContext(signal.get())));
 	}
 
-	private Span createSpan(Payload payload, String method) {
+	private <T> Function<? super Publisher<T>, ? extends Publisher<T>> spanSubscriber(String method) {
+		return Operators.lift((__, subscriber) -> new SpanSubscriber<>(subscriber, subscriber.currentContext(), this.tracing, method));
+	}
+
+	private Function<Context, Context> propagateContext(Payload payload) {
+		return context -> traceContext(payload)
+				.map(traceContext -> context.put(TraceContext.class, traceContext))
+				.orElse(context);
+	}
+
+	private Optional<TraceContext> traceContext(Payload payload) {
 		final CompositeMetadata compositeMetadata = new CompositeMetadata(payload.metadata(), false);
 		Optional<TracingMetadata> tracingMetadata = Optional.empty();
 		if (isProbablyCompositeMetadata(payload.metadata())) {
@@ -115,14 +96,8 @@ class TracingRSocketProxy extends RSocketProxy {
 				.traceIdHigh(metadata.traceIdHigh())
 				.sampled(metadata.isSampled())
 				.debug(metadata.isDebug())
-				.build())
-				.map(this.tracer::newChild)
-				.orElseGet(this.tracer::nextSpan)
-				.kind(Kind.SERVER)
-				.name(method)
-				.tag("rsocket.method", method);
+				.build());
 	}
-
 
 	/**
 	 * Check first 1 byte and determine if the metadata is CompositeMetadata
