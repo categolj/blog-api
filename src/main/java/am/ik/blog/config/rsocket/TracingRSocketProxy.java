@@ -109,7 +109,7 @@ class TracingRSocketProxy extends RSocketProxy {
 				.debug(metadata.isDebug())
 				.build())
 				.map(this.tracer::newChild)
-				.orElse(this.tracer.newTrace())
+				.orElseGet(this.tracer::nextSpan)
 				.kind(Kind.SERVER)
 				.name(method)
 				.tag("rsocket.method", method);
