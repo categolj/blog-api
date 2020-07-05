@@ -6,7 +6,6 @@ import java.util.Optional;
 import brave.Span;
 import brave.Span.Kind;
 import brave.Tracer;
-import brave.Tracer.SpanInScope;
 import brave.propagation.TraceContext;
 import io.netty.buffer.ByteBuf;
 import io.rsocket.Payload;
@@ -38,37 +37,28 @@ class TracingRSocketProxy extends RSocketProxy {
 	@Override
 	public Mono<Void> fireAndForget(Payload payload) {
 		final Span span = this.createSpan(payload, "fire-and-forget");
-		final SpanInScope scope = this.tracer.withSpanInScope(span.start());
+		span.start();
 		return super.fireAndForget(payload)
 				.doOnError(span::error)
-				.doFinally(__ -> {
-					span.finish();
-					scope.close();
-				});
+				.doFinally(__ -> span.finish());
 	}
 
 	@Override
 	public Mono<Payload> requestResponse(Payload payload) {
 		final Span span = this.createSpan(payload, "request-response");
-		final SpanInScope scope = this.tracer.withSpanInScope(span.start());
+		span.start();
 		return super.requestResponse(payload)
 				.doOnError(span::error)
-				.doFinally(__ -> {
-					span.finish();
-					scope.close();
-				});
+				.doFinally(__ -> span.finish());
 	}
 
 	@Override
 	public Flux<Payload> requestStream(Payload payload) {
 		final Span span = this.createSpan(payload, "request-stream");
-		final SpanInScope scope = this.tracer.withSpanInScope(span.start());
+		span.start();
 		return super.requestStream(payload)
 				.doOnError(span::error)
-				.doFinally(__ -> {
-					span.finish();
-					scope.close();
-				});
+				.doFinally(__ -> span.finish());
 	}
 
 	@Override
@@ -76,13 +66,10 @@ class TracingRSocketProxy extends RSocketProxy {
 		return Flux.from(payloads)
 				.switchOnFirst((signal, payloadFlux) -> {
 					final Span span = this.createSpan(signal.get(), "request-channel");
-					final SpanInScope scope = this.tracer.withSpanInScope(span.start());
+					span.start();
 					return TracingRSocketProxy.super.requestChannel(payloadFlux)
 							.doOnError(span::error)
-							.doFinally(__ -> {
-								span.finish();
-								scope.close();
-							});
+							.doFinally(__ -> span.finish());
 				});
 	}
 
