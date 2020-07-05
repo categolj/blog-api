@@ -39,9 +39,11 @@ class TracingRSocketProxy extends RSocketProxy {
 	public Mono<Void> fireAndForget(Payload payload) {
 		final Span span = this.createSpan(payload, "fire-and-forget");
 		final SpanInScope scope = this.tracer.withSpanInScope(span.start());
+		log.debug("Start span={}", span);
 		return super.fireAndForget(payload)
 				.doOnError(span::error)
 				.doFinally(__ -> {
+					log.debug("Finish span={}", span);
 					span.finish();
 					scope.close();
 				});
@@ -51,9 +53,11 @@ class TracingRSocketProxy extends RSocketProxy {
 	public Mono<Payload> requestResponse(Payload payload) {
 		final Span span = this.createSpan(payload, "request-response");
 		final SpanInScope scope = this.tracer.withSpanInScope(span.start());
+		log.debug("Start span={}", span);
 		return super.requestResponse(payload)
 				.doOnError(span::error)
 				.doFinally(__ -> {
+					log.debug("Finish span={}", span);
 					span.finish();
 					scope.close();
 				});
@@ -63,9 +67,11 @@ class TracingRSocketProxy extends RSocketProxy {
 	public Flux<Payload> requestStream(Payload payload) {
 		final Span span = this.createSpan(payload, "request-stream");
 		final SpanInScope scope = this.tracer.withSpanInScope(span.start());
+		log.debug("Start span={}", span);
 		return super.requestStream(payload)
 				.doOnError(span::error)
 				.doFinally(__ -> {
+					log.debug("Finish span={}", span);
 					span.finish();
 					scope.close();
 				});
@@ -77,9 +83,11 @@ class TracingRSocketProxy extends RSocketProxy {
 				.switchOnFirst((signal, payloadFlux) -> {
 					final Span span = this.createSpan(signal.get(), "request-channel");
 					final SpanInScope scope = this.tracer.withSpanInScope(span.start());
+					log.debug("Start span={}", span);
 					return TracingRSocketProxy.super.requestChannel(payloadFlux)
 							.doOnError(span::error)
 							.doFinally(__ -> {
+								log.debug("Finish span={}", span);
 								span.finish();
 								scope.close();
 							});
