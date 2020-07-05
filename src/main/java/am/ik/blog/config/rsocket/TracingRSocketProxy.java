@@ -39,6 +39,7 @@ class TracingRSocketProxy extends RSocketProxy {
 		final Span span = this.createSpan(payload, "fire-and-forget");
 		this.tracer.withSpanInScope(span.start());
 		return super.fireAndForget(payload)
+				.doOnError(span::error)
 				.doFinally(__ -> span.finish());
 	}
 
@@ -47,6 +48,7 @@ class TracingRSocketProxy extends RSocketProxy {
 		final Span span = this.createSpan(payload, "request-response");
 		this.tracer.withSpanInScope(span.start());
 		return super.requestResponse(payload)
+				.doOnError(span::error)
 				.doFinally(__ -> span.finish());
 	}
 
@@ -55,6 +57,7 @@ class TracingRSocketProxy extends RSocketProxy {
 		final Span span = this.createSpan(payload, "request-stream");
 		this.tracer.withSpanInScope(span.start());
 		return super.requestStream(payload)
+				.doOnError(span::error)
 				.doFinally(__ -> span.finish());
 	}
 
@@ -64,7 +67,9 @@ class TracingRSocketProxy extends RSocketProxy {
 				.switchOnFirst((signal, payloadFlux) -> {
 					final Span span = this.createSpan(signal.get(), "request-channel");
 					this.tracer.withSpanInScope(span.start());
-					return TracingRSocketProxy.super.requestChannel(payloadFlux);
+					return TracingRSocketProxy.super.requestChannel(payloadFlux)
+							.doOnError(span::error)
+							.doFinally(__ -> span.finish());
 				});
 	}
 
