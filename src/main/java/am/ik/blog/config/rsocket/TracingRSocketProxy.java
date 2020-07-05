@@ -6,6 +6,7 @@ import java.util.Optional;
 import brave.Span;
 import brave.Span.Kind;
 import brave.Tracer;
+import brave.Tracer.SpanInScope;
 import brave.propagation.TraceContext;
 import io.netty.buffer.ByteBuf;
 import io.rsocket.Payload;
@@ -37,28 +38,37 @@ class TracingRSocketProxy extends RSocketProxy {
 	@Override
 	public Mono<Void> fireAndForget(Payload payload) {
 		final Span span = this.createSpan(payload, "fire-and-forget");
-		this.tracer.withSpanInScope(span.start());
+		final SpanInScope scope = this.tracer.withSpanInScope(span.start());
 		return super.fireAndForget(payload)
 				.doOnError(span::error)
-				.doFinally(__ -> span.finish());
+				.doFinally(__ -> {
+					span.finish();
+					scope.close();
+				});
 	}
 
 	@Override
 	public Mono<Payload> requestResponse(Payload payload) {
 		final Span span = this.createSpan(payload, "request-response");
-		this.tracer.withSpanInScope(span.start());
+		final SpanInScope scope = this.tracer.withSpanInScope(span.start());
 		return super.requestResponse(payload)
 				.doOnError(span::error)
-				.doFinally(__ -> span.finish());
+				.doFinally(__ -> {
+					span.finish();
+					scope.close();
+				});
 	}
 
 	@Override
 	public Flux<Payload> requestStream(Payload payload) {
 		final Span span = this.createSpan(payload, "request-stream");
-		this.tracer.withSpanInScope(span.start());
+		final SpanInScope scope = this.tracer.withSpanInScope(span.start());
 		return super.requestStream(payload)
 				.doOnError(span::error)
-				.doFinally(__ -> span.finish());
+				.doFinally(__ -> {
+					span.finish();
+					scope.close();
+				});
 	}
 
 	@Override
@@ -66,10 +76,13 @@ class TracingRSocketProxy extends RSocketProxy {
 		return Flux.from(payloads)
 				.switchOnFirst((signal, payloadFlux) -> {
 					final Span span = this.createSpan(signal.get(), "request-channel");
-					this.tracer.withSpanInScope(span.start());
+					final SpanInScope scope = this.tracer.withSpanInScope(span.start());
 					return TracingRSocketProxy.super.requestChannel(payloadFlux)
 							.doOnError(span::error)
-							.doFinally(__ -> span.finish());
+							.doFinally(__ -> {
+								span.finish();
+								scope.close();
+							});
 				});
 	}
 
