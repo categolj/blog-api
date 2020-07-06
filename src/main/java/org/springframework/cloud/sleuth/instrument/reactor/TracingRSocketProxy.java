@@ -30,11 +30,14 @@ import static io.rsocket.metadata.WellKnownMimeType.MESSAGE_RSOCKET_TRACING_ZIPK
 public class TracingRSocketProxy extends RSocketProxy {
 	private final Tracing tracing;
 
+	private final Kind kind;
+
 	private final Logger log = LoggerFactory.getLogger(TracingRSocketProxy.class);
 
-	public TracingRSocketProxy(RSocket source, Tracing tracing) {
+	public TracingRSocketProxy(RSocket source, Tracing tracing, Kind kind) {
 		super(source);
 		this.tracing = tracing;
+		this.kind = kind;
 	}
 
 	@Override
@@ -73,7 +76,7 @@ public class TracingRSocketProxy extends RSocketProxy {
 			final Tracer tracer = this.tracing.tracer();
 			final Span span = (traceContext == null ? tracer.newTrace() : tracer.newChild(traceContext))
 					.name(method)
-					.kind(Kind.SERVER)
+					.kind(this.kind)
 					.tag("rsocket.method", method)
 					.start();
 			log.debug("Start span {}", span);
