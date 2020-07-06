@@ -6,7 +6,6 @@ import io.rsocket.exceptions.ApplicationErrorException;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import org.springframework.cloud.sleuth.annotation.SpanTag;
 import org.springframework.data.domain.Page;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
@@ -37,7 +36,7 @@ public class EntryController {
 	}
 
 	@MessageMapping("entries.{entryId}")
-	public Mono<Entry> responseEntry(@SpanTag("entryId") @DestinationVariable("entryId") Long entryId) {
+	public Mono<Entry> responseEntry(@DestinationVariable("entryId") Long entryId) {
 		return this.entryMapper.findOne(entryId, false)
 				.switchIfEmpty(errorResponse(entryId));
 	}
