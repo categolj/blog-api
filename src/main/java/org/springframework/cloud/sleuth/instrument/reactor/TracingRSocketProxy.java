@@ -90,8 +90,10 @@ public class TracingRSocketProxy extends RSocketProxy {
 
 	private void finishSpan() {
 		final Span currentSpan = this.tracing.tracer().currentSpan();
-		log.debug("Finish span {}", currentSpan);
-		currentSpan.finish();
+		if (currentSpan != null) {
+			log.debug("Finish span {}", currentSpan);
+			currentSpan.finish();
+		}
 	}
 
 	private Optional<TraceContext> traceContext(Payload payload) {
