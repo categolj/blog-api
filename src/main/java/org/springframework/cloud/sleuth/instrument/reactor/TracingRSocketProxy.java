@@ -75,7 +75,7 @@ public class TracingRSocketProxy extends RSocketProxy {
 				traceContext = span.context();
 			}
 			else {
-				span = this.tracing.tracer().newChild(traceContext);
+				span = this.tracing.tracer().toSpan(traceContext);
 			}
 			span.name(method).kind(Kind.SERVER).tag("rsocket.method", method).start();
 			return new ScopePassingSpanSubscriber<>(subscriber, subscriber.currentContext(), this.tracing.currentTraceContext(), traceContext);
