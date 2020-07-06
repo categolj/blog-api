@@ -6,6 +6,7 @@ import java.util.function.Function;
 
 import brave.Span;
 import brave.Span.Kind;
+import brave.Tracer;
 import brave.Tracing;
 import brave.propagation.TraceContext;
 import io.netty.buffer.ByteBuf;
@@ -68,22 +69,26 @@ public class TracingRSocketProxy extends RSocketProxy {
 
 	private <T> Function<? super Publisher<T>, ? extends Publisher<T>> scopePassingSpanSubscriberOperator(String method, Payload payload) {
 		return Operators.lift((__, subscriber) -> {
-			TraceContext traceContext = this.traceContext(payload).orElse(null);
-			Span span;
-			if (traceContext == null) {
-				span = this.tracing.tracer().newTrace();
-				traceContext = span.context();
-			}
-			else {
-				span = this.tracing.tracer().toSpan(traceContext);
-			}
-			span.name(method).kind(Kind.SERVER).tag("rsocket.method", method).start();
-			return new ScopePassingSpanSubscriber<>(subscriber, subscriber.currentContext(), this.tracing.currentTraceContext(), traceContext);
+			final TraceContext traceContext = this.traceContext(payload).orElse(null);
+			final Tracer tracer = this.tracing.tracer();
+			final Span span = (traceContext == null ? tracer.newTrace() : tracer.newChild(traceContext))
+					.name(method)
+					.kind(Kind.SERVER)
+					.tag("rsocket.method", method)
+					.start();
+			log.debug("Start span {}", span);
+			return new ScopePassingSpanSubscriber<>(
+					subscriber,
+					subscriber.currentContext(),
+					this.tracing.currentTraceContext(),
+					span.context());
 		});
 	}
 
 	private void finishSpan() {
-		this.tracing.tracer().currentSpan().finish();
+		final Span currentSpan = this.tracing.tracer().currentSpan();
+		log.debug("Finish span {}", currentSpan);
+		currentSpan.finish();
 	}
 
 	private Optional<TraceContext> traceContext(Payload payload) {
