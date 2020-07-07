@@ -1,7 +1,6 @@
 package am.ik.blog.config;
 
-import am.ik.blog.config.rsocket.TracingRSocketInterceptor;
-import brave.Span.Kind;
+import am.ik.blog.config.rsocket.TracingSocketAcceptorInterceptor;
 import brave.Tracing;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.rsocket.micrometer.MicrometerRSocketInterceptor;
@@ -16,7 +15,7 @@ public class RSocketConfig {
 	@Bean
 	public RSocketServerCustomizer serverRSocketFactoryProcessor(Tracing tracing, MeterRegistry meterRegistry) {
 		return server -> server.interceptors(interceptorRegistry -> {
-			interceptorRegistry.forResponder(new TracingRSocketInterceptor(tracing, Kind.SERVER));
+			interceptorRegistry.forSocketAcceptor(new TracingSocketAcceptorInterceptor(tracing));
 			interceptorRegistry.forResponder(new MicrometerRSocketInterceptor(meterRegistry));
 		});
 	}
