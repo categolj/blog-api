@@ -14,107 +14,6 @@ spec:
     name: http
   type: ClusterIP
 ---
-apiVersion: gateway.cloud.ik.am/v1beta1
-kind: RouteDefinition
-metadata:
-  name: blog-rsocket-actuator
-  namespace: blog
-spec:
-  route:
-    uri: http://blog-rsocket.blog.svc.cluster.local:8080
-    predicates:
-    - Host=blog-rsocket.ik.am
-    - Path=/actuator/*
-    filters:
-    - RequestLogging=
-    - name: Retry
-      args:
-        retries: "3"
-        statuses: BAD_GATEWAY
----
-apiVersion: gateway.cloud.ik.am/v1beta1
-kind: RouteDefinition
-metadata:
-  name: blog-rsocket-webhook
-  namespace: blog
-spec:
-  route:
-    uri: http://blog-rsocket.blog.svc.cluster.local:8080
-    predicates:
-    - Host=blog-rsocket.ik.am
-    - Path=/webhook
-    filters:
-    - RequestLogging=
-    - name: Retry
-      args:
-        retries: "3"
-        statuses: BAD_GATEWAY        
----
-apiVersion: gateway.cloud.ik.am/v1beta1
-kind: RouteDefinition
-metadata:
-  name: blog-rsocket
-  namespace: blog
-spec:
-  route:
-    order: -100
-    uri: ws://blog-rsocket.blog.svc.cluster.local:8080
-    predicates:
-    - Host=blog.ik.am
-    - Path=/rsocket
-    filters:
-    - RequestLogging=
-    - name: Retry
-      args:
-        retries: "3"
-        statuses: BAD_GATEWAY
----
-apiVersion: gateway.cloud.ik.am/v1beta1
-kind: RouteDefinition
-metadata:
-  name: blog-api
-  namespace: blog
-spec:
-  route:
-    order: -100
-    predicates:
-    - Host=blog-api.ik.am
-    filters:
-    - RequestLogging=
-    - SetResponseHeader=Access-Control-Allow-Origin, *
-    - SetResponseHeader=Access-Control-Allow-Methods, GET, OPTIONS
-    - SetResponseHeader=Access-Control-Max-Age, 3600
-    - SetResponseHeader=Access-Control-Allow-Headers, *
-    - args:
-        retries: "3"
-        statuses: BAD_GATEWAY
-      name: Retry
-    uri: http://blog-rsocket.blog.svc.cluster.local:8080
----
-apiVersion: gateway.cloud.ik.am/v1beta1
-kind: RouteDefinition
-metadata:
-  name: blog-api-lagacy
-  namespace: blog
-spec:
-  route:
-    order: -101
-    predicates:
-    - Host=blog-api.ik.am
-    - Path=/api/**
-    filters:
-    - RequestLogging=
-    - SetResponseHeader=Access-Control-Allow-Origin, *
-    - SetResponseHeader=Access-Control-Allow-Methods, GET, OPTIONS
-    - SetResponseHeader=Access-Control-Max-Age, 3600
-    - SetResponseHeader=Access-Control-Allow-Headers, *
-    - RewritePath=/api(?<segment>/?.*), $\{segment}
-    - name: Retry
-      args:
-        retries: "3"
-        statuses: BAD_GATEWAY
-    uri: http://blog-rsocket.blog.svc.cluster.local:8080
----
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -140,8 +39,6 @@ spec:
       annotations:
         kubernetes.io/change-cause: "FIXME"
     spec:
-      imagePullSecrets:
-      - name: harbor-secret
       containers:
       - name: blog-rsocket
         image: making/blog-api:5.0.0-SNAPSHOT
@@ -282,14 +179,3 @@ spec:
                      values:
                      - blog-rsocket
                topologyKey: "kubernetes.io/hostname"
----
-apiVersion: policy/v1beta1
-kind: PodDisruptionBudget
-metadata:
-  name: blog-rsocket
-  namespace: blog
-spec:
-  minAvailable: 1
-  selector:
-    matchLabels:
-      app: blog-rsocket
