@@ -41,7 +41,7 @@ spec:
     spec:
       containers:
       - name: blog-rsocket
-        image: making/blog-api:5.0.0-SNAPSHOT
+        image: ghcr.io/categolj/blog-api:5.0.0-SNAPSHOT
         ports:
         - containerPort: 8080
           name: http
