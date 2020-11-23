@@ -60,7 +60,6 @@ jobs:
           -f k8s/app.yml \
           -f k8s/pdb.yml \
           -f k8s/route-definition.yml \
-          -f k8s/overlays/disable-wavefront.yml \
           | kubectl apply -f -
         wget -q https://raw.githubusercontent.com/zlabjp/kubernetes-resource/master/assets/common.sh
         source common.sh
