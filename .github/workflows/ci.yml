@@ -47,19 +47,20 @@ jobs:
       with:
         method: kubeconfig
         kubeconfig: ${{ secrets.KUBE_CONFIG }}
+    - uses: k14s/setup-k14s-action@v1
+      if: github.ref == 'refs/heads/rsocket'
     - name: kubectl apply
       if: github.ref == 'refs/heads/rsocket'
       env:
-        KBLD_VERSION: 0.27.0
         WAIT_UNTIL_READY_SELECTOR: app=blog-rsocket
       run: |
         set -e
-        wget -q https://github.com/k14s/kbld/releases/download/v${KBLD_VERSION}/kbld-linux-amd64 -O kbld
-        chmod +x kbld
-        ./kbld \
+        ytt \
           -f k8s/app.yml \
           -f k8s/pdb.yml \
           -f k8s/route-definition.yml \
+          -f k8s/overlays/disable-wavefront.yml \
+          | kbld -f - \
           | kubectl apply -f -
         wget -q https://raw.githubusercontent.com/zlabjp/kubernetes-resource/master/assets/common.sh
         source common.sh
