@@ -18,7 +18,7 @@
         <java.version>11</java.version>
 		<spring-cloud.version>2020.0.1</spring-cloud.version>
 		<wavefront.version>2.1.0</wavefront.version>
-		<testcontainers.version>1.14.3</testcontainers.version>
+		<testcontainers.version>1.15.2</testcontainers.version>
     </properties>
 
     <dependencies>
