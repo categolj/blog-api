@@ -4,11 +4,6 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Function;
 
-import brave.Span;
-import brave.Span.Kind;
-import brave.Tracer;
-import brave.Tracing;
-import brave.propagation.TraceContext;
 import io.rsocket.Payload;
 import io.rsocket.RSocket;
 import io.rsocket.metadata.CompositeMetadata;
@@ -24,22 +19,31 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.publisher.Operators;
 
+import org.springframework.cloud.sleuth.CurrentTraceContext;
+import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.Span.Kind;
+import org.springframework.cloud.sleuth.TraceContext;
+import org.springframework.cloud.sleuth.Tracer;
+
 import static io.rsocket.metadata.WellKnownMimeType.MESSAGE_RSOCKET_COMPOSITE_METADATA;
 import static io.rsocket.metadata.WellKnownMimeType.MESSAGE_RSOCKET_TRACING_ZIPKIN;
 
 public class TracingRSocketProxy extends RSocketProxy {
 	private final WellKnownMimeType metadataMimeType;
 
-	private final Tracing tracing;
+	private final Tracer tracer;
+
+	private final CurrentTraceContext currentTraceContext;
 
 	private final Kind kind;
 
 	private final Logger log = LoggerFactory.getLogger(TracingRSocketProxy.class);
 
-	public TracingRSocketProxy(RSocket source, WellKnownMimeType metadataMimeType, Tracing tracing, Kind kind) {
+	public TracingRSocketProxy(RSocket source, WellKnownMimeType metadataMimeType, Tracer tracer, CurrentTraceContext currentTraceContext, Kind kind) {
 		super(source);
 		this.metadataMimeType = metadataMimeType;
-		this.tracing = tracing;
+		this.tracer = tracer;
+		this.currentTraceContext = currentTraceContext;
 		this.kind = kind;
 	}
 
@@ -79,8 +83,7 @@ public class TracingRSocketProxy extends RSocketProxy {
 	private <T> Function<? super Publisher<T>, ? extends Publisher<T>> scopePassingSpanSubscriberOperator(String method, Payload payload) {
 		return Operators.lift((__, subscriber) -> {
 			final TraceContext traceContext = this.traceContext(payload).orElse(null);
-			final Tracer tracer = this.tracing.tracer();
-			final Span span = (traceContext == null ? tracer.newTrace() : tracer.newChild(traceContext))
+			final Span span = (traceContext == null ? this.tracer.spanBuilder() : this.tracer.spanBuilder().setParent(traceContext))
 					.name(method)
 					.kind(this.kind)
 					.tag("rsocket.method", method)
@@ -89,23 +92,23 @@ public class TracingRSocketProxy extends RSocketProxy {
 			return new ScopePassingSpanSubscriber<>(
 					subscriber,
 					subscriber.currentContext(),
-					this.tracing.currentTraceContext(),
+					this.currentTraceContext,
 					span.context());
 		});
 	}
 
 	private void annotateOnNext(Payload payload) {
-		final Span currentSpan = this.tracing.tracer().currentSpan();
+		final Span currentSpan = this.tracer.currentSpan();
 		if (currentSpan != null) {
-			currentSpan.annotate("onNext");
+			currentSpan.event("onNext");
 		}
 	}
 
 	private void finishSpan() {
-		final Span currentSpan = this.tracing.tracer().currentSpan();
+		final Span currentSpan = this.tracer.currentSpan();
 		if (currentSpan != null) {
 			log.debug("Finish span {}", currentSpan);
-			currentSpan.finish();
+			currentSpan.end();
 		}
 	}
 
@@ -122,12 +125,28 @@ public class TracingRSocketProxy extends RSocketProxy {
 					.map(Entry::getContent)
 					.map(TracingMetadataCodec::decode);
 		}
-		return tracingMetadata.map(metadata -> TraceContext.newBuilder()
-				.spanId(metadata.spanId())
-				.traceId(metadata.traceId())
-				.traceIdHigh(metadata.traceIdHigh())
-				.sampled(metadata.isSampled())
-				.debug(metadata.isDebug())
-				.build());
+		return tracingMetadata.map(metadata ->
+				new TraceContext() {
+
+					@Override
+					public String traceId() {
+						return Long.toHexString(metadata.traceId()) + Long.toHexString(metadata.traceIdHigh());
+					}
+
+					@Override
+					public String parentId() {
+						return Long.toHexString(metadata.parentId());
+					}
+
+					@Override
+					public String spanId() {
+						return Long.toHexString(metadata.spanId());
+					}
+
+					@Override
+					public Boolean sampled() {
+						return metadata.isSampled();
+					}
+				});
 	}
 }

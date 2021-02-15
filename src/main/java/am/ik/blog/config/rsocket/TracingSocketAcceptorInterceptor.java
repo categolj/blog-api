@@ -1,18 +1,22 @@
 package am.ik.blog.config.rsocket;
 
-import brave.Span.Kind;
-import brave.Tracing;
 import io.rsocket.SocketAcceptor;
 import io.rsocket.metadata.WellKnownMimeType;
 import io.rsocket.plugins.SocketAcceptorInterceptor;
 
+import org.springframework.cloud.sleuth.CurrentTraceContext;
+import org.springframework.cloud.sleuth.Span.Kind;
+import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.instrument.reactor.TracingRSocketProxy;
 
 public class TracingSocketAcceptorInterceptor implements SocketAcceptorInterceptor {
-	private final Tracing tracing;
+	private final Tracer tracer;
 
-	public TracingSocketAcceptorInterceptor(Tracing tracing) {
-		this.tracing = tracing;
+	private final CurrentTraceContext currentTraceContext;
+
+	public TracingSocketAcceptorInterceptor(Tracer tracer, CurrentTraceContext currentTraceContext) {
+		this.tracer = tracer;
+		this.currentTraceContext = currentTraceContext;
 	}
 
 	@Override
@@ -20,7 +24,7 @@ public class TracingSocketAcceptorInterceptor implements SocketAcceptorIntercept
 		return (setup, sendingSocket) -> socketAcceptor.accept(setup, sendingSocket)
 				.map(rSocket -> {
 					final WellKnownMimeType metadataMimeType = WellKnownMimeType.fromString(setup.metadataMimeType());
-					return new TracingRSocketProxy(rSocket, metadataMimeType, this.tracing, Kind.SERVER);
+					return new TracingRSocketProxy(rSocket, metadataMimeType, this.tracer, this.currentTraceContext, Kind.SERVER);
 				});
 	}
 }

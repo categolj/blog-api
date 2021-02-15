@@ -7,8 +7,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.web.server.LocalServerPort;
 import org.springframework.core.io.ClassPathResource;
-import org.springframework.data.r2dbc.core.DatabaseClient;
 import org.springframework.messaging.rsocket.RSocketRequester;
+import org.springframework.r2dbc.core.DatabaseClient;
 import org.springframework.test.context.TestConstructor;
 import org.springframework.util.StreamUtils;
 import reactor.core.publisher.Mono;
@@ -43,8 +43,8 @@ class EntryControllerTest {
 
     @BeforeEach
     public void reset() {
-        this.databaseClient.execute(readFile("sql/delete-test-data.sql")).then().block();
-        this.databaseClient.execute(readFile("sql/insert-test-data.sql")).then().block();
+        this.databaseClient.sql(readFile("sql/delete-test-data.sql")).then().block();
+        this.databaseClient.sql(readFile("sql/insert-test-data.sql")).then().block();
     }
 
     @Test

@@ -26,7 +26,7 @@ import org.springframework.cloud.sleuth.annotation.SpanTag;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.r2dbc.core.DatabaseClient;
+import org.springframework.r2dbc.core.DatabaseClient;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.reactive.TransactionalOperator;
 
@@ -50,8 +50,9 @@ public class EntryMapper {
 	}
 
 	public Mono<Long> nextId() {
-		return this.databaseClient.execute("SELECT max(entry_id) + 1 FROM entry")
-				.as(Long.class).fetch().one();
+		return this.databaseClient.sql("SELECT max(entry_id) + 1 AS next FROM entry")
+				.map(row -> row.get("next", Long.class))
+				.one();
 	}
 
 	@NewSpan
@@ -60,7 +61,7 @@ public class EntryMapper {
 		String sql = String.format(
 				"SELECT count(e.entry_id) AS count FROM entry AS e %s WHERE 1=1 %s",
 				criteria.toJoinClause(), clauseAndParams.clauseForEntryId());
-		DatabaseClient.GenericExecuteSpec executeSpec = this.databaseClient.execute(sql);
+		DatabaseClient.GenericExecuteSpec executeSpec = this.databaseClient.sql(sql);
 		Map<String, Object> params = clauseAndParams.params();
 		for (Map.Entry<String, Object> entry : params.entrySet()) {
 			executeSpec = executeSpec.bind(entry.getKey(), entry.getValue());
@@ -89,10 +90,9 @@ public class EntryMapper {
 		String sql = String.format(
 				"SELECT e.entry_id, e.title%s, e.created_by, e.created_date, e.last_modified_by, e.last_modified_date FROM entry AS e  WHERE e.entry_id = $1",
 				(excludeContent ? "" : ", e.content"));
-		Mono<Entry> entryMono = this.databaseClient.execute(sql) //
+		Mono<Entry> entryMono = this.databaseClient.sql(sql) //
 				.bind("$1", entryId) //
-				.as(Entry.class) //
-				.map((row, meta) -> this.mapRow(row, excludeContent)) //
+				.map(row -> this.mapRow(row, excludeContent)) //
 				.one();
 		return entryMono.flatMap(entry -> Mono.zip(categoriesMono, tagsMono) //
 				.map(tpl -> {
@@ -113,17 +113,17 @@ public class EntryMapper {
 	@NewSpan
 	public Mono<OffsetDateTime> findLastModifiedDate(@SpanTag("entryId") Long entryId) {
 		return this.databaseClient
-				.execute("SELECT last_modified_date FROM entry WHERE entry_id = $1") //
+				.sql("SELECT last_modified_date FROM entry WHERE entry_id = $1") //
 				.bind("$1", entryId) //
-				.map((row, meta) -> row.get("last_modified_date", OffsetDateTime.class))
+				.map(row -> row.get("last_modified_date", OffsetDateTime.class))
 				.one();
 	}
 
 	@NewSpan
 	public Mono<OffsetDateTime> findLatestModifiedDate() {
-		return this.databaseClient.execute(
+		return this.databaseClient.sql(
 				"SELECT last_modified_date FROM entry ORDER BY last_modified_date DESC LIMIT 1") //
-				.map((row, meta) -> row.get("last_modified_date", OffsetDateTime.class))
+				.map(row -> row.get("last_modified_date", OffsetDateTime.class))
 				.one();
 	}
 
@@ -144,13 +144,12 @@ public class EntryMapper {
 											.mapToObj(i -> "$" + i)
 											.collect(Collectors.joining(",")));
 							DatabaseClient.GenericExecuteSpec executeSpec = this.databaseClient
-									.execute(sql);
+									.sql(sql);
 							for (int i = 0; i < ids.size(); i++) {
 								executeSpec = executeSpec.bind("$" + (i + 1), ids.get(i));
 							}
 							return executeSpec //
-									.as(Entry.class) //
-									.map((row, meta) -> this.mapRow(row, true)).all()
+									.map(row -> this.mapRow(row, true)).all()
 									.map(e -> {
 										FrontMatter frontMatter = e.getFrontMatter();
 										return EntryBuilder.copyFrom(e)
@@ -171,7 +170,7 @@ public class EntryMapper {
 		Author created = entry.getCreated();
 		Author updated = entry.getUpdated();
 		Long entryId = entry.getEntryId();
-		Mono<Integer> upsertEntry = this.databaseClient.execute(
+		Mono<Integer> upsertEntry = this.databaseClient.sql(
 				"INSERT INTO entry (entry_id, title, content, created_by, created_date, last_modified_by, last_modified_date)"
 						+ " VALUES (:entry_id, :title, :content, :created_by, :created_date, :last_modified_by, :last_modified_date)"
 						+ " ON CONFLICT ON CONSTRAINT entry_pkey" //
@@ -200,7 +199,7 @@ public class EntryMapper {
 				;
 
 		Mono<Integer> deleteCategory = this.databaseClient
-				.execute("DELETE FROM category WHERE entry_id = $1") //
+				.sql("DELETE FROM category WHERE entry_id = $1") //
 				.bind("$1", entryId) //
 				.fetch().rowsUpdated() //
 				.log("deleteCategory") //
@@ -210,7 +209,7 @@ public class EntryMapper {
 		AtomicInteger order = new AtomicInteger(0);
 		Flux<Integer> insertCategory = Flux
 				.fromIterable(frontMatter.getCategories())
-				.flatMap(category -> this.databaseClient.execute(
+				.flatMap(category -> this.databaseClient.sql(
 						"INSERT INTO category (category_name, category_order, entry_id) VALUES ($1, $2, $3)") //
 						.bind("$1", category.getName()) //
 						.bind("$2", order.getAndIncrement()) //
@@ -220,7 +219,7 @@ public class EntryMapper {
 				;
 
 		Mono<Integer> deleteEntryTag = this.databaseClient
-				.execute("DELETE FROM entry_tag WHERE entry_id = $1") //
+				.sql("DELETE FROM entry_tag WHERE entry_id = $1") //
 				.bind("$1", entryId) //
 				.fetch().rowsUpdated() //
 				.log("deleteEntryTag") //
@@ -228,7 +227,7 @@ public class EntryMapper {
 		// TODO Batch Update
 		Flux<Integer> upsertTag = Flux.fromIterable(frontMatter.getTags()) //
 				.flatMap(tag -> this.databaseClient
-						.execute("INSERT INTO tag (tag_name) VALUES (:tag_name)" //
+						.sql("INSERT INTO tag (tag_name) VALUES (:tag_name)" //
 								+ " ON CONFLICT ON CONSTRAINT tag_pkey" //
 								+ " DO UPDATE SET tag_name = :tag_name2") //
 						.bind("tag_name", tag.getName()) //
@@ -237,7 +236,7 @@ public class EntryMapper {
 				.log("upsertTag") //
 				;
 		Flux<Integer> insertEntryTag = Flux.fromIterable(frontMatter.getTags()) //
-				.flatMap(tag -> this.databaseClient.execute(
+				.flatMap(tag -> this.databaseClient.sql(
 						"INSERT INTO entry_tag (entry_id, tag_name) VALUES ($1, $2)") //
 						.bind("$1", entryId) //
 						.bind("$2", tag.getName()) //
@@ -254,7 +253,7 @@ public class EntryMapper {
 
 	@NewSpan
 	public Mono<Long> delete(@SpanTag("entryId") Long entryId) {
-		return this.databaseClient.execute("DELETE FROM entry WHERE entry_id = $1") //
+		return this.databaseClient.sql("DELETE FROM entry WHERE entry_id = $1") //
 				.bind("$1", entryId) //
 				.fetch().rowsUpdated() //
 				.as(this.transactionalOperator::transactional) //
@@ -283,7 +282,7 @@ public class EntryMapper {
 				"SELECT entry_id, tag_name FROM entry_tag WHERE entry_id IN (%s)",
 				IntStream.rangeClosed(1, ids.size()).mapToObj(i -> "$" + i)
 						.collect(Collectors.joining(",")));
-		DatabaseClient.GenericExecuteSpec executeSpec = this.databaseClient.execute(sql);
+		DatabaseClient.GenericExecuteSpec executeSpec = this.databaseClient.sql(sql);
 		for (int i = 0; i < ids.size(); i++) {
 			executeSpec = executeSpec.bind("$" + (i + 1), ids.get(i));
 		}
@@ -312,7 +311,7 @@ public class EntryMapper {
 				"SELECT entry_id, category_name FROM category WHERE entry_id IN (%s) ORDER BY category_order ASC",
 				IntStream.rangeClosed(1, ids.size()).mapToObj(i -> "$" + i)
 						.collect(Collectors.joining(",")));
-		DatabaseClient.GenericExecuteSpec executeSpec = this.databaseClient.execute(sql);
+		DatabaseClient.GenericExecuteSpec executeSpec = this.databaseClient.sql(sql);
 		for (int i = 0; i < ids.size(); i++) {
 			executeSpec = executeSpec.bind("$" + (i + 1), ids.get(i));
 		}
@@ -339,12 +338,12 @@ public class EntryMapper {
 				"SELECT e.entry_id FROM entry AS e %s WHERE 1=1 %s ORDER BY e.last_modified_date DESC LIMIT %d OFFSET %d",
 				searchCriteria.toJoinClause(), clauseAndParams.clauseForEntryId(),
 				pageable.getPageSize(), pageable.getOffset());
-		DatabaseClient.GenericExecuteSpec executeSpec = this.databaseClient.execute(sql);
+		DatabaseClient.GenericExecuteSpec executeSpec = this.databaseClient.sql(sql);
 		Map<String, Object> params = clauseAndParams.params();
 		for (Map.Entry<String, Object> entry : params.entrySet()) {
 			executeSpec = executeSpec.bind(entry.getKey(), entry.getValue());
 		}
-		return executeSpec.map((row, meta) -> row.get("entry_id", Long.class)) //
+		return executeSpec.map(row -> row.get("entry_id", Long.class)) //
 				.all();
 	}
 }
