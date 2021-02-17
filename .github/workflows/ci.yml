@@ -41,27 +41,3 @@ jobs:
         set -e
         ./mvnw -V spring-boot:build-image -Dspring-boot.build-image.imageName=${IMAGE_NAME} -Dmaven.test.skip=true -Dspring-boot.version=${BOOT_VERSION}
         docker push ${IMAGE_NAME}
-
-    - uses: azure/k8s-set-context@v1
-      if: github.ref == 'refs/heads/rsocket'
-      with:
-        method: kubeconfig
-        kubeconfig: ${{ secrets.KUBE_CONFIG }}
-    - uses: k14s/setup-k14s-action@v1
-      if: github.ref == 'refs/heads/rsocket'
-    - name: kubectl apply
-      if: github.ref == 'refs/heads/rsocket'
-      env:
-        WAIT_UNTIL_READY_SELECTOR: app=blog-rsocket
-      run: |
-        set -e
-        ytt \
-          -f k8s/app.yml \
-          -f k8s/pdb.yml \
-          -f k8s/route-definition.yml \
-          -f k8s/overlays/disable-wavefront.yml \
-          | kbld -f - \
-          | kubectl apply -f -
-        wget -q https://raw.githubusercontent.com/zlabjp/kubernetes-resource/master/assets/common.sh
-        source common.sh
-        wait_until_pods_ready 120 5 ${WAIT_UNTIL_READY_SELECTOR}
