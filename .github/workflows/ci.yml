@@ -64,7 +64,7 @@ jobs:
         set -ex
         GIT_REV=$(git rev-parse HEAD)
         BRANCH_NAME="update-blog-api-dev-${GIT_REV}"
-        COMMIT_MESSAGE="[Dev] Bump blog-api to ${GIT_REV}"
+        COMMIT_MESSAGE="[Dev] Bump to categolj/blog-api@${GIT_REV}"
         mkdir -p ~/.ssh
         cat > ~/.ssh/config <<EOF
         StrictHostKeyChecking no
@@ -99,7 +99,7 @@ jobs:
         set -ex
         GIT_REV=$(git rev-parse HEAD)
         BRANCH_NAME="update-blog-api-prod-${GIT_REV}"
-        COMMIT_MESSAGE="[Prod] Bump blog-api to ${GIT_REV}"
+        COMMIT_MESSAGE="[Prod] Bump to categolj/blog-api@${GIT_REV}"
         mkdir -p ~/.ssh
         cat > ~/.ssh/config <<EOF
         StrictHostKeyChecking no
