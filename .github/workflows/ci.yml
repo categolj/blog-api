@@ -100,18 +100,9 @@ jobs:
         GIT_REV=$(git rev-parse HEAD)
         BRANCH_NAME="update-blog-api-prod-${GIT_REV}"
         COMMIT_MESSAGE="[Prod] Bump to categolj/blog-api@${GIT_REV}"
-        mkdir -p ~/.ssh
-        cat > ~/.ssh/config <<EOF
-        StrictHostKeyChecking no
-        LogLevel quiet
-        EOF
-        cat > ~/.ssh/id_rsa <<EOF
-        ${GIT_SSH_KEY}
-        EOF
-        chmod 0600 ~/.ssh/*
 
-        git config --global user.email "${GIT_EMAIL}"
-        git config --global user.name "${GIT_NAME}"
+        cd ..
+        rm -rf $(echo ${REPOSITORY} | awk -F '/' '{print $2}')
         git clone git@github.com:${REPOSITORY}.git
         cd $(echo ${REPOSITORY} | awk -F '/' '{print $2}')
         git checkout -b ${BRANCH_NAME}
