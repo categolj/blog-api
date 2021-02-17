@@ -51,7 +51,7 @@ jobs:
         image_digest: $(docker inspect --format='{{index .RepoDigests 0}}' ${IMAGE_NAME} | awk -F '@' '{print $2}')
         EOF
         cat values.yml
-    - name: send a pull request for dev
+    - name: send a pull request to dev
       if: github.ref == 'refs/heads/rsocket'
       env:
         REPOSITORY: making/config
@@ -85,4 +85,39 @@ jobs:
         git add -A
         git commit -m "${COMMIT_MESSAGE}"
         git push origin ${BRANCH_NAME}
-        curl -u ${GIT_NAME}:${ACCESS_TOKEN} -H "Content-Type: application/json" -X POST -d "{\"title\":\"${COMMIT_MESSAGE}\",\"body\":\"automatically created pr\",\"head\":\"${BRANCH_NAME}\",\"base\":\"${BASE}\"}" https://api.github.com/repos/${REPOSITORY}/pulls
+        curl -u ${GIT_NAME}:${ACCESS_TOKEN} -H "Content-Type: application/json" -X POST -d "{\"title\":\"${COMMIT_MESSAGE}\",\"body\":\"See https://github.com/categolj/blog-api/commit/${GIT_REV}\",\"head\":\"${BRANCH_NAME}\",\"base\":\"${BASE}\"}" https://api.github.com/repos/${REPOSITORY}/pulls
+    - name: send a pull request to prod
+      if: github.ref == 'refs/heads/rsocket'
+      env:
+        REPOSITORY: making/config
+        GIT_EMAIL: ${{ secrets.GIT_EMAIL }}
+        GIT_NAME: ${{ secrets.GIT_NAME }}
+        GIT_SSH_KEY: ${{ secrets.GIT_SSH_KEY }}
+        ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN }}
+        BASE: master
+      run: |
+        set -ex
+        GIT_REV=$(git rev-parse HEAD)
+        BRANCH_NAME="update-blog-api-prod-${GIT_REV}"
+        COMMIT_MESSAGE="[Prod] Bump blog-api to ${GIT_REV}"
+        mkdir -p ~/.ssh
+        cat > ~/.ssh/config <<EOF
+        StrictHostKeyChecking no
+        LogLevel quiet
+        EOF
+        cat > ~/.ssh/id_rsa <<EOF
+        ${GIT_SSH_KEY}
+        EOF
+        chmod 0600 ~/.ssh/*
+
+        git config --global user.email "${GIT_EMAIL}"
+        git config --global user.name "${GIT_NAME}"
+        git clone git@github.com:${REPOSITORY}.git
+        cd $(echo ${REPOSITORY} | awk -F '/' '{print $2}')
+        git checkout -b ${BRANCH_NAME}
+        mv ../values.yml home-lab/grape/app/blog-api/prod/values.yml
+        git diff
+        git add -A
+        git commit -m "${COMMIT_MESSAGE}"
+        git push origin ${BRANCH_NAME}
+        curl -u ${GIT_NAME}:${ACCESS_TOKEN} -H "Content-Type: application/json" -X POST -d "{\"title\":\"${COMMIT_MESSAGE}\",\"body\":\"See https://github.com/categolj/blog-api/commit/${GIT_REV}\",\"head\":\"${BRANCH_NAME}\",\"base\":\"${BASE}\"}" https://api.github.com/repos/${REPOSITORY}/pulls
