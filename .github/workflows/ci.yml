@@ -41,3 +41,13 @@ jobs:
         set -e
         ./mvnw -V spring-boot:build-image -Dspring-boot.build-image.imageName=${IMAGE_NAME} -Dmaven.test.skip=true -Dspring-boot.version=${BOOT_VERSION}
         docker push ${IMAGE_NAME}
+        docker pull ${IMAGE_NAME}
+        cat <<EOF > values.yml
+        #@data/values
+        #@overlay/match-child-defaults missing_ok=True
+        ---
+        git_repo: https://github.com/categolj/blog-api
+        git_commit: $(git rev-parse HEAD)
+        image_digest: $(docker inspect --format='{{index .RepoDigests 0}}' ${IMAGE_NAME} | awk -F '@' '{print $2}')
+        EOF
+        cat values.yml
