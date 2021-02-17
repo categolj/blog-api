@@ -80,7 +80,7 @@ jobs:
         git clone git@github.com:${REPOSITORY}.git
         cd $(echo ${REPOSITORY} | awk -F '/' '{print $2}')
         git checkout -b ${BRANCH_NAME}
-        mv ../values.yml home-lab/grape/app/blog-api/dev/values.yml
+        cp ../values.yml home-lab/grape/app/blog-api/dev/values.yml
         git diff
         git add -A
         git commit -m "${COMMIT_MESSAGE}"
@@ -106,7 +106,7 @@ jobs:
         git clone git@github.com:${REPOSITORY}.git
         cd $(echo ${REPOSITORY} | awk -F '/' '{print $2}')
         git checkout -b ${BRANCH_NAME}
-        mv ../values.yml home-lab/grape/app/blog-api/prod/values.yml
+        cp ../values.yml home-lab/grape/app/blog-api/prod/values.yml
         git diff
         git add -A
         git commit -m "${COMMIT_MESSAGE}"
