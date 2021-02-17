@@ -6,13 +6,14 @@ import io.r2dbc.spi.ConnectionFactory;
 
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.config.BeanPostProcessor;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 
 @Component
 public class ConnectionFactoryPostProcessor implements BeanPostProcessor {
 	private final Tracer tracer;
 
-	public ConnectionFactoryPostProcessor(Tracer tracer) {
+	public ConnectionFactoryPostProcessor(@Lazy Tracer tracer) {
 		this.tracer = tracer;
 	}
 
