@@ -85,7 +85,6 @@ jobs:
         git add -A
         git commit -m "${COMMIT_MESSAGE}"
         git push origin ${BASE}
-        cd -
 
         # send a pull request to prod
         BRANCH_NAME="update-blog-api-prod-${GIT_REV}"
