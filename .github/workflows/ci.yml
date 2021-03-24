@@ -50,6 +50,7 @@ jobs:
           </servers>
         </settings>
         EOF
+        sed -i 's|</project>|<distributionManagement><repository><id>sonatype-snapshots</id><name>sonatype-snapshots</name><url>https://oss.sonatype.org/content/repositories/snapshots</url></repository></distributionManagement></project>|' pom.xml
         ./mvnw -V deploy -s settings.xml -DskipTests=true -DserverId=sonatype-snapshots
     - name: mvn spring-boot:build-image
       if: github.ref == 'refs/heads/rsocket'
