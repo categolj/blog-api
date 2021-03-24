@@ -39,6 +39,7 @@ jobs:
         SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
       run: |
         set -e
+        BOOT_VERSION=$(grep '<version>' pom.xml | head -n 1 | sed -e 's|<version>||g' -e 's|</version>||g' -e 's|<.*>||g' -e 's| ||g')
         cat > settings.xml <<EOF
         <settings>
           <servers>
@@ -51,7 +52,7 @@ jobs:
         </settings>
         EOF
         sed -i 's|</project>|<distributionManagement><repository><id>sonatype-snapshots</id><name>sonatype-snapshots</name><url>https://oss.sonatype.org/content/repositories/snapshots</url></repository></distributionManagement></project>|' pom.xml
-        ./mvnw -V deploy -s settings.xml -DskipTests=true -DserverId=sonatype-snapshots
+        ./mvnw -V deploy -s settings.xml -DskipTests=true -DserverId=sonatype-snapshots -Dspring-boot.version=${BOOT_VERSION}
     - name: mvn spring-boot:build-image
       if: github.ref == 'refs/heads/rsocket'
       env:
@@ -76,6 +77,7 @@ jobs:
         ---
         git_repo: https://github.com/categolj/blog-api
         git_commit: $(git rev-parse HEAD)
+        image_name: ${IMAGE_NAME}
         image_digest: $(docker inspect --format='{{index .RepoDigests 0}}' ${IMAGE_NAME} | awk -F '@' '{print $2}')
         EOF
         cat values.yml
