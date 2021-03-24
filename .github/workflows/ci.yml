@@ -35,23 +35,22 @@ jobs:
     - name: mvn deploy
       if: github.ref == 'refs/heads/rsocket'
       env:
-        DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
-        DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+        SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
+        SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
       run: |
         set -e
         cat > settings.xml <<EOF
         <settings>
           <servers>
             <server>
-               <id>github</id>
-               <username>${DOCKER_USERNAME}</username>
-               <password>${DOCKER_PASSWORD}</password>
+               <id>sonatype-snapshots</id>
+               <username>${SONATYPE_USERNAME}</username>
+               <password>${SONATYPE_PASSWORD}</password>
             </server>
           </servers>
         </settings>
         EOF
-        sed -i 's|</project>|<distributionManagement><repository><id>github</id><name>github</name><url>https://maven.pkg.github.com/categolj/blog-api</url></repository></distributionManagement></project>|' pom.xml
-        ./mvnw -V deploy -s settings.xml -DskipTests=true -DserverId=github
+        ./mvnw -V deploy -s settings.xml -DskipTests=true -DserverId=sonatype-snapshots
     - name: mvn spring-boot:build-image
       if: github.ref == 'refs/heads/rsocket'
       env:
