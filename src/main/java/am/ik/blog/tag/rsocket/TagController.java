@@ -1,27 +1,25 @@
 package am.ik.blog.tag.rsocket;
 
-import am.ik.blog.tag.Tag;
-import org.springframework.cloud.sleuth.annotation.NewSpan;
-import org.springframework.messaging.handler.annotation.MessageMapping;
-import org.springframework.web.bind.annotation.RestController;
+import java.util.List;
 
+import am.ik.blog.tag.Tag;
 import am.ik.blog.tag.TagMapper;
 import reactor.core.publisher.Mono;
 
-import java.util.List;
+import org.springframework.messaging.handler.annotation.MessageMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 public class TagController {
 
-    private final TagMapper tagMapper;
+	private final TagMapper tagMapper;
 
-    public TagController(TagMapper tagMapper) {
-        this.tagMapper = tagMapper;
-    }
+	public TagController(TagMapper tagMapper) {
+		this.tagMapper = tagMapper;
+	}
 
-    @MessageMapping("tags")
-    @NewSpan
-    public Mono<List<Tag>> tags() {
-        return this.tagMapper.findOrderByTagNameAsc().collectList();
-    }
+	@MessageMapping("tags")
+	public Mono<List<Tag>> tags() {
+		return this.tagMapper.findOrderByTagNameAsc().collectList();
+	}
 }
