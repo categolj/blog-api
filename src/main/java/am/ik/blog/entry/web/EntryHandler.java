@@ -12,7 +12,9 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.server.RouterFunction;
 import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
+import org.springframework.web.server.ResponseStatusException;
 
+import static org.springframework.http.HttpStatus.NOT_FOUND;
 import static org.springframework.web.reactive.function.server.RouterFunctions.route;
 
 @Component
@@ -33,7 +35,9 @@ public class EntryHandler {
 	Mono<ServerResponse> getEntry(ServerRequest request) {
 		final long entryId = Long.parseLong(request.pathVariable("entryId"));
 		final Mono<Entry> entry = this.entryMapper.findOne(entryId, false);
-		return ServerResponse.ok().body(entry, Entry.class);
+		return entry
+				.flatMap(e -> ServerResponse.ok().bodyValue(e))
+				.switchIfEmpty(Mono.error(() -> new ResponseStatusException(NOT_FOUND, String.format("The requested entry is not found (entryId = %d)", entryId))));
 	}
 
 	Mono<ServerResponse> getEntries(ServerRequest request) {
