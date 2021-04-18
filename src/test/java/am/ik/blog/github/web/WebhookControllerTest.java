@@ -21,7 +21,8 @@ import static org.mockito.Mockito.verify;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, properties = {
         "blog.github.access-token=foo",
-        "blog.github.webhook-secret=bar"})
+        "blog.github.webhook-secret=bar",
+        "spring.zipkin.enabled=false"})
 @TestConstructor(autowireMode = TestConstructor.AutowireMode.ALL)
 public class WebhookControllerTest {
 

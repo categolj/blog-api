@@ -27,7 +27,7 @@ import static am.ik.blog.entry.rsocket.Asserts.assertEntry99997;
 import static am.ik.blog.entry.rsocket.Asserts.assertEntry99998;
 import static am.ik.blog.entry.rsocket.Asserts.assertEntry99999;
 
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, properties = "spring.zipkin.enabled=false")
 @TestConstructor(autowireMode = TestConstructor.AutowireMode.ALL)
 class EntryControllerTest {
 
