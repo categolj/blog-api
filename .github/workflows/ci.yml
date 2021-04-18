@@ -31,6 +31,8 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-maven-
     - name: mvn test
+      env:
+        _JAVA_OPTIONS: -Djava.net.preferIPv4Stack=true
       run: |
         set -e
         ./mvnw -V test
