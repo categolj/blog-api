@@ -36,8 +36,7 @@ class EntryControllerTest {
     private final DatabaseClient databaseClient;
 
     EntryControllerTest(RSocketRequester.Builder builder, @LocalServerPort int port, DatabaseClient databaseClient) {
-        this.requester = builder.connectWebSocket(URI.create(String.format("ws://localhost:%d/rsocket", port)))
-            .block();
+        this.requester = builder.websocket(URI.create(String.format("ws://localhost:%d/rsocket", port)));
         this.databaseClient = databaseClient;
     }
 
