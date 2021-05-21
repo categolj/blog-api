@@ -1,5 +1,7 @@
 package am.ik.blog;
 
+import java.util.LinkedHashSet;
+
 import am.ik.blog.category.CategoryMapper;
 import am.ik.blog.entry.EntryMapper;
 import am.ik.blog.tag.TagMapper;
@@ -31,7 +33,7 @@ import org.springframework.nativex.hint.TypeHint;
 						"org.springframework.cloud.sleuth.autoconfig.zipkin2.ZipkinKafkaSenderConfiguration",
 						"org.springframework.cloud.sleuth.autoconfig.zipkin2.ZipkinRestTemplateSenderConfiguration"
 				},
-						types = { CommitsResponse.Commit.class, CommitsResponse.Committer.class, ContentsResponse.Put.class, ContentsResponse.Delete.class, ContentsResponse.File.class, Commit.class, Committer.class, Content.class, ContentType.class, Parent.class, Tree.class })
+						types = { LinkedHashSet.class, CommitsResponse.Commit.class, CommitsResponse.Committer.class, ContentsResponse.Put.class, ContentsResponse.Delete.class, ContentsResponse.File.class, Commit.class, Committer.class, Content.class, ContentType.class, Parent.class, Tree.class })
 		},
 		proxies = {
 				@ProxyHint(types = { EntryMapper.class, SpringProxy.class, Advised.class, DecoratingProxy.class }),
