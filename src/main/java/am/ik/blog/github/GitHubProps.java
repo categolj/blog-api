@@ -9,6 +9,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.validation.Errors;
 import org.springframework.validation.annotation.Validated;
 
+import static am.ik.yavi.constraint.charsequence.codepoints.AsciiCodePoints.ASCII_PRINTABLE_CHARS;
+
 @ConfigurationProperties(prefix = "blog.github")
 @Component
 @Validated
@@ -19,8 +21,10 @@ public class GitHubProps implements org.springframework.validation.Validator {
     private String webhookSecret;
 
 	private final BiValidator<GitHubProps, Errors> validator = ValidatorBuilder.<GitHubProps>of()
-			.constraint(GitHubProps::getAccessToken, "accessToken", c -> c.notBlank())
-			.constraint(GitHubProps::getWebhookSecret, "webhookSecret", c -> c.notBlank())
+			.constraint(GitHubProps::getAccessToken, "accessToken", c -> c.notBlank()
+					.codePoints(ASCII_PRINTABLE_CHARS).asWhiteList())
+			.constraint(GitHubProps::getWebhookSecret, "webhookSecret", c -> c.notBlank()
+					.codePoints(ASCII_PRINTABLE_CHARS).asWhiteList())
 			.build(Errors::rejectValue);
 
     @ConstraintTarget
