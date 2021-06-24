@@ -31,7 +31,6 @@ import org.springframework.nativex.hint.TypeHint;
 						"org.springframework.cloud.sleuth.autoconfig.zipkin2.ZipkinActiveMqSenderConfiguration",
 						"org.springframework.cloud.sleuth.autoconfig.zipkin2.ZipkinRabbitSenderConfiguration",
 						"org.springframework.cloud.sleuth.autoconfig.zipkin2.ZipkinKafkaSenderConfiguration",
-						"org.springframework.cloud.sleuth.autoconfig.zipkin2.ZipkinRestTemplateSenderConfiguration",
 						"io.micrometer.prometheus.rsocket.PrometheusRSocketClient"
 				},
 						types = { LinkedHashSet.class, CommitsResponse.Commit.class, CommitsResponse.Committer.class, ContentsResponse.Put.class, ContentsResponse.Delete.class, ContentsResponse.File.class, Commit.class, Committer.class, Content.class, ContentType.class, Parent.class, Tree.class })
