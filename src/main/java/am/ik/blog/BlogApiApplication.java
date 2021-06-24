@@ -19,8 +19,8 @@ import org.springframework.aop.framework.Advised;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.core.DecoratingProxy;
+import org.springframework.nativex.hint.JdkProxyHint;
 import org.springframework.nativex.hint.NativeHint;
-import org.springframework.nativex.hint.ProxyHint;
 import org.springframework.nativex.hint.TypeHint;
 
 @SpringBootApplication
@@ -36,10 +36,10 @@ import org.springframework.nativex.hint.TypeHint;
 				},
 						types = { LinkedHashSet.class, CommitsResponse.Commit.class, CommitsResponse.Committer.class, ContentsResponse.Put.class, ContentsResponse.Delete.class, ContentsResponse.File.class, Commit.class, Committer.class, Content.class, ContentType.class, Parent.class, Tree.class })
 		},
-		proxies = {
-				@ProxyHint(types = { EntryMapper.class, SpringProxy.class, Advised.class, DecoratingProxy.class }),
-				@ProxyHint(types = { CategoryMapper.class, SpringProxy.class, Advised.class, DecoratingProxy.class }),
-				@ProxyHint(types = { TagMapper.class, SpringProxy.class, Advised.class, DecoratingProxy.class })
+		jdkProxies = {
+				@JdkProxyHint(types = { EntryMapper.class, SpringProxy.class, Advised.class, DecoratingProxy.class }),
+				@JdkProxyHint(types = { CategoryMapper.class, SpringProxy.class, Advised.class, DecoratingProxy.class }),
+				@JdkProxyHint(types = { TagMapper.class, SpringProxy.class, Advised.class, DecoratingProxy.class })
 		}
 )
 public class BlogApiApplication {
