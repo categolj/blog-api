@@ -86,7 +86,7 @@
 		<dependency>
 			<groupId>am.ik.yavi</groupId>
 			<artifactId>yavi</artifactId>
-			<version>0.8.1</version>
+			<version>0.8.3</version>
 		</dependency>
 		<dependency>
 			<groupId>org.yaml</groupId>
