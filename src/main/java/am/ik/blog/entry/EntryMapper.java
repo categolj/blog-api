@@ -76,7 +76,7 @@ public class EntryMapper {
 		return this.count(criteria)
 				.zipWith(this.findAll(criteria, pageable).collectList()
 						.switchIfEmpty(Mono.fromCallable(List::of))) //
-				.doOnError(e -> log.error("Failed to find a page!", e))
+				.doOnError(e -> log.error("Failed to find a page!: " + e))
 				.map(tpl -> new PageImpl<>(tpl.getT2(), pageable, tpl.getT1()));
 	}
 
@@ -107,7 +107,7 @@ public class EntryMapper {
 											.build())
 							.build();
 				})) //
-				.doOnError(e -> log.error("Failed to fetch an entry!", e));
+				.doOnError(e -> log.error("Failed to fetch an entry (entryId = "+entryId+") !: " +  e));
 	}
 
 	@NewSpan

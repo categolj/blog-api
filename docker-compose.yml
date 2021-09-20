@@ -1,0 +1,24 @@
+version: "2"
+services:
+  blog-api:
+    image: ghcr.io/making/blog-api:latest
+    ports:
+    - 8080:8080
+    mem_limit: 256m
+    restart: always
+    environment:
+      SPRING_PROFILES_ACTIVE: kubernetes
+      SPRING_R2DBC_URL: r2dbc:postgresql://postgresql:5432/blog
+      SPRING_R2DBC_USERNAME: blog
+      SPRING_R2DBC_PASSWORD: blog
+      SPRING_ZIPKIN_ENABLED: "false"
+    depends_on:
+    - postgresql
+  postgresql:
+    image: bitnami/postgresql:11.11.0-debian-10-r59
+    ports:
+    - 5432:5432
+    environment:
+      POSTGRES_DB: blog
+      POSTGRES_USER: blog
+      POSTGRES_PASSWORD: blog
