@@ -1,7 +1,7 @@
 package am.ik.blog.entry.web;
 
 import am.ik.blog.entry.Entry;
-import am.ik.blog.entry.EntryMapper;
+import am.ik.blog.entry.EntryService;
 import am.ik.blog.entry.search.SearchCriteria;
 import reactor.core.publisher.Mono;
 
@@ -19,10 +19,10 @@ import static org.springframework.web.reactive.function.server.RouterFunctions.r
 
 @Component
 public class EntryHandler {
-	private final EntryMapper entryMapper;
+	private final EntryService entryService;
 
-	public EntryHandler(EntryMapper entryMapper) {
-		this.entryMapper = entryMapper;
+	public EntryHandler(EntryService entryService) {
+		this.entryService = entryService;
 	}
 
 	public RouterFunction<ServerResponse> routes() {
@@ -34,7 +34,7 @@ public class EntryHandler {
 
 	Mono<ServerResponse> getEntry(ServerRequest request) {
 		final long entryId = Long.parseLong(request.pathVariable("entryId"));
-		final Mono<Entry> entry = this.entryMapper.findOne(entryId, false);
+		final Mono<Entry> entry = this.entryService.findOne(entryId, false);
 		return entry
 				.flatMap(e -> ServerResponse.ok().bodyValue(e))
 				.switchIfEmpty(Mono.error(() -> new ResponseStatusException(NOT_FOUND, String.format("The requested entry is not found (entryId = %d)", entryId))));
@@ -44,7 +44,7 @@ public class EntryHandler {
 		final Integer page = request.queryParam("page").map(Integer::parseInt).orElse(0);
 		final Integer size = request.queryParam("size").map(Integer::parseInt).orElse(10);
 		final Pageable pageable = PageRequest.of(page, size);
-		final Mono<Page<Entry>> entryPage = this.entryMapper.findPage(SearchCriteria.defaults().build(), pageable);
+		final Mono<Page<Entry>> entryPage = this.entryService.findPage(SearchCriteria.defaults().build(), pageable);
 		return ServerResponse.ok().body(entryPage, Page.class);
 	}
 }

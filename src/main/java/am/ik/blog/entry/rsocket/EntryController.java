@@ -1,7 +1,7 @@
 package am.ik.blog.entry.rsocket;
 
 import am.ik.blog.entry.Entry;
-import am.ik.blog.entry.EntryMapper;
+import am.ik.blog.entry.EntryService;
 import io.rsocket.exceptions.ApplicationErrorException;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -14,30 +14,30 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class EntryController {
 
-	private final EntryMapper entryMapper;
+	private final EntryService entryService;
 
-	public EntryController(EntryMapper entryMapper) {
-		this.entryMapper = entryMapper;
+	public EntryController(EntryService entryService) {
+		this.entryService = entryService;
 	}
 
 	@MessageMapping("entries.stream")
 	public Flux<Entry> streamAllEntry(EntryRequest request) {
-		return this.entryMapper.findAll(request.toCriteria(), request.toPageable());
+		return this.entryService.findAll(request.toCriteria(), request.toPageable());
 	}
 
 	@MessageMapping("entries")
 	public Mono<Page<Entry>> responsePage(EntryRequest request) {
-		return this.entryMapper.findPage(request.toCriteria(), request.toPageable());
+		return this.entryService.findPage(request.toCriteria(), request.toPageable());
 	}
 
 	@MessageMapping("entries+c")
 	public Mono<Page<Entry>> responsePageContentIncluded(EntryRequest request) {
-		return this.entryMapper.findPage(request.toCriteria(false), request.toPageable());
+		return this.entryService.findPage(request.toCriteria(false), request.toPageable());
 	}
 
 	@MessageMapping("entries.{entryId}")
 	public Mono<Entry> responseEntry(@DestinationVariable("entryId") Long entryId) {
-		return this.entryMapper.findOne(entryId, false)
+		return this.entryService.findOne(entryId, false)
 				.switchIfEmpty(errorResponse(entryId));
 	}
 
