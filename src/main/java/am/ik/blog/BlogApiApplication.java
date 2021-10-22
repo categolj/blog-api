@@ -16,6 +16,7 @@ import am.ik.github.repositories.contents.ContentsResponse;
 import reactor.core.publisher.Hooks;
 
 import org.springframework.boot.SpringApplication;
+import org.springframework.boot.actuate.r2dbc.ConnectionFactoryHealthIndicator;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.nativex.hint.AotProxyHint;
 import org.springframework.nativex.hint.NativeHint;
@@ -33,6 +34,7 @@ import org.springframework.nativex.hint.TypeHint;
 								"org.springframework.cloud.sleuth.autoconfig.zipkin2.ZipkinKafkaSenderConfiguration"
 						},
 						types = {
+								ConnectionFactoryHealthIndicator.class,
 								LinkedHashSet.class,
 								CommitsResponse.Commit.class,
 								CommitsResponse.Committer.class,
