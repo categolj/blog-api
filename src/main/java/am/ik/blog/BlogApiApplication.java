@@ -1,6 +1,5 @@
 package am.ik.blog;
 
-import java.util.Arrays;
 import java.util.LinkedHashSet;
 
 import am.ik.blog.category.CategoryMapper;
@@ -16,13 +15,10 @@ import am.ik.github.repositories.commits.CommitsResponse;
 import am.ik.github.repositories.contents.ContentsResponse;
 import reactor.core.publisher.Hooks;
 
-import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.actuate.r2dbc.ConnectionFactoryHealthIndicator;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.info.JavaInfo;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.annotation.Bean;
 import org.springframework.nativex.hint.AotProxyHint;
 import org.springframework.nativex.hint.NativeHint;
 import org.springframework.nativex.hint.ProxyBits;
@@ -69,16 +65,4 @@ public class BlogApiApplication {
 		Hooks.onErrorDropped(e -> { /* https://github.com/rsocket/rsocket-java/issues/1018 */});
 		SpringApplication.run(BlogApiApplication.class, args);
 	}
-
-	@Bean
-	public CommandLineRunner clr(ApplicationContext context) {
-		return a -> {
-			final String[] names = context.getBeanDefinitionNames();
-			Arrays.sort(names);
-			for (String name : names) {
-				System.out.println(name);
-			}
-		};
-	}
-
 }
