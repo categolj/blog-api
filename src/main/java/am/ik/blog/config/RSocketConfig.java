@@ -1,6 +1,5 @@
 package am.ik.blog.config;
 
-import am.ik.blog.config.rsocket.TracingSocketAcceptorInterceptor;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.rsocket.micrometer.MicrometerRSocketInterceptor;
 
@@ -16,7 +15,6 @@ public class RSocketConfig {
 	@Bean
 	public RSocketServerCustomizer serverRSocketFactoryProcessor(Tracer tracer, CurrentTraceContext currentTraceContext, MeterRegistry meterRegistry) {
 		return server -> server.interceptors(interceptorRegistry -> {
-			interceptorRegistry.forSocketAcceptor(new TracingSocketAcceptorInterceptor(tracer, currentTraceContext));
 			interceptorRegistry.forResponder(new MicrometerRSocketInterceptor(meterRegistry));
 		});
 	}
