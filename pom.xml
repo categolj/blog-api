@@ -19,7 +19,7 @@
 		<java.version>11</java.version>
 		<spring-cloud.version>2020.0.4</spring-cloud.version>
 		<wavefront.version>2.2.2</wavefront.version>
-		<spring-native.version>0.10.4</spring-native.version>
+		<spring-native.version>0.11.1</spring-native.version>
 		<testcontainers.version>1.16.0</testcontainers.version>
 		<start-class>am.ik.blog.BlogApiApplication</start-class>
 		<native-image-args></native-image-args>
