@@ -18,10 +18,18 @@ import reactor.core.publisher.Hooks;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.actuate.r2dbc.ConnectionFactoryHealthIndicator;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.info.JavaInfo;
 import org.springframework.nativex.hint.AotProxyHint;
 import org.springframework.nativex.hint.NativeHint;
 import org.springframework.nativex.hint.ProxyBits;
 import org.springframework.nativex.hint.TypeHint;
+
+import static org.springframework.nativex.hint.TypeAccess.DECLARED_CONSTRUCTORS;
+import static org.springframework.nativex.hint.TypeAccess.DECLARED_FIELDS;
+import static org.springframework.nativex.hint.TypeAccess.DECLARED_METHODS;
+import static org.springframework.nativex.hint.TypeAccess.PUBLIC_CONSTRUCTORS;
+import static org.springframework.nativex.hint.TypeAccess.PUBLIC_FIELDS;
+import static org.springframework.nativex.hint.TypeAccess.PUBLIC_METHODS;
 
 @SpringBootApplication
 @NativeHint(
@@ -49,8 +57,13 @@ import org.springframework.nativex.hint.TypeHint;
 								Content.class,
 								ContentType.class,
 								Parent.class,
-								Tree.class
-						})
+								Tree.class,
+								JavaInfo.class,
+								JavaInfo.JavaRuntimeEnvironmentInfo.class,
+								JavaInfo.JavaVirtualMachineInfo.class
+						},
+						access = { DECLARED_FIELDS, DECLARED_METHODS, DECLARED_CONSTRUCTORS, PUBLIC_FIELDS, PUBLIC_METHODS, PUBLIC_CONSTRUCTORS }
+				)
 		},
 		aotProxies = {
 				@AotProxyHint(targetClass = EntryMapper.class, proxyFeatures = ProxyBits.IS_STATIC),
