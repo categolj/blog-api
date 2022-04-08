@@ -235,7 +235,7 @@
 								<echo message=""
 									  file="target/classes/application.properties"
 									  append="yes"/>
-								<echo message="info.maven.versions.spring-boot=${spring-boot.version}${line.separator}"
+								<echo message="info.maven.versions.spring-boot=${project.parent.version}${line.separator}"
 									  file="target/classes/application.properties"
 									  append="yes"/>
 								<echo message="info.maven.versions.spring-cloud=${spring-cloud.version}${line.separator}"
