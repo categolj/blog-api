@@ -1,6 +1,7 @@
 package am.ik.blog.config;
 
 import am.ik.blog.admin.web.EntryImportHandler;
+import am.ik.blog.admin.web.InfoHandler;
 import am.ik.blog.entry.web.EntryHandler;
 import am.ik.blog.github.web.WebhookHandler;
 
@@ -16,9 +17,11 @@ public class RouterConfig {
 	public RouterFunction<ServerResponse> routes(
 			EntryHandler entryHandler,
 			WebhookHandler webhookHandler,
-			EntryImportHandler entryImportHandler) {
+			EntryImportHandler entryImportHandler,
+			InfoHandler infoHandler) {
 		return entryHandler.routes()
 				.and(webhookHandler.routes())
-				.and(entryImportHandler.routes());
+				.and(entryImportHandler.routes())
+				.and(infoHandler.routes());
 	}
 }
