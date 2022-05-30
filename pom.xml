@@ -18,7 +18,7 @@
 	<properties>
 		<java.version>11</java.version>
 		<spring-boot.version>${project.parent.version}</spring-boot.version>
-		<spring-cloud.version>2021.0.2</spring-cloud.version>
+		<spring-cloud.version>2021.0.3</spring-cloud.version>
 		<wavefront.version>2.2.2</wavefront.version>
 		<spring-native.version>0.11.5</spring-native.version>
 		<testcontainers.version>1.17.1</testcontainers.version>
