@@ -21,7 +21,7 @@
 		<spring-cloud.version>2021.0.3</spring-cloud.version>
 		<wavefront.version>2.2.2</wavefront.version>
 		<spring-native.version>0.12.1</spring-native.version>
-		<testcontainers.version>1.17.1</testcontainers.version>
+		<testcontainers.version>1.17.3</testcontainers.version>
 		<start-class>am.ik.blog.BlogApiApplication</start-class>
 		<native-image-args></native-image-args>
 		<jar-classifier></jar-classifier>
