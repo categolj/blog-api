@@ -21,8 +21,6 @@ import reactor.core.publisher.Mono;
 import reactor.util.function.Tuple2;
 import reactor.util.function.Tuples;
 
-import org.springframework.cloud.sleuth.annotation.NewSpan;
-import org.springframework.cloud.sleuth.annotation.SpanTag;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -55,7 +53,6 @@ public class EntryMapper {
 				.one();
 	}
 
-	@NewSpan
 	public Mono<Long> count(SearchCriteria criteria) {
 		SearchCriteria.ClauseAndParams clauseAndParams = criteria.toWhereClause();
 		String sql = String.format(
@@ -71,7 +68,6 @@ public class EntryMapper {
 				.one();
 	}
 
-	@NewSpan
 	public Mono<Page<Entry>> findPage(SearchCriteria criteria, Pageable pageable) {
 		return this.count(criteria)
 				.zipWith(this.findAll(criteria, pageable).collectList()
@@ -80,8 +76,7 @@ public class EntryMapper {
 				.map(tpl -> new PageImpl<>(tpl.getT2(), pageable, tpl.getT1()));
 	}
 
-	@NewSpan
-	public Mono<Entry> findOne(@SpanTag("entryId") Long entryId, boolean excludeContent) {
+	public Mono<Entry> findOne(Long entryId, boolean excludeContent) {
 		List<Long> ids = Collections.singletonList(entryId);
 		Mono<List<Tag>> tagsMono = this.tagsMap(ids)
 				.map(x -> x.getOrDefault(entryId, List.of()));
@@ -95,23 +90,22 @@ public class EntryMapper {
 				.map(row -> this.mapRow(row, excludeContent)) //
 				.one();
 		return entryMono.flatMap(entry -> Mono.zip(categoriesMono, tagsMono) //
-				.map(tpl -> {
-					FrontMatter fm = entry.getFrontMatter();
-					return EntryBuilder.copyFrom(entry) //
-							.withFrontMatter(
-									new FrontMatterBuilder()
-											.withTitle(fm.getTitle())
-											.withCategories(tpl.getT1())
-											.withTags(tpl.getT2())
-											// TODO: fm.date(), fm.updated()
-											.build())
-							.build();
-				})) //
-				.doOnError(e -> log.error("Failed to fetch an entry (entryId = "+entryId+") !: " +  e));
+						.map(tpl -> {
+							FrontMatter fm = entry.getFrontMatter();
+							return EntryBuilder.copyFrom(entry) //
+									.withFrontMatter(
+											new FrontMatterBuilder()
+													.withTitle(fm.getTitle())
+													.withCategories(tpl.getT1())
+													.withTags(tpl.getT2())
+													// TODO: fm.date(), fm.updated()
+													.build())
+									.build();
+						})) //
+				.doOnError(e -> log.error("Failed to fetch an entry (entryId = " + entryId + ") !: " + e));
 	}
 
-	@NewSpan
-	public Mono<OffsetDateTime> findLastModifiedDate(@SpanTag("entryId") Long entryId) {
+	public Mono<OffsetDateTime> findLastModifiedDate(Long entryId) {
 		return this.databaseClient
 				.sql("SELECT last_modified_date FROM entry WHERE entry_id = $1") //
 				.bind("$1", entryId) //
@@ -119,15 +113,13 @@ public class EntryMapper {
 				.one();
 	}
 
-	@NewSpan
 	public Mono<OffsetDateTime> findLatestModifiedDate() {
 		return this.databaseClient.sql(
-				"SELECT last_modified_date FROM entry ORDER BY last_modified_date DESC LIMIT 1") //
+						"SELECT last_modified_date FROM entry ORDER BY last_modified_date DESC LIMIT 1") //
 				.map(row -> row.get("last_modified_date", OffsetDateTime.class))
 				.one();
 	}
 
-	@NewSpan
 	public Flux<Entry> findAll(SearchCriteria criteria, Pageable pageable) {
 		SearchCriteria.ClauseAndParams clauseAndParams = criteria.toWhereClause();
 		return this.entryIds(criteria, pageable, clauseAndParams) //
@@ -164,23 +156,22 @@ public class EntryMapper {
 						}));
 	}
 
-	@NewSpan
 	public Mono<Entry> save(Entry entry) {
 		FrontMatter frontMatter = entry.getFrontMatter();
 		Author created = entry.getCreated();
 		Author updated = entry.getUpdated();
 		Long entryId = entry.getEntryId();
 		Mono<Integer> upsertEntry = this.databaseClient.sql(
-				"INSERT INTO entry (entry_id, title, content, created_by, created_date, last_modified_by, last_modified_date)"
-						+ " VALUES (:entry_id, :title, :content, :created_by, :created_date, :last_modified_by, :last_modified_date)"
-						+ " ON CONFLICT ON CONSTRAINT entry_pkey" //
-						+ " DO UPDATE SET" //
-						+ " title = :title2," //
-						+ " content = :content2," //
-						+ " created_by = :created_by2," //
-						+ " created_date = :created_date2," //
-						+ " last_modified_by = :last_modified_by2," //
-						+ " last_modified_date = :last_modified_date2") //
+						"INSERT INTO entry (entry_id, title, content, created_by, created_date, last_modified_by, last_modified_date)"
+								+ " VALUES (:entry_id, :title, :content, :created_by, :created_date, :last_modified_by, :last_modified_date)"
+								+ " ON CONFLICT ON CONSTRAINT entry_pkey" //
+								+ " DO UPDATE SET" //
+								+ " title = :title2," //
+								+ " content = :content2," //
+								+ " created_by = :created_by2," //
+								+ " created_date = :created_date2," //
+								+ " last_modified_by = :last_modified_by2," //
+								+ " last_modified_date = :last_modified_date2") //
 				.bind("entry_id", entryId) //
 				.bind("title", frontMatter.getTitle()) //
 				.bind("content", entry.getContent()) //
@@ -210,7 +201,7 @@ public class EntryMapper {
 		Flux<Integer> insertCategory = Flux
 				.fromIterable(frontMatter.getCategories())
 				.flatMap(category -> this.databaseClient.sql(
-						"INSERT INTO category (category_name, category_order, entry_id) VALUES ($1, $2, $3)") //
+								"INSERT INTO category (category_name, category_order, entry_id) VALUES ($1, $2, $3)") //
 						.bind("$1", category.getName()) //
 						.bind("$2", order.getAndIncrement()) //
 						.bind("$3", entryId) //
@@ -237,7 +228,7 @@ public class EntryMapper {
 				;
 		Flux<Integer> insertEntryTag = Flux.fromIterable(frontMatter.getTags()) //
 				.flatMap(tag -> this.databaseClient.sql(
-						"INSERT INTO entry_tag (entry_id, tag_name) VALUES ($1, $2)") //
+								"INSERT INTO entry_tag (entry_id, tag_name) VALUES ($1, $2)") //
 						.bind("$1", entryId) //
 						.bind("$2", tag.getName()) //
 						.fetch().rowsUpdated()) //
@@ -251,8 +242,7 @@ public class EntryMapper {
 				.then(Mono.just(entry));
 	}
 
-	@NewSpan
-	public Mono<Long> delete(@SpanTag("entryId") Long entryId) {
+	public Mono<Long> delete(Long entryId) {
 		return this.databaseClient.sql("DELETE FROM entry WHERE entry_id = $1") //
 				.bind("$1", entryId) //
 				.fetch().rowsUpdated() //

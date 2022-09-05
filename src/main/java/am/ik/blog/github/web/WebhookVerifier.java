@@ -1,17 +1,20 @@
 package am.ik.blog.github.web;
 
+import org.apache.commons.codec.binary.Hex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.security.crypto.codec.Hex;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
+
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 
 public class WebhookVerifier {
 	private final Logger log = LoggerFactory.getLogger(WebhookVerifier.class);
+
 	private final Mac hmac;
+
 	private static final String HMAC_SHA1 = "HmacSHA1";
 
 	public WebhookVerifier(String secret)
@@ -33,6 +36,6 @@ public class WebhookVerifier {
 
 	String signature(String payload) {
 		byte[] sig = hmac.doFinal(payload.getBytes());
-		return "sha1=" + new String(Hex.encode(sig)).toLowerCase();
+		return "sha1=" + new String(Hex.encodeHex(sig)).toLowerCase();
 	}
 }

@@ -37,9 +37,6 @@ import static org.springframework.nativex.hint.TypeAccess.PUBLIC_METHODS;
 		types = {
 				@TypeHint(
 						typeNames = {
-								"org.springframework.cloud.sleuth.autoconfig.zipkin2.ZipkinActiveMqSenderConfiguration",
-								"org.springframework.cloud.sleuth.autoconfig.zipkin2.ZipkinRabbitSenderConfiguration",
-								"org.springframework.cloud.sleuth.autoconfig.zipkin2.ZipkinKafkaSenderConfiguration",
 								"org.springframework.boot.info.JavaInfo",
 								"org.springframework.boot.info.JavaInfo$JavaRuntimeEnvironmentInfo.class",
 								"org.springframework.boot.info.JavaInfo$JavaVirtualMachineInfo.class"
