@@ -6,6 +6,8 @@ import am.ik.blog.entry.search.SearchCriteria;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.reactor.circuitbreaker.operator.CircuitBreakerOperator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -16,6 +18,8 @@ import org.springframework.web.reactive.function.client.WebClient;
 
 @Service
 public class EntryService {
+	private final Logger log = LoggerFactory.getLogger(EntryService.class);
+
 	private final EntryMapper entryMapper;
 
 	private final WebClient webClient;
@@ -37,7 +41,10 @@ public class EntryService {
 	public Mono<Entry> findOne(Long entryId, boolean excludeContent) {
 		return this.entryMapper.findOne(entryId, excludeContent)
 				.transformDeferred(CircuitBreakerOperator.of(this.circuitBreaker))
-				.onErrorResume(e -> this.findOneFromGithub(entryId, excludeContent, e));
+				.onErrorResume(e -> {
+					log.warn("Failed to read entry (id = " + entryId + ") from database", e);
+					return this.findOneFromGithub(entryId, excludeContent, e);
+				});
 	}
 
 	Mono<Entry> findOneFromGithub(Long entryId, boolean excludeContent, Throwable throwable) {
