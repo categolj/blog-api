@@ -22,7 +22,7 @@ jobs:
     - uses: graalvm/setup-graalvm@v1
       with:
         version: '22.0.0.2'
-        java-version: '11'
+        java-version: '17'
         components: 'native-image'
     - uses: actions/cache@v1
       with:
@@ -96,5 +96,6 @@ jobs:
           -n categolj \
           --tag ${IMAGE_NAME} \
           --wait \
+          --env BP_JVM_VERSION=17 \
           --blob https://oss.sonatype.org/content/repositories/snapshots/am/ik/blog/${APP_NAME}/${VERSION}/${APP_NAME}-${LATEST_SNAPSHOT}.zip
         ./kp build list ${APP_NAME} -n categolj
