@@ -43,14 +43,22 @@ public class EntryService {
 				.transformDeferred(CircuitBreakerOperator.of(this.circuitBreaker))
 				.onErrorResume(e -> {
 					log.warn("Failed to read entry (id = " + entryId + ") from database", e);
-					return this.findOneFromGithub(entryId, excludeContent, e);
+					return this.fallbackFromGithub(entryId, excludeContent, e);
 				});
 	}
 
-	Mono<Entry> findOneFromGithub(Long entryId, boolean excludeContent, Throwable throwable) {
-		final String fileName = String.format("%05d.md", entryId);
+	/* TODO */
+	public Mono<Entry> findTranslatedOne(Long entryId, String lang) {
+		return this.findOneFromGithub(entryId, "");
+	}
+
+	Mono<Entry> fallbackFromGithub(Long entryId, boolean excludeContent, Throwable throwable) {
+		return this.findOneFromGithub(entryId, "https://raw.githubusercontent.com/making/blog.ik.am/master/content/%05d.md");
+	}
+
+	Mono<Entry> findOneFromGithub(Long entryId, String urlTemplate) {
 		final Mono<String> markdown = this.webClient.get()
-				.uri("https://raw.githubusercontent.com/making/blog.ik.am/master/content/" + fileName)
+				.uri(urlTemplate.formatted(entryId))
 				.retrieve()
 				.bodyToMono(String.class);
 		return markdown.flatMap(body -> Mono.justOrEmpty(EntryBuilder.parseBody(entryId, body)))
@@ -59,7 +67,6 @@ public class EntryService {
 						.withUpdated(new Author("system", tpl.getT3().orElse(OffsetDateTime.parse("1970-01-01T00:00:00Z"))))
 						.build());
 	}
-
 
 	public Flux<Entry> findAll(SearchCriteria criteria, Pageable pageable) {
 		return entryMapper.findAll(criteria, pageable);
