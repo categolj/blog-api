@@ -4,8 +4,9 @@ import am.ik.blog.entry.Entry;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.web.server.LocalServerPort;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.messaging.rsocket.RSocketRequester;
 import org.springframework.r2dbc.core.DatabaseClient;
@@ -27,7 +28,7 @@ import static am.ik.blog.entry.rsocket.Asserts.assertEntry99997;
 import static am.ik.blog.entry.rsocket.Asserts.assertEntry99998;
 import static am.ik.blog.entry.rsocket.Asserts.assertEntry99999;
 
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, properties = "spring.zipkin.enabled=false")
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @TestConstructor(autowireMode = TestConstructor.AutowireMode.ALL)
 class EntryControllerTest {
 
@@ -35,7 +36,7 @@ class EntryControllerTest {
 
     private final DatabaseClient databaseClient;
 
-    EntryControllerTest(RSocketRequester.Builder builder, @LocalServerPort int port, DatabaseClient databaseClient) {
+    EntryControllerTest(RSocketRequester.Builder builder, @Value("${local.server.port}") int port, DatabaseClient databaseClient) {
         this.requester = builder.websocket(URI.create(String.format("ws://localhost:%d/rsocket", port)));
         this.databaseClient = databaseClient;
     }
