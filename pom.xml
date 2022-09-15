@@ -71,6 +71,12 @@
 			<groupId>am.ik.github</groupId>
 			<artifactId>reactive-github-client</artifactId>
 			<version>0.0.4</version>
+			<exclusions>
+				<exclusion>
+					<groupId>io.projectreactor.ipc</groupId>
+					<artifactId>reactor-netty</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 		<dependency>
 			<groupId>am.ik.yavi</groupId>
