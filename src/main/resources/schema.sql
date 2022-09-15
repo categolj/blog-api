@@ -43,10 +43,3 @@ CREATE INDEX IF NOT EXISTS entry_last_modified_date
 
 CREATE INDEX IF NOT EXISTS category_name_order
     ON category (category_name, category_order);
-
-CREATE TABLE IF NOT EXISTS http_trace
-(
-    id    UUID,
-    trace JSONB,
-    PRIMARY KEY (id)
-);
