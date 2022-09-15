@@ -1,7 +1,6 @@
 package am.ik.blog.github;
 
 import am.ik.blog.category.Category;
-import am.ik.blog.github.EntryFetcher;
 import am.ik.blog.entry.Entry;
 import am.ik.blog.entry.FrontMatter;
 import am.ik.blog.tag.Tag;
@@ -16,12 +15,12 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.core.io.ClassPathResource;
-import org.springframework.util.SocketUtils;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 import java.time.OffsetDateTime;
+import java.util.Random;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.http.HttpHeaders.CONTENT_TYPE;
@@ -47,7 +46,7 @@ public class EntryFetcherTest {
 
     @BeforeEach
     void setup() throws Exception {
-        this.port = SocketUtils.findAvailableTcpPort();
+        this.port = new Random().nextInt(60000, 65535);
         this.server.start(this.port);
         this.gitHubClient = new GitHubClient("http://localhost:" + port,
             WebClient.builder(), new AccessToken("dummy"));
