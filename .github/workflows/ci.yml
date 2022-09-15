@@ -37,7 +37,7 @@ jobs:
         set -e
         ./mvnw -V test
     - name: mvn deploy
-      if: github.ref == 'refs/heads/main'
+      if: github.ref == 'refs/heads/deprecated'
       env:
         SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
         SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
@@ -59,7 +59,7 @@ jobs:
         ./mvnw -V package -s settings.xml -P native,mostly-static -DskipTests=true -Dspring-boot.version=${BOOT_VERSION}
         ./mvnw -V deploy:deploy-file -DskipTests -Pnative -s settings.xml -DrepositoryId=sonatype-snapshots -Durl=https://oss.sonatype.org/content/repositories/snapshots
     - name: download-kp-cli
-      if: github.ref == 'refs/heads/main'
+      if: github.ref == 'refs/heads/deprecated'
       env:
         KP_VERSION: 0.4.2
       run: |
@@ -67,13 +67,13 @@ jobs:
         wget -q https://github.com/vmware-tanzu/kpack-cli/releases/download/v${KP_VERSION}/kp-linux-${KP_VERSION} -O kp
         chmod +x ./kp
     - name: kubeconfig
-      if: github.ref == 'refs/heads/main'
+      if: github.ref == 'refs/heads/deprecated'
       uses: azure/k8s-set-context@v1
       with:
         method: kubeconfig
         kubeconfig: ${{ secrets.KPACK_KUBECONFIG }}
     - name: build-image
-      if: github.ref == 'refs/heads/main'
+      if: github.ref == 'refs/heads/deprecated'
       env:
         APP_NAME: blog-api
         GOOGLE_APPLICATION_CREDENTIALS_JSON: ${{ secrets.KPACK_GOOGLE_APPLICATION_CREDENTIALS }}

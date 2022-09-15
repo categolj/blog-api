@@ -17,13 +17,11 @@
 
 	<properties>
 		<java.version>17</java.version>
-		<spring-native.version>0.12.1</spring-native.version>
 		<testcontainers.version>1.17.3</testcontainers.version>
 		<ecs-logging-java.version>1.5.0</ecs-logging-java.version>
 		<start-class>am.ik.blog.BlogApiApplication</start-class>
 		<resilience4j.version>1.7.1</resilience4j.version>
 		<snakeyaml.version>1.32</snakeyaml.version>
-		<native-image-args></native-image-args>
 		<jar-classifier></jar-classifier>
 	</properties>
 
@@ -32,16 +30,6 @@
 			<groupId>co.elastic.logging</groupId>
 			<artifactId>logback-ecs-encoder</artifactId>
 			<version>${ecs-logging-java.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework.experimental</groupId>
-			<artifactId>spring-native</artifactId>
-			<version>${spring-native.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework.experimental</groupId>
-			<artifactId>spring-aot</artifactId>
-			<version>${spring-native.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -173,28 +161,6 @@
 	<build>
 		<plugins>
 			<plugin>
-				<groupId>org.springframework.experimental</groupId>
-				<artifactId>spring-aot-maven-plugin</artifactId>
-				<version>${spring-native.version}</version>
-				<configuration>
-					<removeSpelSupport>true</removeSpelSupport>
-				</configuration>
-				<executions>
-<!--					<execution>-->
-<!--						<id>test-generate</id>-->
-<!--						<goals>-->
-<!--							<goal>test-generate</goal>-->
-<!--						</goals>-->
-<!--					</execution>-->
-					<execution>
-						<id>generate</id>
-						<goals>
-							<goal>generate</goal>
-						</goals>
-					</execution>
-				</executions>
-			</plugin>
-			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
 				<executions>
@@ -222,136 +188,4 @@
 			</plugin>
 		</plugins>
 	</build>
-	<profiles>
-		<profile>
-			<id>mostly-static</id>
-			<properties>
-				<native-image-args>-H:+StaticExecutableWithDynamicLibC</native-image-args>
-			</properties>
-		</profile>
-		<profile>
-			<id>native</id>
-			<properties>
-				<jar-classifier>exec</jar-classifier>
-			</properties>
-			<build>
-				<plugins>
-					<plugin>
-						<groupId>org.graalvm.buildtools</groupId>
-						<artifactId>native-maven-plugin</artifactId>
-						<version>0.9.13</version>
-						<executions>
-							<execution>
-								<id>build-native</id>
-								<goals>
-									<goal>build</goal>
-								</goals>
-								<phase>package</phase>
-							</execution>
-						</executions>
-						<configuration>
-							<buildArgs>${native-image-args}</buildArgs>
-							<imageName>${start-class}</imageName>
-							<outputDirectory>${project.build.directory}</outputDirectory>
-						</configuration>
-					</plugin>
-					<plugin>
-						<groupId>org.apache.maven.plugins</groupId>
-						<artifactId>maven-antrun-plugin</artifactId>
-						<version>3.1.0</version>
-						<executions>
-							<execution>
-								<id>zip</id>
-								<phase>package</phase>
-								<goals>
-									<goal>run</goal>
-								</goals>
-								<configuration>
-									<target>
-										<echo message="web: ./${start-class}"
-											  file="${project.build.directory}/Procfile"/>
-										<zip destfile="${project.build.directory}/${project.artifactId}-${project.version}.zip">
-											<zipfileset dir="${project.build.directory}"
-														filemode="755"
-														includes="${start-class}"/>
-											<fileset dir="${project.build.directory}"
-													 includes="Procfile"/>
-										</zip>
-									</target>
-								</configuration>
-							</execution>
-						</executions>
-					</plugin>
-					<plugin>
-						<groupId>org.apache.maven.plugins</groupId>
-						<artifactId>maven-install-plugin</artifactId>
-						<version>3.0.1</version>
-						<configuration>
-							<groupId>${project.groupId}</groupId>
-							<artifactId>${project.artifactId}</artifactId>
-							<version>${project.version}</version>
-							<packaging>zip</packaging>
-							<file>
-								${project.build.directory}/${project.artifactId}-${project.version}.zip
-							</file>
-						</configuration>
-					</plugin>
-					<plugin>
-						<groupId>org.apache.maven.plugins</groupId>
-						<artifactId>maven-deploy-plugin</artifactId>
-						<version>3.0.0</version>
-						<configuration>
-							<groupId>${project.groupId}</groupId>
-							<artifactId>${project.artifactId}</artifactId>
-							<version>${project.version}</version>
-							<packaging>zip</packaging>
-							<file>
-								${project.build.directory}/${project.artifactId}-${project.version}.zip
-							</file>
-						</configuration>
-					</plugin>
-				</plugins>
-			</build>
-		</profile>
-	</profiles>
-	<repositories>
-<!--		<repository>-->
-<!--			<id>spring-snapshot</id>-->
-<!--			<name>Spring Snapshots</name>-->
-<!--			<url>https://repo.spring.io/snapshot</url>-->
-<!--			<snapshots>-->
-<!--				<enabled>true</enabled>-->
-<!--			</snapshots>-->
-<!--		</repository>-->
-<!--		<repository>-->
-<!--			<id>spring-milestones</id>-->
-<!--			<name>Spring Milestones</name>-->
-<!--			<url>https://repo.spring.io/milestone</url>-->
-<!--		</repository>-->
-		<repository>
-			<id>spring-release</id>
-			<name>Spring release</name>
-			<url>https://repo.spring.io/release</url>
-		</repository>
-	</repositories>
-	<pluginRepositories>
-<!--		<pluginRepository>-->
-<!--			<id>spring-snapshot</id>-->
-<!--			<name>Spring Snapshots</name>-->
-<!--			<url>https://repo.spring.io/snapshot</url>-->
-<!--			<snapshots>-->
-<!--				<enabled>true</enabled>-->
-<!--			</snapshots>-->
-<!--		</pluginRepository>-->
-<!--		<pluginRepository>-->
-<!--			<id>spring-milestones</id>-->
-<!--			<name>Spring Milestones</name>-->
-<!--			<url>https://repo.spring.io/milestone</url>-->
-<!--		</pluginRepository>-->
-		<pluginRepository>
-			<id>spring-release</id>
-			<name>Spring release</name>
-			<url>https://repo.spring.io/release</url>
-		</pluginRepository>
-	</pluginRepositories>
 </project>
