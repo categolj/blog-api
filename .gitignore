@@ -30,3 +30,4 @@ build/
 ### VS Code ###
 .vscode/
 secret-*
+/src/main/resources/application-default.properties
