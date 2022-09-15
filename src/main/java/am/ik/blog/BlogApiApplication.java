@@ -1,6 +1,6 @@
 package am.ik.blog;
 
-import java.time.OffsetDateTime;
+import java.time.Instant;
 
 import reactor.core.publisher.Hooks;
 
@@ -12,7 +12,7 @@ public class BlogApiApplication {
 
 	public static void main(String[] args) {
 		Hooks.onErrorDropped(e -> { /* https://github.com/rsocket/rsocket-java/issues/1018 */});
-		System.setProperty("info.env.launch", OffsetDateTime.now().toString());
+		System.setProperty("info.env.launch", Instant.now().toString());
 		SpringApplication.run(BlogApiApplication.class, args);
 	}
 }
