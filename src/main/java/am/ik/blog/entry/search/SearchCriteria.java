@@ -72,7 +72,7 @@ public class SearchCriteria {
     }
 
     boolean hasKeyword() {
-        return !StringUtils.isEmpty(this.keyword);
+        return StringUtils.hasText(this.keyword);
     }
 
     public String toJoinClause() {
