@@ -8,9 +8,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.junit.jupiter.api.Test;
+
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.boot.web.server.LocalServerPort;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.TestConstructor;
 import org.springframework.test.web.reactive.server.WebTestClient;
@@ -21,8 +22,7 @@ import static org.mockito.Mockito.verify;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, properties = {
         "blog.github.access-token=foo",
-        "blog.github.webhook-secret=bar",
-        "spring.zipkin.enabled=false"})
+        "blog.github.webhook-secret=bar"})
 @TestConstructor(autowireMode = TestConstructor.AutowireMode.ALL)
 public class WebhookControllerTest {
 
@@ -36,7 +36,7 @@ public class WebhookControllerTest {
     @MockBean
     EntryMapper entryRepository;
 
-    public WebhookControllerTest(ObjectMapper objectMapper, @LocalServerPort int port) {
+    public WebhookControllerTest(ObjectMapper objectMapper, @Value("${local.server.port}") int port) {
         this.objectMapper = objectMapper;
         this.webClient = WebTestClient.bindToServer() //
                 .baseUrl("http://localhost:" + port) //
