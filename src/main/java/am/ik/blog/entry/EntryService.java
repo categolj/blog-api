@@ -48,8 +48,8 @@ public class EntryService {
 	}
 
 	/* TODO */
-	public Mono<Entry> findTranslatedOne(Long entryId, String lang) {
-		return this.findOneFromGithub(entryId, "");
+	public Mono<Entry> translate(Long entryId, String lang) {
+		return Mono.error(new UnsupportedOperationException());
 	}
 
 	Mono<Entry> fallbackFromGithub(Long entryId, boolean excludeContent, Throwable throwable) {
@@ -61,6 +61,10 @@ public class EntryService {
 				.uri(urlTemplate.formatted(entryId))
 				.retrieve()
 				.bodyToMono(String.class);
+		return this.parseMarkdown(entryId, markdown);
+	}
+
+	Mono<Entry> parseMarkdown(Long entryId, Mono<String> markdown) {
 		return markdown.flatMap(body -> Mono.justOrEmpty(EntryBuilder.parseBody(entryId, body)))
 				.map(tpl -> tpl.getT1()
 						.withCreated(new Author("system", tpl.getT2().orElse(OffsetDateTime.parse("1970-01-01T00:00:00Z"))))
