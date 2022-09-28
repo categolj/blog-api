@@ -78,7 +78,6 @@
 		<dependency>
 			<groupId>org.postgresql</groupId>
 			<artifactId>r2dbc-postgresql</artifactId>
-			<version>0.9.2.RELEASE</version>
 			<exclusions>
 				<exclusion>
 					<groupId>io.projectreactor.netty.incubator</groupId>
