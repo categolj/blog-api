@@ -21,16 +21,15 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.PageImpl;
+import org.springframework.data.web.ReactivePageableHandlerMethodArgumentResolver;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import org.springframework.web.reactive.function.client.WebClient;
-import org.springframework.web.reactive.function.server.RouterFunction;
-import org.springframework.web.reactive.function.server.ServerResponse;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 
 @WebFluxTest
-class EntryHandlerTest {
+class EntryRestControllerTest {
 	@Autowired
 	WebTestClient webTestClient;
 
@@ -108,13 +107,8 @@ class EntryHandlerTest {
 		}
 
 		@Bean
-		public EntryHandler entryHandler(EntryService entryService) {
-			return new EntryHandler(entryService);
-		}
-
-		@Bean
-		public RouterFunction<ServerResponse> routes(EntryHandler entryHandler) {
-			return entryHandler.routes();
+		public ReactivePageableHandlerMethodArgumentResolver pageableArgumentResolver() {
+			return new ReactivePageableHandlerMethodArgumentResolver();
 		}
 	}
 }
