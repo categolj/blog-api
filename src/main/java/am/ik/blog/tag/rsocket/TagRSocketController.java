@@ -10,11 +10,11 @@ import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-public class TagController {
+public class TagRSocketController {
 
 	private final TagMapper tagMapper;
 
-	public TagController(TagMapper tagMapper) {
+	public TagRSocketController(TagMapper tagMapper) {
 		this.tagMapper = tagMapper;
 	}
 

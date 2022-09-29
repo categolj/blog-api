@@ -12,11 +12,11 @@ import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-public class EntryController {
+public class EntryRSocketController {
 
 	private final EntryService entryService;
 
-	public EntryController(EntryService entryService) {
+	public EntryRSocketController(EntryService entryService) {
 		this.entryService = entryService;
 	}
 

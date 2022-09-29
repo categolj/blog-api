@@ -30,13 +30,13 @@ import static am.ik.blog.entry.rsocket.Asserts.assertEntry99999;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @TestConstructor(autowireMode = TestConstructor.AutowireMode.ALL)
-class EntryControllerTest {
+class EntryRSocketControllerTest {
 
     private final RSocketRequester requester;
 
     private final DatabaseClient databaseClient;
 
-    EntryControllerTest(RSocketRequester.Builder builder, @Value("${local.server.port}") int port, DatabaseClient databaseClient) {
+    EntryRSocketControllerTest(RSocketRequester.Builder builder, @Value("${local.server.port}") int port, DatabaseClient databaseClient) {
         this.requester = builder.websocket(URI.create(String.format("ws://localhost:%d/rsocket", port)));
         this.databaseClient = databaseClient;
     }

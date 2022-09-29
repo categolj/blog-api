@@ -10,11 +10,11 @@ import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-public class CategoryController {
+public class CategoryRSocketController {
 
 	private final CategoryMapper categoryMapper;
 
-	public CategoryController(CategoryMapper categoryMapper) {
+	public CategoryRSocketController(CategoryMapper categoryMapper) {
 		this.categoryMapper = categoryMapper;
 	}
 
