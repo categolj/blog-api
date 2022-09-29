@@ -52,6 +52,10 @@
 			<artifactId>spring-boot-starter-webflux</artifactId>
 		</dependency>
 		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-validation</artifactId>
+		</dependency>
+		<dependency>
 			<groupId>io.rsocket</groupId>
 			<artifactId>rsocket-micrometer</artifactId>
 		</dependency>
@@ -70,6 +74,11 @@
 			<groupId>am.ik.yavi</groupId>
 			<artifactId>yavi</artifactId>
 			<version>0.11.3</version>
+		</dependency>
+		<dependency>
+			<groupId>org.springdoc</groupId>
+			<artifactId>springdoc-openapi-webflux-ui</artifactId>
+			<version>1.6.11</version>
 		</dependency>
 		<dependency>
 			<groupId>org.yaml</groupId>
