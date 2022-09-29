@@ -105,10 +105,5 @@ class EntryRestControllerTest {
 		public EntryService entryService(EntryMapper entryMapper, CircuitBreakerRegistry circuitBreakerRegistry) {
 			return new EntryService(entryMapper, WebClient.builder(), circuitBreakerRegistry);
 		}
-
-		@Bean
-		public ReactivePageableHandlerMethodArgumentResolver pageableArgumentResolver() {
-			return new ReactivePageableHandlerMethodArgumentResolver();
-		}
 	}
 }
