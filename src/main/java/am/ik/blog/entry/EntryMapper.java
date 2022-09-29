@@ -13,7 +13,7 @@ import java.util.stream.IntStream;
 import am.ik.blog.category.Category;
 import am.ik.blog.entry.search.SearchCriteria;
 import am.ik.blog.tag.Tag;
-import io.r2dbc.spi.Row;
+import io.r2dbc.spi.Readable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Flux;
@@ -161,7 +161,7 @@ public class EntryMapper {
 		Author created = entry.getCreated();
 		Author updated = entry.getUpdated();
 		Long entryId = entry.getEntryId();
-		Mono<Integer> upsertEntry = this.databaseClient.sql(
+		Mono<Long> upsertEntry = this.databaseClient.sql(
 						"INSERT INTO entry (entry_id, title, content, created_by, created_date, last_modified_by, last_modified_date)"
 								+ " VALUES (:entry_id, :title, :content, :created_by, :created_date, :last_modified_by, :last_modified_date)"
 								+ " ON CONFLICT ON CONSTRAINT entry_pkey" //
@@ -189,7 +189,7 @@ public class EntryMapper {
 				.log("upsertEntry") //
 				;
 
-		Mono<Integer> deleteCategory = this.databaseClient
+		Mono<Long> deleteCategory = this.databaseClient
 				.sql("DELETE FROM category WHERE entry_id = $1") //
 				.bind("$1", entryId) //
 				.fetch().rowsUpdated() //
@@ -198,7 +198,7 @@ public class EntryMapper {
 
 		// TODO Batch Update
 		AtomicInteger order = new AtomicInteger(0);
-		Flux<Integer> insertCategory = Flux
+		Flux<Long> insertCategory = Flux
 				.fromIterable(frontMatter.getCategories())
 				.flatMap(category -> this.databaseClient.sql(
 								"INSERT INTO category (category_name, category_order, entry_id) VALUES ($1, $2, $3)") //
@@ -209,14 +209,14 @@ public class EntryMapper {
 				.log("insertCategory") //
 				;
 
-		Mono<Integer> deleteEntryTag = this.databaseClient
+		Mono<Long> deleteEntryTag = this.databaseClient
 				.sql("DELETE FROM entry_tag WHERE entry_id = $1") //
 				.bind("$1", entryId) //
 				.fetch().rowsUpdated() //
 				.log("deleteEntryTag") //
 				;
 		// TODO Batch Update
-		Flux<Integer> upsertTag = Flux.fromIterable(frontMatter.getTags()) //
+		Flux<Long> upsertTag = Flux.fromIterable(frontMatter.getTags()) //
 				.flatMap(tag -> this.databaseClient
 						.sql("INSERT INTO tag (tag_name) VALUES (:tag_name)" //
 								+ " ON CONFLICT ON CONSTRAINT tag_pkey" //
@@ -226,7 +226,7 @@ public class EntryMapper {
 						.fetch().rowsUpdated()) //
 				.log("upsertTag") //
 				;
-		Flux<Integer> insertEntryTag = Flux.fromIterable(frontMatter.getTags()) //
+		Flux<Long> insertEntryTag = Flux.fromIterable(frontMatter.getTags()) //
 				.flatMap(tag -> this.databaseClient.sql(
 								"INSERT INTO entry_tag (entry_id, tag_name) VALUES ($1, $2)") //
 						.bind("$1", entryId) //
@@ -251,7 +251,7 @@ public class EntryMapper {
 				.then(Mono.just(entryId));
 	}
 
-	Entry mapRow(Row row, boolean excludeContent) {
+	Entry mapRow(Readable row, boolean excludeContent) {
 		return new EntryBuilder().withEntryId(row.get("entry_id", Long.class))
 				.withContent(excludeContent ? "" : row.get("content", String.class)) //
 				.withFrontMatter(new FrontMatterBuilder()
