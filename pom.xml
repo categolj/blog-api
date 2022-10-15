@@ -205,14 +205,6 @@
 				<enabled>false</enabled>
 			</snapshots>
 		</repository>
-		<repository>
-			<id>springdocs</id>
-			<name>Spring Docs</name>
-			<url>https://s01.oss.sonatype.org/content/repositories/snapshots</url>
-			<releases>
-				<enabled>false</enabled>
-			</releases>
-		</repository>
 	</repositories>
 	<pluginRepositories>
 		<pluginRepository>
