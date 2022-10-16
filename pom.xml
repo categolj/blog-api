@@ -85,10 +85,6 @@
 					<groupId>io.projectreactor.netty</groupId>
 					<artifactId>reactor-netty-http-brave</artifactId>
 				</exclusion>
-				<exclusion>
-					<groupId>com.ongres.scram</groupId>
-					<artifactId>client</artifactId>
-				</exclusion>
 			</exclusions>
 		</dependency>
 		<dependency>
