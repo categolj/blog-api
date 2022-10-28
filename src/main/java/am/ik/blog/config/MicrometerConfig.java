@@ -1,6 +1,7 @@
 package am.ik.blog.config;
 
 import io.micrometer.core.instrument.config.MeterFilter;
+
 import org.springframework.boot.actuate.autoconfigure.metrics.MeterRegistryCustomizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -12,7 +13,7 @@ public class MicrometerConfig {
 		return registry -> registry.config() //
 				.meterFilter(MeterFilter.deny(id -> {
 					String uri = id.getTag("uri");
-					return uri != null && uri.startsWith("/actuator");
+					return uri != null && (uri.equals("/readyz") || uri.equals("/livez") || uri.startsWith("/actuator/health"));
 				}));
 	}
 }
