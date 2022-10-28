@@ -6,6 +6,7 @@ import am.ik.blog.entry.EntryMapper;
 import am.ik.blog.github.EntryFetcher;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -38,7 +39,10 @@ public class EntryImportController {
 												? Mono.empty()
 												: Mono.error(e)),
 						2) //
-				.flatMap(this.entryMapper::save, 4) //
+				.log("entry")
+				.doOnNext(this.entryMapper::save)
+				.log("save")
+				.publishOn(Schedulers.single())
 				.map(e -> e.getEntryId() + " " + e.getFrontMatter().getTitle());
 	}
 }

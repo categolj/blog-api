@@ -7,8 +7,8 @@
 	<include resource="co/elastic/logging/logback/boot/ecs-console-appender.xml" />
 	<include resource="co/elastic/logging/logback/boot/ecs-file-appender.xml" />
 	<root level="INFO">
-		<appender-ref ref="ECS_JSON_CONSOLE"/>
-<!--		<appender-ref ref="CONSOLE"/>-->
+<!--		<appender-ref ref="ECS_JSON_CONSOLE"/>-->
+		<appender-ref ref="CONSOLE"/>
 <!--		<appender-ref ref="ECS_JSON_FILE"/>-->
 <!--		<appender-ref ref="FILE"/>-->
 	</root>

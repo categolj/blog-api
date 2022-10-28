@@ -1,31 +1,30 @@
 package am.ik.blog.category;
 
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Stream;
 
-import reactor.core.publisher.Flux;
+import am.ik.blog.util.FileLoader;
 
-import org.springframework.r2dbc.core.DatabaseClient;
-import org.springframework.stereotype.Component;
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
+import org.springframework.stereotype.Repository;
 
-import static java.util.stream.Collectors.toList;
-
-@Component
+@Repository
 public class CategoryMapper {
+	private final NamedParameterJdbcTemplate jdbcTemplate;
 
-	private final DatabaseClient databaseClient;
-
-	public CategoryMapper(DatabaseClient databaseClient) {
-		this.databaseClient = databaseClient;
+	public CategoryMapper(NamedParameterJdbcTemplate jdbcTemplate) {
+		this.jdbcTemplate = jdbcTemplate;
 	}
 
-	public Flux<List<Category>> findAll() {
-		return this.databaseClient.sql(
-						"SELECT DISTINCT ARRAY_TO_STRING(ARRAY(SELECT category_name FROM category WHERE category.entry_id = e.entry_id ORDER BY category_order ASC), ',') AS category FROM entry AS e ORDER BY " +
-								"category")
-				.map(row -> row.get("category", String.class)).all()
-				.map(s -> Stream.of(s.split(","))
-						.map(Category::of)
-						.collect(toList()));
+	public List<List<Category>> findAll() {
+		final String sql = FileLoader.loadSqlAsString("am/ik/blog/category/CategoryMapper/findAll.sql");
+		return this.jdbcTemplate.query(sql, Map.of(), (rs, rowNum) -> {
+			final String category = rs.getString("category");
+			if (category == null) {
+				return List.of();
+			}
+			return Stream.of(category.split(",")).map(Category::new).toList();
+		});
 	}
 }

@@ -1,5 +1,7 @@
 package am.ik.blog.github.web;
 
+import java.util.Map;
+
 import am.ik.blog.github.EntryFetcher;
 import am.ik.blog.github.Fixtures;
 import am.ik.blog.entry.Entry;
@@ -48,7 +50,7 @@ public class WebhookControllerTest {
         Entry entry = Fixtures.entry(100L);
         given(entryFetcher.fetch("example", "blog.example.com", "content/00100.md"))
                 .willReturn(Mono.just(entry));
-        given(entryRepository.save(entry)).willReturn(Mono.just(entry));
+        given(entryRepository.save(entry)).willReturn(Map.of());
 
         ObjectNode body = this.objectMapper.createObjectNode();
         body.putObject("repository").put("full_name", "example/blog.example.com");
@@ -72,7 +74,7 @@ public class WebhookControllerTest {
                 .jsonPath("$.length()").isEqualTo(1) //
                 .jsonPath("$[0].added").isEqualTo(100);
 
-        verify(entryRepository).save(entry);
+       verify(entryRepository).save(entry);
     }
 
     @Test
@@ -80,7 +82,7 @@ public class WebhookControllerTest {
         Entry entry = Fixtures.entry(100L);
         given(entryFetcher.fetch("example", "blog.example.com", "content/00100.md"))
                 .willReturn(Mono.just(entry));
-        given(entryRepository.save(entry)).willReturn(Mono.just(entry));
+		given(entryRepository.save(entry)).willReturn(Map.of());
 
         ObjectNode body = this.objectMapper.createObjectNode();
         body.putObject("repository").put("full_name", "example/blog.example.com");
@@ -113,7 +115,7 @@ public class WebhookControllerTest {
         given(entryFetcher.fetch("example", "blog.example.com", "content/00100.md"))
                 .willReturn(Mono.just(entry));
         Long entryId = entry.getEntryId();
-        given(entryRepository.delete(entryId)).willReturn(Mono.just(entryId));
+        given(entryRepository.delete(entryId)).willReturn(1);
 
         ObjectNode body = this.objectMapper.createObjectNode();
         body.putObject("repository").put("full_name", "example/blog.example.com");

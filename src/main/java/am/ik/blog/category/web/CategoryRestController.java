@@ -18,7 +18,7 @@ public class CategoryRestController {
 	}
 
 	@GetMapping(path = "categories")
-	public Mono<List<List<Category>>> categories() {
-		return this.categoryMapper.findAll().collectList();
+	public List<List<Category>> categories() {
+		return this.categoryMapper.findAll();
 	}
 }

@@ -1,217 +1,248 @@
 package am.ik.blog.entry.search;
 
 import am.ik.blog.tag.Tag;
+
+import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.util.StringUtils;
 
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class SearchCriteria {
 
-    public static final SearchCriteria DEFAULT = defaults().build();
-    public static final String SERIES = "Series";
+	public static final SearchCriteria DEFAULT = defaults().build();
 
-    private boolean excludeContent;
+	public static final String SERIES = "Series";
 
-    private String createdBy;
+	private boolean excludeContent;
 
-    private String lastModifiedBy;
+	private String createdBy;
 
-    private Tag tag;
+	private String lastModifiedBy;
 
-    private CategoryOrders categoryOrders;
+	private Tag tag;
 
-    private String keyword;
+	private CategoryOrders categoryOrders;
 
-    SearchCriteria(boolean excludeContent, String createdBy, String lastModifiedBy, Tag tag,
-                   CategoryOrders categoryOrders, String keyword) {
-        this.excludeContent = excludeContent;
-        this.createdBy = createdBy;
-        this.lastModifiedBy = lastModifiedBy;
-        this.tag = tag;
-        this.categoryOrders = categoryOrders;
-        this.keyword = keyword;
-    }
+	private String keyword;
 
-    public static SearchCriteriaBuilder builder() {
-        return new SearchCriteriaBuilder();
-    }
+	SearchCriteria(boolean excludeContent, String createdBy, String lastModifiedBy, Tag tag,
+			CategoryOrders categoryOrders, String keyword) {
+		this.excludeContent = excludeContent;
+		this.createdBy = createdBy;
+		this.lastModifiedBy = lastModifiedBy;
+		this.tag = tag;
+		this.categoryOrders = categoryOrders;
+		this.keyword = keyword;
+	}
 
-    public static SearchCriteria.SearchCriteriaBuilder defaults() {
-        return SearchCriteria.builder().excludeContent(true);
-    }
+	public static SearchCriteriaBuilder builder() {
+		return new SearchCriteriaBuilder();
+	}
 
-    public CategoryOrders getCategoryOrders() {
-        return this.categoryOrders;
-    }
+	public static SearchCriteria.SearchCriteriaBuilder defaults() {
+		return SearchCriteria.builder().excludeContent(true);
+	}
 
-    public String getCreatedBy() {
-        return this.createdBy;
-    }
+	public CategoryOrders getCategoryOrders() {
+		return this.categoryOrders;
+	}
 
-    public String getKeyword() {
-        return this.keyword;
-    }
+	public String getCreatedBy() {
+		return this.createdBy;
+	}
 
-    public String getLastModifiedBy() {
-        return this.lastModifiedBy;
-    }
+	public String getKeyword() {
+		return this.keyword;
+	}
 
-    public Tag getTag() {
-        return this.tag;
-    }
+	public String getLastModifiedBy() {
+		return this.lastModifiedBy;
+	}
 
-    public boolean isExcludeContent() {
-        return this.excludeContent;
-    }
+	public Tag getTag() {
+		return this.tag;
+	}
 
-    boolean isExcludeSeries() {
-        return this.tag == null && this.categoryOrders == null && !this.hasKeyword();
-    }
+	public boolean isExcludeContent() {
+		return this.excludeContent;
+	}
 
-    boolean hasKeyword() {
-        return StringUtils.hasText(this.keyword);
-    }
+	boolean isExcludeSeries() {
+		return this.tag == null && this.categoryOrders == null && !this.hasKeyword();
+	}
 
-    public String toJoinClause() {
-        StringBuilder sb = new StringBuilder();
-        if (this.tag != null) {
-            sb.append("LEFT JOIN entry_tag AS et ON e.entry_id = et.entry_id ");
-        }
-        if (this.categoryOrders != null) {
-            sb.append("LEFT JOIN category AS c ON e.entry_id = c.entry_id ");
-        }
-        return sb.toString();
-    }
+	boolean hasKeyword() {
+		return StringUtils.hasText(this.keyword);
+	}
 
-    public ClauseAndParams toWhereClause() {
-        AtomicInteger i = new AtomicInteger(1);
-        Map<String, String> clause = new LinkedHashMap<>();
-        Map<String, Object> params = new HashMap<>();
+	public String toJoinClause() {
+		StringBuilder sb = new StringBuilder();
+		if (this.tag != null) {
+			sb.append("LEFT JOIN entry_tag AS et ON e.entry_id = et.entry_id ");
+		}
+		if (this.categoryOrders != null) {
+			sb.append("LEFT JOIN category AS c ON e.entry_id = c.entry_id ");
+		}
+		return sb.toString();
+	}
 
-        if (this.hasKeyword()) {
-            params.put("$" + i, "%" + this.keyword + "%");
-            clause.put("$" + i, "AND e.content LIKE $" + i);
-            i.incrementAndGet();
-        }
-        if (this.createdBy != null) {
-            params.put("$" + i, this.createdBy);
-            clause.put("$" + i, "AND e.created_by = $" + i);
-            i.incrementAndGet();
-        }
-        if (this.lastModifiedBy != null) {
-            params.put("$" + i, this.lastModifiedBy);
-            clause.put("$" + i, "AND e.last_modified_by = $" + i);
-            i.incrementAndGet();
-        }
-        if (this.tag != null) {
-            params.put("$" + i, this.tag.getName());
-            clause.put("$" + i, "AND et.tag_name = $" + i);
-            i.incrementAndGet();
-        } else if (this.isExcludeSeries()) {
-            params.put("$" + i, SERIES);
-            clause.put("$" + i, "AND e.entry_id NOT IN (SELECT entry_id FROM entry_tag WHERE tag_name = $" + i + ")");
-            i.incrementAndGet();
-        }
-        if (this.categoryOrders != null) {
-            this.categoryOrders.getValue().forEach(c -> {
-                int categoryOrder = c.getCategoryOrder();
-                String categoryStringKey = "$" + i;
-                String categoryOrderKey = "$" + i.incrementAndGet();
-                params.put(categoryStringKey, c.getCategory().getName());
-                clause.put(categoryStringKey, "AND c.category_name = " + categoryStringKey);
-                params.put(categoryOrderKey, categoryOrder);
-                clause.put(categoryOrderKey, "AND c.category_order = " + categoryOrderKey);
-                i.incrementAndGet();
-            });
-        }
-        return new ClauseAndParams(clause, params);
-    }
+	public MapSqlParameterSource toParameterSource() {
+		final MapSqlParameterSource params = new MapSqlParameterSource();
+		if (this.hasKeyword()) {
+			params.addValue("keyword", this.keyword);
+		}
+		if (this.createdBy != null) {
+			params.addValue("createdBy", this.createdBy);
+		}
+		if (this.lastModifiedBy != null) {
+			params.addValue("lastModifiedBy", this.createdBy);
+		}
+		if (this.tag != null) {
+			params.addValue("tag", tag.name());
+		}
+		if (this.categoryOrders != null) {
+			final List<CategoryOrder> value = this.categoryOrders.getValue().stream().toList();
+			params.addValue("categoryOrders", value);
+			for (int i = 0; i < value.size(); i++) {
+				final CategoryOrder categoryOrder = value.get(i);
+				params.addValue("categoryOrder_0_%d.category.name".formatted(i), categoryOrder.getCategory().name());
+				params.addValue("categoryOrder_0_%d.categoryOrder".formatted(i), categoryOrder.getCategoryOrder());
+			}
+		}
+		return params;
+	}
 
-    public static class ClauseAndParams {
+	public ClauseAndParams toWhereClause() {
+		AtomicInteger i = new AtomicInteger(1);
+		Map<String, String> clause = new LinkedHashMap<>();
+		Map<String, Object> params = new HashMap<>();
 
-        private final Map<String, String> clause;
+		if (this.hasKeyword()) {
+			params.put("$" + i, "%" + this.keyword + "%");
+			clause.put("$" + i, "AND e.content LIKE $" + i);
+			i.incrementAndGet();
+		}
+		if (this.createdBy != null) {
+			params.put("$" + i, this.createdBy);
+			clause.put("$" + i, "AND e.created_by = $" + i);
+			i.incrementAndGet();
+		}
+		if (this.lastModifiedBy != null) {
+			params.put("$" + i, this.lastModifiedBy);
+			clause.put("$" + i, "AND e.last_modified_by = $" + i);
+			i.incrementAndGet();
+		}
+		if (this.tag != null) {
+			params.put("$" + i, this.tag.name());
+			clause.put("$" + i, "AND et.tag_name = $" + i);
+			i.incrementAndGet();
+		}
+		else if (this.isExcludeSeries()) {
+			params.put("$" + i, SERIES);
+			clause.put("$" + i, "AND e.entry_id NOT IN (SELECT entry_id FROM entry_tag WHERE tag_name = $" + i + ")");
+			i.incrementAndGet();
+		}
+		if (this.categoryOrders != null) {
+			this.categoryOrders.getValue().forEach(c -> {
+				int categoryOrder = c.getCategoryOrder();
+				String categoryStringKey = "$" + i;
+				String categoryOrderKey = "$" + i.incrementAndGet();
+				params.put(categoryStringKey, c.getCategory().name());
+				clause.put(categoryStringKey, "AND c.category_name = " + categoryStringKey);
+				params.put(categoryOrderKey, categoryOrder);
+				clause.put(categoryOrderKey, "AND c.category_order = " + categoryOrderKey);
+				i.incrementAndGet();
+			});
+		}
+		return new ClauseAndParams(clause, params);
+	}
 
-        private final Map<String, Object> params;
+	public static class ClauseAndParams {
 
-        ClauseAndParams(Map<String, String> clause, Map<String, Object> params) {
-            this.clause = clause;
-            this.params = params;
-        }
+		private final Map<String, String> clause;
 
-        public String clauseForEntryId() {
-            return String.join(" ", this.clause.values());
-        }
+		private final Map<String, Object> params;
 
-        public Map<String, Object> params() {
-            return this.params;
-        }
-    }
+		ClauseAndParams(Map<String, String> clause, Map<String, Object> params) {
+			this.clause = clause;
+			this.params = params;
+		}
 
-    public static class SearchCriteriaBuilder {
+		public String clauseForEntryId() {
+			return String.join(" ", this.clause.values());
+		}
 
-        private CategoryOrders categoryOrders;
+		public Map<String, Object> params() {
+			return this.params;
+		}
+	}
 
-        private String createdBy;
+	public static class SearchCriteriaBuilder {
 
-        private boolean excludeContent;
+		private CategoryOrders categoryOrders;
 
-        private String keyword;
+		private String createdBy;
 
-        private String lastModifiedBy;
+		private boolean excludeContent;
 
-        private Tag tag;
+		private String keyword;
 
-        SearchCriteriaBuilder() {
-        }
+		private String lastModifiedBy;
 
-        public SearchCriteria build() {
-            return new SearchCriteria(excludeContent, createdBy, lastModifiedBy, tag,
-                    categoryOrders, keyword);
-        }
+		private Tag tag;
 
-        public SearchCriteriaBuilder categoryOrders(CategoryOrders categoryOrders) {
-            this.categoryOrders = categoryOrders;
-            return this;
-        }
+		SearchCriteriaBuilder() {
+		}
 
-        public SearchCriteriaBuilder createdBy(String createdBy) {
-            this.createdBy = createdBy;
-            return this;
-        }
+		public SearchCriteria build() {
+			return new SearchCriteria(excludeContent, createdBy, lastModifiedBy, tag,
+					categoryOrders, keyword);
+		}
 
-        public SearchCriteriaBuilder excludeContent(boolean excludeContent) {
-            this.excludeContent = excludeContent;
-            return this;
-        }
+		public SearchCriteriaBuilder categoryOrders(CategoryOrders categoryOrders) {
+			this.categoryOrders = categoryOrders;
+			return this;
+		}
 
-        public SearchCriteriaBuilder keyword(String keyword) {
-            this.keyword = keyword;
-            return this;
-        }
+		public SearchCriteriaBuilder createdBy(String createdBy) {
+			this.createdBy = createdBy;
+			return this;
+		}
 
-        public SearchCriteriaBuilder lastModifiedBy(String lastModifiedBy) {
-            this.lastModifiedBy = lastModifiedBy;
-            return this;
-        }
+		public SearchCriteriaBuilder excludeContent(boolean excludeContent) {
+			this.excludeContent = excludeContent;
+			return this;
+		}
 
-        public SearchCriteriaBuilder tag(Tag tag) {
-            this.tag = tag;
-            return this;
-        }
-    }
+		public SearchCriteriaBuilder keyword(String keyword) {
+			this.keyword = keyword;
+			return this;
+		}
 
-    @Override
-    public String toString() {
-        return "SearchCriteria{" +
-                "excludeContent=" + excludeContent +
-                ", createdBy='" + createdBy + '\'' +
-                ", lastModifiedBy='" + lastModifiedBy + '\'' +
-                ", tag=" + tag +
-                ", categoryOrders=" + categoryOrders +
-                ", keyword='" + keyword + '\'' +
-                '}';
-    }
+		public SearchCriteriaBuilder lastModifiedBy(String lastModifiedBy) {
+			this.lastModifiedBy = lastModifiedBy;
+			return this;
+		}
+
+		public SearchCriteriaBuilder tag(Tag tag) {
+			this.tag = tag;
+			return this;
+		}
+	}
+
+	@Override
+	public String toString() {
+		return "SearchCriteria{" +
+				"excludeContent=" + excludeContent +
+				", createdBy='" + createdBy + '\'' +
+				", lastModifiedBy='" + lastModifiedBy + '\'' +
+				", tag=" + tag +
+				", categoryOrders=" + categoryOrders +
+				", keyword='" + keyword + '\'' +
+				'}';
+	}
 }

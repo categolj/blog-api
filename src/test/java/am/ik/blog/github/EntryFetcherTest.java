@@ -113,8 +113,8 @@ public class EntryFetcherTest {
 					assertThat(frontMatter).isNotNull();
 					assertThat(frontMatter.getTitle()).isEqualTo("First article");
 					assertThat(frontMatter.getCategories()).containsExactly(
-							Category.of("Demo"), Category.of("Hello"));
-					assertThat(frontMatter.getTags()).containsExactly(Tag.of("Demo"));
+							new Category("Demo"), new Category("Hello"));
+					assertThat(frontMatter.getTags()).containsExactly(new Tag("Demo"));
 				}) //
 				.verifyComplete();
 		;

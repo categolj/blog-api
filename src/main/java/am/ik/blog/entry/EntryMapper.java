@@ -1,339 +1,210 @@
 package am.ik.blog.entry;
 
-
-import java.time.OffsetDateTime;
-import java.util.Collections;
+import java.sql.Timestamp;
+import java.time.ZoneOffset;
+import java.util.Arrays;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
+import java.util.Optional;
+import java.util.stream.Stream;
 
 import am.ik.blog.category.Category;
 import am.ik.blog.entry.search.SearchCriteria;
 import am.ik.blog.tag.Tag;
-import io.r2dbc.spi.Readable;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
+import am.ik.blog.util.FileLoader;
+import org.mybatis.scripting.thymeleaf.SqlGenerator;
 import reactor.util.function.Tuple2;
 import reactor.util.function.Tuples;
 
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
-import org.springframework.r2dbc.core.DatabaseClient;
-import org.springframework.stereotype.Component;
-import org.springframework.transaction.reactive.TransactionalOperator;
+import org.springframework.jdbc.core.RowMapper;
+import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
+import org.springframework.jdbc.core.namedparam.SqlParameterSource;
+import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
+import static am.ik.blog.util.FileLoader.loadSqlAsString;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 
-@Component
+@Repository
 public class EntryMapper {
+	private final NamedParameterJdbcTemplate jdbcTemplate;
 
-	private final DatabaseClient databaseClient;
+	private final SqlGenerator sqlGenerator;
 
-	private final TransactionalOperator transactionalOperator;
 
-	private final Logger log = LoggerFactory.getLogger(EntryMapper.class);
-
-	public EntryMapper(DatabaseClient databaseClient,
-			TransactionalOperator transactionalOperator) {
-		this.databaseClient = databaseClient;
-		this.transactionalOperator = transactionalOperator;
+	public EntryMapper(NamedParameterJdbcTemplate jdbcTemplate, SqlGenerator sqlGenerator) {
+		this.jdbcTemplate = jdbcTemplate;
+		this.sqlGenerator = sqlGenerator;
 	}
 
-	public Mono<Long> nextId() {
-		return this.databaseClient.sql("SELECT max(entry_id) + 1 AS next FROM entry")
-				.map(row -> row.get("next", Long.class))
-				.one();
+	static RowMapper<Entry> rowMapper(boolean excludeContent, Map<Long, List<Category>> categoriesMap, Map<Long, List<Tag>> tagsMap) {
+		return (rs, rowNum) -> {
+			final long entryId = rs.getLong("entry_id");
+			return new EntryBuilder()
+					.withEntryId(entryId)
+					.withContent(excludeContent ? "" : rs.getString("content"))
+					.withFrontMatter(new FrontMatterBuilder()
+							.withTitle(rs.getString("title"))
+							.withCategories(categoriesMap.getOrDefault(entryId, List.of()))
+							.withTags(tagsMap.getOrDefault(entryId, List.of()))
+							.build())
+					.withCreated(new Author(rs.getString("created_by"),
+							rs.getTimestamp("created_date").toInstant().atOffset(ZoneOffset.UTC)))
+					.withUpdated(new Author(rs.getString("last_modified_by"),
+							rs.getTimestamp("last_modified_date").toInstant().atOffset(ZoneOffset.UTC)))
+					.build();
+		};
 	}
 
-	public Mono<Long> count(SearchCriteria criteria) {
-		SearchCriteria.ClauseAndParams clauseAndParams = criteria.toWhereClause();
-		String sql = String.format(
-				"SELECT count(e.entry_id) AS count FROM entry AS e %s WHERE 1=1 %s",
-				criteria.toJoinClause(), clauseAndParams.clauseForEntryId());
-		DatabaseClient.GenericExecuteSpec executeSpec = this.databaseClient.sql(sql);
-		Map<String, Object> params = clauseAndParams.params();
-		for (Map.Entry<String, Object> entry : params.entrySet()) {
-			executeSpec = executeSpec.bind(entry.getKey(), entry.getValue());
+	public Optional<Entry> findOne(Long entryId, boolean excludeContent) {
+		final List<Long> ids = List.of(entryId);
+		final Map<Long, List<Category>> categoriesMap = this.categoriesMap(ids);
+		final Map<Long, List<Tag>> tagsMap = this.tagsMap(ids);
+		final MapSqlParameterSource params = new MapSqlParameterSource()
+				.addValue("entryId", entryId)
+				.addValue("excludeContent", excludeContent);
+		final String sql = this.sqlGenerator.generate(loadSqlAsString("am/ik/blog/entry/EntryMapper/findOne.sql"), params.getValues(), params::addValue);
+		try {
+			final Entry entry = this.jdbcTemplate.queryForObject(sql, params, rowMapper(excludeContent, categoriesMap, tagsMap));
+			return Optional.ofNullable(entry);
 		}
-		return executeSpec //
-				.map((row, meta) -> row.get("count", Long.class)) //
-				.one();
-	}
-
-	public Mono<Page<Entry>> findPage(SearchCriteria criteria, Pageable pageable) {
-		return this.count(criteria)
-				.zipWith(this.findAll(criteria, pageable).collectList()
-						.switchIfEmpty(Mono.fromCallable(List::of))) //
-				.doOnError(e -> log.error("Failed to find a page!: " + e))
-				.map(tpl -> new PageImpl<>(tpl.getT2(), pageable, tpl.getT1()));
-	}
-
-	public Mono<Entry> findOne(Long entryId, boolean excludeContent) {
-		List<Long> ids = Collections.singletonList(entryId);
-		Mono<List<Tag>> tagsMono = this.tagsMap(ids)
-				.map(x -> x.getOrDefault(entryId, List.of()));
-		Mono<List<Category>> categoriesMono = this.categoriesMap(ids)
-				.map(x -> x.get(entryId));
-		String sql = String.format(
-				"SELECT e.entry_id, e.title%s, e.created_by, e.created_date, e.last_modified_by, e.last_modified_date FROM entry AS e  WHERE e.entry_id = $1",
-				(excludeContent ? "" : ", e.content"));
-		Mono<Entry> entryMono = this.databaseClient.sql(sql) //
-				.bind("$1", entryId) //
-				.map(row -> this.mapRow(row, excludeContent)) //
-				.one();
-		return entryMono.flatMap(entry -> Mono.zip(categoriesMono, tagsMono) //
-						.map(tpl -> {
-							FrontMatter fm = entry.getFrontMatter();
-							return EntryBuilder.copyFrom(entry) //
-									.withFrontMatter(
-											new FrontMatterBuilder()
-													.withTitle(fm.getTitle())
-													.withCategories(tpl.getT1())
-													.withTags(tpl.getT2())
-													// TODO: fm.date(), fm.updated()
-													.build())
-									.build();
-						})) //
-				.doOnError(e -> log.error("Failed to fetch an entry (entryId = " + entryId + ") !: " + e));
-	}
-
-	public Mono<OffsetDateTime> findLastModifiedDate(Long entryId) {
-		return this.databaseClient
-				.sql("SELECT last_modified_date FROM entry WHERE entry_id = $1") //
-				.bind("$1", entryId) //
-				.map(row -> row.get("last_modified_date", OffsetDateTime.class))
-				.one();
-	}
-
-	public Mono<OffsetDateTime> findLatestModifiedDate() {
-		return this.databaseClient.sql(
-						"SELECT last_modified_date FROM entry ORDER BY last_modified_date DESC LIMIT 1") //
-				.map(row -> row.get("last_modified_date", OffsetDateTime.class))
-				.one();
-	}
-
-	public Flux<Entry> findAll(SearchCriteria criteria, Pageable pageable) {
-		SearchCriteria.ClauseAndParams clauseAndParams = criteria.toWhereClause();
-		return this.entryIds(criteria, pageable, clauseAndParams) //
-				.collectList() //
-				.flatMapMany(ids -> this.tagsMap(ids) //
-						.zipWith(this.categoriesMap(ids)) //
-						.flatMapMany(tpl -> {
-							Map<Long, List<Tag>> tagsMap = tpl.getT1();
-							Map<Long, List<Category>> categoriesMap = tpl.getT2();
-							String sql = String.format(
-									"SELECT e.entry_id, e.title, e.created_by, e.created_date, e.last_modified_by, e.last_modified_date FROM entry AS e WHERE e.entry_id IN (%s) ORDER BY e.last_modified_date " +
-											"DESC",
-									IntStream.rangeClosed(1, ids.size())
-											.mapToObj(i -> "$" + i)
-											.collect(Collectors.joining(",")));
-							DatabaseClient.GenericExecuteSpec executeSpec = this.databaseClient
-									.sql(sql);
-							for (int i = 0; i < ids.size(); i++) {
-								executeSpec = executeSpec.bind("$" + (i + 1), ids.get(i));
-							}
-							return executeSpec //
-									.map(row -> this.mapRow(row, true)).all()
-									.map(e -> {
-										FrontMatter frontMatter = e.getFrontMatter();
-										return EntryBuilder.copyFrom(e)
-												.withFrontMatter(new FrontMatterBuilder()
-														.withTitle(frontMatter.getTitle())
-														.withCategories(categoriesMap.get(e.getEntryId()))
-														.withTags(tagsMap.get(e.getEntryId()))
-														.build())
-												.build();
-									}).doOnRequest(n -> log.debug("request({})", n))
-									;
-						}));
-	}
-
-	public Mono<Entry> save(Entry entry) {
-		FrontMatter frontMatter = entry.getFrontMatter();
-		Author created = entry.getCreated();
-		Author updated = entry.getUpdated();
-		Long entryId = entry.getEntryId();
-		Mono<Long> upsertEntry = this.databaseClient.sql(
-						"INSERT INTO entry (entry_id, title, content, created_by, created_date, last_modified_by, last_modified_date)"
-								+ " VALUES (:entry_id, :title, :content, :created_by, :created_date, :last_modified_by, :last_modified_date)"
-								+ " ON CONFLICT ON CONSTRAINT entry_pkey" //
-								+ " DO UPDATE SET" //
-								+ " title = :title2," //
-								+ " content = :content2," //
-								+ " created_by = :created_by2," //
-								+ " created_date = :created_date2," //
-								+ " last_modified_by = :last_modified_by2," //
-								+ " last_modified_date = :last_modified_date2") //
-				.bind("entry_id", entryId) //
-				.bind("title", frontMatter.getTitle()) //
-				.bind("content", entry.getContent()) //
-				.bind("created_by", created.getName()) //
-				.bind("created_date", created.getDate()) //
-				.bind("last_modified_by", updated.getName()) //
-				.bind("last_modified_date", updated.getDate()) //
-				.bind("title2", frontMatter.getTitle()) //
-				.bind("content2", entry.getContent()) //
-				.bind("created_by2", created.getName()) //
-				.bind("created_date2", created.getDate()) //
-				.bind("last_modified_by2", updated.getName()) //
-				.bind("last_modified_date2", updated.getDate()) //
-				.fetch().rowsUpdated() //
-				.log("upsertEntry") //
-				;
-
-		Mono<Long> deleteCategory = this.databaseClient
-				.sql("DELETE FROM category WHERE entry_id = $1") //
-				.bind("$1", entryId) //
-				.fetch().rowsUpdated() //
-				.log("deleteCategory") //
-				;
-
-		// TODO Batch Update
-		AtomicInteger order = new AtomicInteger(0);
-		Flux<Long> insertCategory = Flux
-				.fromIterable(frontMatter.getCategories())
-				.flatMap(category -> this.databaseClient.sql(
-								"INSERT INTO category (category_name, category_order, entry_id) VALUES ($1, $2, $3)") //
-						.bind("$1", category.getName()) //
-						.bind("$2", order.getAndIncrement()) //
-						.bind("$3", entryId) //
-						.fetch().rowsUpdated()) //
-				.log("insertCategory") //
-				;
-
-		Mono<Long> deleteEntryTag = this.databaseClient
-				.sql("DELETE FROM entry_tag WHERE entry_id = $1") //
-				.bind("$1", entryId) //
-				.fetch().rowsUpdated() //
-				.log("deleteEntryTag") //
-				;
-		// TODO Batch Update
-		Flux<Long> upsertTag = Flux.fromIterable(frontMatter.getTags()) //
-				.flatMap(tag -> this.databaseClient
-						.sql("INSERT INTO tag (tag_name) VALUES (:tag_name)" //
-								+ " ON CONFLICT ON CONSTRAINT tag_pkey" //
-								+ " DO UPDATE SET tag_name = :tag_name2") //
-						.bind("tag_name", tag.getName()) //
-						.bind("tag_name2", tag.getName()) //
-						.fetch().rowsUpdated()) //
-				.log("upsertTag") //
-				;
-		Flux<Long> insertEntryTag = Flux.fromIterable(frontMatter.getTags()) //
-				.flatMap(tag -> this.databaseClient.sql(
-								"INSERT INTO entry_tag (entry_id, tag_name) VALUES ($1, $2)") //
-						.bind("$1", entryId) //
-						.bind("$2", tag.getName()) //
-						.fetch().rowsUpdated()) //
-				.log("insertEntryTag") //
-				;
-		return upsertEntry //
-				.and(deleteCategory.thenMany(insertCategory)) //
-				.and(deleteEntryTag.thenMany(upsertTag).thenMany(insertEntryTag)) //
-				.as(this.transactionalOperator::transactional) //
-				.log("tx") //
-				.then(Mono.just(entry));
-	}
-
-	public Mono<Long> delete(Long entryId) {
-		return this.databaseClient.sql("DELETE FROM entry WHERE entry_id = $1") //
-				.bind("$1", entryId) //
-				.fetch().rowsUpdated() //
-				.as(this.transactionalOperator::transactional) //
-				.log("delete") //
-				.then(Mono.just(entryId));
-	}
-
-	Entry mapRow(Readable row, boolean excludeContent) {
-		return new EntryBuilder().withEntryId(row.get("entry_id", Long.class))
-				.withContent(excludeContent ? "" : row.get("content", String.class)) //
-				.withFrontMatter(new FrontMatterBuilder()
-						.withTitle(row.get("title", String.class))
-						.build())
-				.withCreated(new Author(row.get("created_by", String.class),
-						row.get("created_date", OffsetDateTime.class))) //
-				.withUpdated(new Author(row.get("last_modified_by", String.class),
-						row.get("last_modified_date", OffsetDateTime.class))) //
-				.build();
-	}
-
-	Mono<Map<Long, List<Tag>>> tagsMap(List<Long> ids) {
-		if (ids.isEmpty()) {
-			return Mono.empty();
+		catch (EmptyResultDataAccessException e) {
+			return Optional.empty();
 		}
-		String sql = String.format(
-				"SELECT entry_id, tag_name FROM entry_tag WHERE entry_id IN (%s)",
-				IntStream.rangeClosed(1, ids.size()).mapToObj(i -> "$" + i)
-						.collect(Collectors.joining(",")));
-		DatabaseClient.GenericExecuteSpec executeSpec = this.databaseClient.sql(sql);
+	}
+
+	public List<Entry> findAll(SearchCriteria searchCriteria, Pageable pageable) {
+		final List<Long> ids = this.entryIds(searchCriteria, pageable);
+		final Map<Long, List<Category>> categoriesMap = this.categoriesMap(ids);
+		final Map<Long, List<Tag>> tagsMap = this.tagsMap(ids);
+		final MapSqlParameterSource params = entryIdsParameterSource(ids);
+		final String sql = this.sqlGenerator.generate(loadSqlAsString("am/ik/blog/entry/EntryMapper/findAll.sql"), params.getValues(), params::addValue);
+		return this.jdbcTemplate.query(sql, params, rowMapper(true, categoriesMap, tagsMap));
+	}
+
+	public Page<Entry> findPage(SearchCriteria searchCriteria, Pageable pageable) {
+		final List<Entry> content = this.findAll(searchCriteria, pageable);
+		final long total = this.count(searchCriteria);
+		return new PageImpl<>(content, pageable, total);
+	}
+
+	public long count(SearchCriteria searchCriteria) {
+		final MapSqlParameterSource params = searchCriteria.toParameterSource();
+		final String sql = this.sqlGenerator.generate(loadSqlAsString("am/ik/blog/entry/EntryMapper/count.sql"), params.getValues(), params::addValue);
+		final Long count = this.jdbcTemplate.queryForObject(sql, params, (rs, rowNum) -> rs.getLong("count"));
+		return Objects.<Long>requireNonNullElse(count, 0L);
+	}
+
+	@Transactional
+	public int delete(Long entryId) {
+		final MapSqlParameterSource params = new MapSqlParameterSource()
+				.addValue("entryId", entryId);
+		final String sql = this.sqlGenerator.generate(loadSqlAsString("am/ik/blog/entry/EntryMapper/deleteEntry.sql"), params.getValues(), params::addValue);
+		return this.jdbcTemplate.update(sql, params);
+	}
+
+	@Transactional
+	public Map<String, Integer> save(Entry entry) {
+		final Map<String, Integer> result = new LinkedHashMap<>();
+		final FrontMatter frontMatter = entry.getFrontMatter();
+		final Author created = entry.getCreated();
+		final Author updated = entry.getUpdated();
+		final Long entryId = entry.getEntryId();
+		final MapSqlParameterSource params = new MapSqlParameterSource()
+				.addValue("entryId", entryId)
+				.addValue("title", frontMatter.getTitle())
+				.addValue("content", entry.getContent())
+				.addValue("createdBy", created.getName())
+				.addValue("createdDate", Timestamp.from(created.getDate().toInstant()))
+				.addValue("lastModifiedBy", updated.getName())
+				.addValue("lastModifiedDate", Timestamp.from(updated.getDate().toInstant()));
+		final String upsertEntrySql = this.sqlGenerator.generate(loadSqlAsString("am/ik/blog/entry/EntryMapper/upsertEntry.sql"), params.getValues(), params::addValue);
+		final int upsertEntryCount = this.jdbcTemplate.update(upsertEntrySql, params);
+		result.put("upsertEntry", upsertEntryCount);
+		final String deleteCategorySql = this.sqlGenerator.generate(loadSqlAsString("am/ik/blog/entry/EntryMapper/deleteCategory.sql"), params.getValues(), params::addValue);
+		final int deleteCategoryCount = this.jdbcTemplate.update(deleteCategorySql, params);
+		result.put("deleteCategory", deleteCategoryCount);
+		final String insertCategorySql = this.sqlGenerator.generate(loadSqlAsString("am/ik/blog/entry/EntryMapper/insertCategory.sql"), params.getValues(), params::addValue);
+		final List<Category> categories = frontMatter.getCategories();
+		final SqlParameterSource[] insertCategoryParams = new SqlParameterSource[categories.size()];
+		for (int i = 0; i < categories.size(); i++) {
+			final Category category = categories.get(i);
+			insertCategoryParams[i] = new MapSqlParameterSource()
+					.addValue("entryId", entryId)
+					.addValue("categoryName", category.name())
+					.addValue("categoryOrder", i);
+		}
+		final int[] insertCategoryCount = this.jdbcTemplate.batchUpdate(insertCategorySql, insertCategoryParams);
+		result.put("insertCategory", Arrays.stream(insertCategoryCount).sum());
+		final String deleteEntryTagSql = this.sqlGenerator.generate(loadSqlAsString("am/ik/blog/entry/EntryMapper/deleteEntryTag.sql"), params.getValues(), params::addValue);
+		final int deleteEntryTagCount = this.jdbcTemplate.update(deleteEntryTagSql, params);
+		result.put("deleteEntryTag", deleteEntryTagCount);
+		final String upsertTagSql = this.sqlGenerator.generate(loadSqlAsString("am/ik/blog/entry/EntryMapper/upsertTag.sql"), params.getValues(), params::addValue);
+		final String insertEntryTagSql = this.sqlGenerator.generate(loadSqlAsString("am/ik/blog/entry/EntryMapper/insertEntryTag.sql"), params.getValues(), params::addValue);
+		final List<Tag> tags = frontMatter.getTags();
+		final SqlParameterSource[] tagParams = new SqlParameterSource[tags.size()];
+		for (int i = 0; i < tags.size(); i++) {
+			final Tag tag = tags.get(i);
+			tagParams[i] = new MapSqlParameterSource()
+					.addValue("entryId", entryId)
+					.addValue("tagName", tag.name());
+		}
+		final int[] upsertTagCount = this.jdbcTemplate.batchUpdate(upsertTagSql, tagParams);
+		result.put("upsertTag", Arrays.stream(upsertTagCount).sum());
+		final int[] insertEntryTagCount = this.jdbcTemplate.batchUpdate(insertEntryTagSql, tagParams);
+		result.put("insertEntryTag", Arrays.stream(insertEntryTagCount).sum());
+		return result;
+	}
+
+	private List<Long> entryIds(SearchCriteria searchCriteria, Pageable pageable) {
+		final MapSqlParameterSource params = searchCriteria.toParameterSource();
+		final String sql = this.sqlGenerator.generate(loadSqlAsString("am/ik/blog/entry/EntryMapper/entryIds.sql"), params.getValues(), params::addValue)
+				+ " LIMIT %d OFFSET %d".formatted(pageable.getPageSize(), pageable.getOffset());
+		return this.jdbcTemplate.query(sql, params, (rs, rowNum) -> rs.getLong("entry_id"));
+	}
+
+	private Map<Long, List<Tag>> tagsMap(List<Long> ids) {
+		final MapSqlParameterSource params = entryIdsParameterSource(ids);
+		final String sql = this.sqlGenerator.generate(loadSqlAsString("am/ik/blog/entry/EntryMapper/tagsMap.sql"), params.getValues(), params::addValue);
+		final List<Tuple2<Long, Tag>> list = this.jdbcTemplate.query(sql, params,
+				(rs, rowNum) -> Tuples.of(rs.getLong("entry_id"), new Tag(rs.getString("tag_name"))));
+		return aggregateByKey(list);
+	}
+
+	private Map<Long, List<Category>> categoriesMap(List<Long> ids) {
+		final MapSqlParameterSource params = entryIdsParameterSource(ids);
+		final String sql = this.sqlGenerator.generate(loadSqlAsString("am/ik/blog/entry/EntryMapper/categoriesMap.sql"), params.getValues(), params::addValue);
+		final List<Tuple2<Long, Category>> list = this.jdbcTemplate.query(sql, params,
+				(rs, rowNum) -> Tuples.of(rs.getLong("entry_id"), new Category(rs.getString("category_name"))));
+		return aggregateByKey(list);
+	}
+
+	private static <K, V> Map<K, List<V>> aggregateByKey(List<Tuple2<K, V>> list) {
+		return list.stream()
+				.collect(groupingBy(Tuple2::getT1))
+				.entrySet()
+				.stream()
+				.map(e -> Tuples.of(e.getKey(), e.getValue()
+						.stream()
+						.map(Tuple2::getT2)
+						.collect(toList())))
+				.collect(toMap(Tuple2::getT1, Tuple2::getT2));
+	}
+
+	private static MapSqlParameterSource entryIdsParameterSource(List<Long> ids) {
+		final MapSqlParameterSource params = new MapSqlParameterSource().addValue("entryIds", ids);
 		for (int i = 0; i < ids.size(); i++) {
-			executeSpec = executeSpec.bind("$" + (i + 1), ids.get(i));
+			params.addValue("entryIds[%d]".formatted(i), ids.get(i));
 		}
-		return executeSpec
-				.map((row, rowMetadata) -> Tuples.of(
-						Objects.requireNonNull(row.get("entry_id", Long.class)),
-						Tag.of(row.get("tag_name", String.class)))) //
-				.all() //
-				.collectList() //
-				.map(list -> list.stream() //
-						.collect(groupingBy(Tuple2::getT1)) //
-						.entrySet() //
-						.stream() //
-						.map(e -> Tuples.of(e.getKey(), e.getValue() //
-								.stream() //
-								.map(Tuple2::getT2) //
-								.collect(toList())))
-						.collect(toMap(Tuple2::getT1, Tuple2::getT2)));
-	}
-
-	Mono<Map<Long, List<Category>>> categoriesMap(List<Long> ids) {
-		if (ids.isEmpty()) {
-			return Mono.empty();
-		}
-		String sql = String.format(
-				"SELECT entry_id, category_name FROM category WHERE entry_id IN (%s) ORDER BY category_order ASC",
-				IntStream.rangeClosed(1, ids.size()).mapToObj(i -> "$" + i)
-						.collect(Collectors.joining(",")));
-		DatabaseClient.GenericExecuteSpec executeSpec = this.databaseClient.sql(sql);
-		for (int i = 0; i < ids.size(); i++) {
-			executeSpec = executeSpec.bind("$" + (i + 1), ids.get(i));
-		}
-		return executeSpec
-				.map((row, rowMetadata) -> Tuples.of(
-						Objects.requireNonNull(row.get("entry_id", Long.class)),
-						Category.of(row.get("category_name", String.class)))) //
-				.all() //
-				.collectList() //
-				.map(list -> list.stream() //
-						.collect(groupingBy(Tuple2::getT1)) //
-						.entrySet() //
-						.stream() //
-						.map(e -> Tuples.of(e.getKey(), e.getValue() //
-								.stream() //
-								.map(Tuple2::getT2) //
-								.collect(toList())))
-						.collect(toMap(Tuple2::getT1, Tuple2::getT2)));
-	}
-
-	Flux<Long> entryIds(SearchCriteria searchCriteria, Pageable pageable,
-			SearchCriteria.ClauseAndParams clauseAndParams) {
-		String sql = String.format(
-				"SELECT e.entry_id FROM entry AS e %s WHERE 1=1 %s ORDER BY e.last_modified_date DESC LIMIT %d OFFSET %d",
-				searchCriteria.toJoinClause(), clauseAndParams.clauseForEntryId(),
-				pageable.getPageSize(), pageable.getOffset());
-		DatabaseClient.GenericExecuteSpec executeSpec = this.databaseClient.sql(sql);
-		Map<String, Object> params = clauseAndParams.params();
-		for (Map.Entry<String, Object> entry : params.entrySet()) {
-			executeSpec = executeSpec.bind(entry.getKey(), entry.getValue());
-		}
-		return executeSpec.map(row -> row.get("entry_id", Long.class)) //
-				.all();
+		return params;
 	}
 }

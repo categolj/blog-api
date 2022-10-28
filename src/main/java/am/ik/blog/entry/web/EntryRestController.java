@@ -1,9 +1,10 @@
 package am.ik.blog.entry.web;
 
+import java.util.Optional;
+
 import am.ik.blog.entry.Entry;
 import am.ik.blog.entry.EntryService;
 import am.ik.blog.entry.search.SearchCriteria;
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import org.springframework.data.domain.Page;
@@ -29,19 +30,12 @@ public class EntryRestController {
 	@GetMapping(path = "/entries/{entryId}")
 	public Mono<Entry> getEntry(@PathVariable("entryId") Long entryId, @RequestParam(defaultValue = "false") boolean excludeContext) {
 		final Mono<Entry> entry = this.entryService.findOne(entryId, excludeContext);
-		return entry
-				.switchIfEmpty(Mono.error(() -> new ResponseStatusException(NOT_FOUND, String.format("The requested entry is not found (entryId = %d)", entryId))));
+		return entry.switchIfEmpty(Mono.error(() -> new ResponseStatusException(NOT_FOUND, String.format("The requested entry is not found (entryId = %d)", entryId))));
 	}
 
 	@GetMapping(path = "/entries", produces = MediaType.APPLICATION_JSON_VALUE)
-	public Mono<Page<Entry>> getEntries(Pageable pageable, @ModelAttribute EntryRequest request) {
+	public Page<Entry> getEntries(Pageable pageable, @ModelAttribute EntryRequest request) {
 		final SearchCriteria searchCriteria = request.toCriteria();
 		return this.entryService.findPage(searchCriteria, pageable);
-	}
-
-	@GetMapping(path = "/entries", produces = MediaType.APPLICATION_NDJSON_VALUE)
-	public Flux<Entry> streamEntries(Pageable pageable, @ModelAttribute EntryRequest request) {
-		final SearchCriteria searchCriteria = request.toCriteria();
-		return this.entryService.findAll(searchCriteria, pageable);
 	}
 }

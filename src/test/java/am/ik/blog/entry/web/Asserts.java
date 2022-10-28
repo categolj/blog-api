@@ -1,4 +1,4 @@
-package am.ik.blog.entry.rsocket;
+package am.ik.blog.entry.web;
 
 import am.ik.blog.category.Category;
 import am.ik.blog.entry.Entry;
@@ -16,9 +16,9 @@ public class Asserts {
         assertThat(entry.getEntryId()).isEqualTo(99999L);
         assertThat(entry.getFrontMatter().getTitle()).isEqualTo("Hello World!!");
         assertThat(entry.getFrontMatter().getTags())
-            .containsExactly(Tag.of("test1"), Tag.of("test2"), Tag.of("test3"));
+            .containsExactly(new Tag("test1"), new Tag("test2"), new Tag("test3"));
         assertThat(entry.getFrontMatter().getCategories())
-            .containsExactly(Category.of("x"), Category.of("y"), Category.of("z"));
+            .containsExactly(new Category("x"), new Category("y"), new Category("z"));
         return new IsContentExcluded(entry, "Hello!",
             OffsetDateTime.of(2017, 4, 1, 1, 0, 0, 0, ZoneOffset.ofHours(9)),
             OffsetDateTime.of(2017, 4, 1, 2, 0, 0, 0,
@@ -30,9 +30,9 @@ public class Asserts {
         assertThat(entry.getEntryId()).isEqualTo(99998L);
         assertThat(entry.getFrontMatter().getTitle()).isEqualTo("Test!!");
         assertThat(entry.getFrontMatter().getTags())
-            .containsExactly(Tag.of("test1"), Tag.of("test2"));
+            .containsExactly(new Tag("test1"), new Tag("test2"));
         assertThat(entry.getFrontMatter().getCategories())
-            .containsExactly(Category.of("a"), Category.of("b"), Category.of("c"));
+            .containsExactly(new Category("a"), new Category("b"), new Category("c"));
         return new IsContentExcluded(entry, "This is a test data.",
             OffsetDateTime.of(2017, 4, 1, 0, 0, 0, 0, ZoneOffset.ofHours(9)),
             OffsetDateTime.of(2017, 4, 1, 0, 0, 0, 0,
@@ -44,9 +44,9 @@ public class Asserts {
         assertThat(entry.getEntryId()).isEqualTo(99997L);
         assertThat(entry.getFrontMatter().getTitle()).isEqualTo("CategoLJ 4");
         assertThat(entry.getFrontMatter().getTags())
-            .containsExactly(Tag.of("test1"), Tag.of("test3"));
+            .containsExactly(new Tag("test1"), new Tag("test3"));
         assertThat(entry.getFrontMatter().getCategories())
-            .containsExactly(Category.of("x"), Category.of("y"));
+            .containsExactly(new Category("x"), new Category("y"));
         return new IsContentExcluded(entry, "This is a test data.",
             OffsetDateTime.of(2017, 3, 31, 0, 0, 0, 0,
                 ZoneOffset.ofHours(9)),

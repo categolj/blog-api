@@ -1,5 +1,7 @@
 package am.ik.blog.tag.web;
 
+import java.util.List;
+
 import am.ik.blog.tag.Tag;
 import am.ik.blog.tag.TagMapper;
 import org.junit.jupiter.api.Test;
@@ -24,7 +26,7 @@ class TagRestControllerTest {
 
 	@Test
 	void tags() {
-		given(this.tagMapper.findOrderByTagNameAsc()).willReturn(Flux.just(Tag.of("aaa"), Tag.of("bbb")));
+		given(this.tagMapper.findOrderByTagNameAsc()).willReturn(List.of(new Tag("aaa"), new Tag("bbb")));
 		this.webTestClient.get()
 				.uri("/tags")
 				.exchange()
