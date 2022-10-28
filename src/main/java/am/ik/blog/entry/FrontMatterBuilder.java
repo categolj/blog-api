@@ -52,9 +52,9 @@ public class FrontMatterBuilder {
         final FrontMatter frontMatter = new FrontMatterBuilder()
             .withTitle((String) map.getOrDefault("title", "no title"))
             .withCategories(((List<String>) map.computeIfAbsent("categories", key -> emptyList()))
-                .stream().map(Category::of).collect(toList()))
+                .stream().map(Category::new).collect(toList()))
             .withTags(((List<String>) map.computeIfAbsent("tags", key -> emptyList())).stream()
-                .map(Tag::of).collect(toList()))
+                .map(Tag::new).collect(toList()))
             .build();
         final OffsetDateTime date = map.containsKey("date")
             ? OffsetDateTime.ofInstant(

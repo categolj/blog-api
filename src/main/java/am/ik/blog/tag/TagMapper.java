@@ -1,22 +1,23 @@
 package am.ik.blog.tag;
 
-import reactor.core.publisher.Flux;
+import java.util.List;
 
-import org.springframework.r2dbc.core.DatabaseClient;
-import org.springframework.stereotype.Component;
+import am.ik.blog.util.FileLoader;
 
-@Component
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
+import org.springframework.stereotype.Repository;
+
+@Repository
 public class TagMapper {
-	private final DatabaseClient databaseClient;
+	private final NamedParameterJdbcTemplate jdbcTemplate;
 
-	public TagMapper(DatabaseClient databaseClient) {
-		this.databaseClient = databaseClient;
+	public TagMapper(NamedParameterJdbcTemplate jdbcTemplate) {
+		this.jdbcTemplate = jdbcTemplate;
 	}
 
-	public Flux<Tag> findOrderByTagNameAsc() {
-		return this.databaseClient
-				.sql("SELECT tag_name FROM tag ORDER BY tag_name ASC")
-				.map(row -> Tag.of(row.get("tag_name", String.class)))
-				.all();
+
+	public List<Tag> findOrderByTagNameAsc() {
+		final String sql = FileLoader.loadSqlAsString("am/ik/blog/tag/TagMapper/findOrderByTagNameAsc.sql");
+		return this.jdbcTemplate.query(sql, (rs, rowNum) -> new Tag(rs.getString("tag_name")));
 	}
 }

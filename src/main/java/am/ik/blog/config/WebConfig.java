@@ -1,13 +1,11 @@
 package am.ik.blog.config;
 
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.data.web.ReactivePageableHandlerMethodArgumentResolver;
-import org.springframework.web.reactive.config.CorsRegistry;
-import org.springframework.web.reactive.config.WebFluxConfigurer;
+import org.springframework.web.servlet.config.annotation.CorsRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 @Configuration
-public class WebConfig implements WebFluxConfigurer {
+public class WebConfig implements WebMvcConfigurer {
 
 	@Override
 	public void addCorsMappings(CorsRegistry registry) {
@@ -15,10 +13,5 @@ public class WebConfig implements WebFluxConfigurer {
 				.allowedOrigins("*")
 				.allowedMethods("GET", "POST")
 				.maxAge(3600);
-	}
-
-	@Bean
-	public ReactivePageableHandlerMethodArgumentResolver pageableArgumentResolver() {
-		return new ReactivePageableHandlerMethodArgumentResolver();
 	}
 }

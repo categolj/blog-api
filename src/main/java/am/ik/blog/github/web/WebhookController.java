@@ -17,6 +17,7 @@ import am.ik.blog.github.GitHubProps;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import reactor.core.publisher.Flux;
+import reactor.core.scheduler.Schedulers;
 
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpStatus;
@@ -54,25 +55,28 @@ public class WebhookController {
 			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "commit is empty!");
 		}
 		final Stream<JsonNode> commits = StreamSupport.stream(node.get("commits").spliterator(), false);
-		return Flux.fromStream(commits) //
+		return Flux.fromStream(commits)
 				.flatMap(commit -> {
 					Flux<Long> added = this.paths(commit.get("added"))
-							.flatMap(path -> this.entryFetcher.fetch(owner, repo, path)) //
-							.flatMap(entryMapper::save) //
+							.flatMap(path -> this.entryFetcher.fetch(owner, repo, path))
+							.doOnNext(entryMapper::save)
+							.publishOn(Schedulers.single())
 							.map(Entry::getEntryId)
 							.log("added");
-					Flux<Long> modified = this.paths(commit.get("modified")) //
-							.flatMap(path -> this.entryFetcher.fetch(owner, repo, path)) //
-							.flatMap(this.entryMapper::save) //
+					Flux<Long> modified = this.paths(commit.get("modified"))
+							.flatMap(path -> this.entryFetcher.fetch(owner, repo, path))
+							.doOnNext(entryMapper::save)
+							.publishOn(Schedulers.single())
 							.map(Entry::getEntryId)
 							.log("modified");
-					Flux<Long> removed = this.paths(commit.get("removed")) //
-							.map(path -> Entry.parseId(Paths.get(path).getFileName().toString())) //
-							.flatMap(this.entryMapper::delete) //
+					Flux<Long> removed = this.paths(commit.get("removed"))
+							.map(path -> Entry.parseId(Paths.get(path).getFileName().toString()))
+							.doOnNext(this.entryMapper::delete)
+							.publishOn(Schedulers.single())
 							.log("removed");
-					return added.map(id -> Collections.singletonMap("added", id)) //
+					return added.map(id -> Collections.singletonMap("added", id))
 							.mergeWith(
-									modified.map(id -> Collections.singletonMap("modified", id))) //
+									modified.map(id -> Collections.singletonMap("modified", id)))
 							.mergeWith(
 									removed.map(id -> Collections.singletonMap("removed", id)))
 							.log("merged");

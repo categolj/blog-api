@@ -18,7 +18,7 @@ public class TagRestController {
 	}
 
 	@GetMapping(path = "/tags")
-	public Mono<List<Tag>> tags() {
-		return this.tagMapper.findOrderByTagNameAsc().collectList();
+	public List<Tag> tags() {
+		return this.tagMapper.findOrderByTagNameAsc();
 	}
 }

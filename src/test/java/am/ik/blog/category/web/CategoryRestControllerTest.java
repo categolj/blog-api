@@ -4,20 +4,16 @@ import java.util.List;
 
 import am.ik.blog.category.Category;
 import am.ik.blog.category.CategoryMapper;
-import am.ik.blog.tag.Tag;
-import am.ik.blog.tag.TagMapper;
 import org.junit.jupiter.api.Test;
-import reactor.core.publisher.Flux;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.web.reactive.server.WebTestClient;
 
-import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.BDDMockito.given;
 
-@WebFluxTest
+@WebMvcTest
 class CategoryRestControllerTest {
 	@Autowired
 	WebTestClient webTestClient;
@@ -27,7 +23,7 @@ class CategoryRestControllerTest {
 
 	@Test
 	void categories() {
-		given(this.categoryMapper.findAll()).willReturn(Flux.just(List.of(Category.of("a"), Category.of("b")), List.of(Category.of("a"), Category.of("b"), Category.of("c"))));
+		given(this.categoryMapper.findAll()).willReturn(List.of(List.of(new Category("a"), new Category("b")), List.of(new Category("a"), new Category("b"), new Category("c"))));
 		this.webTestClient.get()
 				.uri("/categories")
 				.exchange()

@@ -14,9 +14,9 @@ public class Fixtures {
 
     public static Entry entry(Long entryId) {
         OffsetDateTime now = OffsetDateTime.now();
-        List<Category> categories = List.of(Category.of("foo"), Category.of("bar"),
-            Category.of("hoge"));
-        List<Tag> tags = List.of(Tag.of("a"), Tag.of("b"), Tag.of("c"));
+        List<Category> categories = List.of(new Category("foo"), new Category("bar"),
+            new Category("hoge"));
+        List<Tag> tags = List.of(new Tag("a"), new Tag("b"), new Tag("c"));
         return new EntryBuilder() //
             .withEntryId(entryId) //
             .withContent("Hello") //

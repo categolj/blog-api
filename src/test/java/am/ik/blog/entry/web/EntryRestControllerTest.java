@@ -1,6 +1,7 @@
 package am.ik.blog.entry.web;
 
 import java.util.List;
+import java.util.Optional;
 
 import am.ik.blog.circuitbreaker.CircuitBreakerConfig;
 import am.ik.blog.circuitbreaker.CircuitBreakerProps;
@@ -9,26 +10,25 @@ import am.ik.blog.entry.EntryBuilder;
 import am.ik.blog.entry.EntryMapper;
 import am.ik.blog.entry.EntryService;
 import am.ik.blog.entry.FrontMatterBuilder;
-import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
+import am.ik.blog.github.GitHubUserContentClient;
 import org.junit.jupiter.api.Test;
-import reactor.core.publisher.Mono;
+import org.mockito.Mockito;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.PageImpl;
-import org.springframework.data.web.ReactivePageableHandlerMethodArgumentResolver;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 
-@WebFluxTest
+@WebMvcTest
 class EntryRestControllerTest {
 	@Autowired
 	WebTestClient webTestClient;
@@ -55,7 +55,7 @@ class EntryRestControllerTest {
 	@Test
 	void getEntry_200() {
 		given(this.entryMapper.findOne(100L, false))
-				.willReturn(Mono.just(this.entry100));
+				.willReturn(Optional.of(this.entry100));
 		this.webTestClient.get()
 				.uri("/entries/100")
 				.exchange()
@@ -69,20 +69,16 @@ class EntryRestControllerTest {
 	@Test
 	void getEntry_404() {
 		given(this.entryMapper.findOne(100L, false))
-				.willReturn(Mono.empty());
+				.willReturn(Optional.empty());
 		this.webTestClient.get()
 				.uri("/entries/100")
 				.exchange()
-				.expectStatus().isNotFound()
-				.expectBody()
-				.jsonPath("$.message").isEqualTo("The requested entry is not found (entryId = 100)")
-				.jsonPath("$.status").isEqualTo(404)
-				.jsonPath("$.error").isEqualTo("Not Found");
+				.expectStatus().isNotFound();
 	}
 
 	@Test
 	void getEntries() {
-		given(this.entryMapper.findPage(any(), any())).willReturn(Mono.just(new PageImpl<>(List.of(this.entry100, this.entry200))));
+		given(this.entryMapper.findPage(any(), any())).willReturn(new PageImpl<>(List.of(this.entry100, this.entry200)));
 		this.webTestClient.get()
 				.uri("/entries")
 				.exchange()
@@ -102,8 +98,8 @@ class EntryRestControllerTest {
 	@EnableConfigurationProperties(CircuitBreakerProps.class)
 	static class Config {
 		@Bean
-		public EntryService entryService(EntryMapper entryMapper, CircuitBreakerRegistry circuitBreakerRegistry) {
-			return new EntryService(entryMapper, WebClient.builder(), circuitBreakerRegistry);
+		public EntryService entryService(EntryMapper entryMapper) {
+			return new EntryService(entryMapper, Mockito.mock(GitHubUserContentClient.class));
 		}
 	}
 }

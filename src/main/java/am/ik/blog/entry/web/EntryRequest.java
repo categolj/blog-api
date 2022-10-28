@@ -71,7 +71,7 @@ public class EntryRequest {
 	public SearchCriteria toCriteria() {
 		final SearchCriteriaBuilder builder = SearchCriteria.builder()
 				.keyword(query)
-				.tag((tag == null) ? null : Tag.of(tag))
+				.tag((tag == null) ? null : new Tag(tag))
 				.categoryOrders((categories == null) ? null : CategoryOrders.from(categories))
 				.createdBy(createdBy)
 				.lastModifiedBy(updatedBy);

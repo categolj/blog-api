@@ -37,15 +37,15 @@
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-rsocket</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-data-r2dbc</artifactId>
+			<artifactId>spring-boot-starter-jdbc</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>io.micrometer</groupId>
 			<artifactId>micrometer-registry-prometheus</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-web</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -56,8 +56,13 @@
 			<artifactId>spring-boot-starter-validation</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>io.rsocket</groupId>
-			<artifactId>rsocket-micrometer</artifactId>
+			<groupId>org.mybatis.scripting</groupId>
+			<artifactId>mybatis-thymeleaf</artifactId>
+			<version>1.0.3</version>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.data</groupId>
+			<artifactId>spring-data-commons</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>am.ik.yavi</groupId>
@@ -66,7 +71,7 @@
 		</dependency>
 		<dependency>
 			<groupId>org.springdoc</groupId>
-			<artifactId>springdoc-openapi-starter-webflux-ui</artifactId>
+			<artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
 			<version>2.0.0-M7</version>
 		</dependency>
 		<dependency>
@@ -75,26 +80,12 @@
 		</dependency>
 		<dependency>
 			<groupId>org.postgresql</groupId>
-			<artifactId>r2dbc-postgresql</artifactId>
-			<exclusions>
-				<exclusion>
-					<groupId>io.projectreactor.netty.incubator</groupId>
-					<artifactId>reactor-netty-incubator-quic</artifactId>
-				</exclusion>
-				<exclusion>
-					<groupId>io.projectreactor.netty</groupId>
-					<artifactId>reactor-netty-http-brave</artifactId>
-				</exclusion>
-			</exclusions>
+			<artifactId>postgresql</artifactId>
+			<scope>runtime</scope>
 		</dependency>
 		<dependency>
 			<groupId>io.github.resilience4j</groupId>
-			<artifactId>resilience4j-circuitbreaker</artifactId>
-			<version>${resilience4j.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>io.github.resilience4j</groupId>
-			<artifactId>resilience4j-reactor</artifactId>
+			<artifactId>resilience4j-spring-boot2</artifactId>
 			<version>${resilience4j.version}</version>
 		</dependency>
 		<dependency>
@@ -143,12 +134,6 @@
 		</dependency>
 		<dependency>
 			<groupId>org.testcontainers</groupId>
-			<artifactId>r2dbc</artifactId>
-			<version>${testcontainers.version}</version>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.testcontainers</groupId>
 			<artifactId>postgresql</artifactId>
 			<version>${testcontainers.version}</version>
 			<scope>test</scope>
@@ -173,9 +158,12 @@
 						<enabled>true</enabled>
 					</layers>
 					<additionalProperties>
-						<spring.boot.version>${project.parent.version}</spring.boot.version>
-						<spring.framework.version>${spring-framework.version}</spring.framework.version>
-						<spring.security.version>${spring-security.version}</spring.security.version>
+						<spring.boot.version>${project.parent.version}
+						</spring.boot.version>
+						<spring.framework.version>${spring-framework.version}
+						</spring.framework.version>
+						<spring.security.version>${spring-security.version}
+						</spring.security.version>
 					</additionalProperties>
 				</configuration>
 			</plugin>
