@@ -2,11 +2,9 @@ package am.ik.blog.entry;
 
 import java.time.OffsetDateTime;
 import java.util.List;
-import java.util.Optional;
 
 import am.ik.blog.entry.search.SearchCriteria;
 import am.ik.blog.github.GitHubUserContentClient;
-import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Mono;
@@ -34,7 +32,6 @@ public class EntryService {
 	}
 
 
-	@CircuitBreaker(name = "entry", fallbackMethod = "fallbackFromGithub")
 	public Mono<Entry> findOne(Long entryId, boolean excludeContent) {
 		return Mono.justOrEmpty(this.entryMapper.findOne(entryId, excludeContent));
 	}

@@ -3,8 +3,6 @@ package am.ik.blog.entry.web;
 import java.util.List;
 import java.util.Optional;
 
-import am.ik.blog.circuitbreaker.CircuitBreakerConfig;
-import am.ik.blog.circuitbreaker.CircuitBreakerProps;
 import am.ik.blog.entry.Entry;
 import am.ik.blog.entry.EntryBuilder;
 import am.ik.blog.entry.EntryMapper;
@@ -23,7 +21,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.test.web.reactive.server.WebTestClient;
-import org.springframework.web.reactive.function.client.WebClient;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
@@ -94,8 +91,6 @@ class EntryRestControllerTest {
 	}
 
 	@TestConfiguration
-	@Import(CircuitBreakerConfig.class)
-	@EnableConfigurationProperties(CircuitBreakerProps.class)
 	static class Config {
 		@Bean
 		public EntryService entryService(EntryMapper entryMapper) {
