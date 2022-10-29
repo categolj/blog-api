@@ -64,6 +64,11 @@
 			<artifactId>opentelemetry-exporter-otlp</artifactId>
 		</dependency>
 		<dependency>
+			<groupId>net.ttddyy.observation</groupId>
+			<artifactId>datasource-micrometer-spring-boot</artifactId>
+			<version>1.0.0-RC1</version>
+		</dependency>
+		<dependency>
 			<groupId>org.mybatis.scripting</groupId>
 			<artifactId>mybatis-thymeleaf</artifactId>
 			<version>1.0.3</version>

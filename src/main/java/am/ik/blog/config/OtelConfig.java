@@ -76,7 +76,7 @@ public class OtelConfig {
 		public CompletableResultCode export(Collection<SpanData> spans) {
 			return delegate.export(spans.stream().filter(spanData -> {
 				final String uri = spanData.getAttributes().get(HTTP_URL);
-				return uri != null && uriFilter.test(uri);
+				return uri == null || uriFilter.test(uri);
 			}).toList());
 		}
 
