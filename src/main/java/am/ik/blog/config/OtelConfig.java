@@ -53,21 +53,21 @@ public class OtelConfig {
 			@Override
 			public Object postProcessAfterInitialization(Object bean, String beanName) throws BeansException {
 				if (bean instanceof final SpanExporter spanExporter) {
-					return new UriFilteringSpanExporter(spanExporter, uriFilter);
+					return new HttpUrlFilteringSpanExporter(spanExporter, uriFilter);
 				}
 				return bean;
 			}
 		};
 	}
 
-	static class UriFilteringSpanExporter implements SpanExporter {
+	static class HttpUrlFilteringSpanExporter implements SpanExporter {
 		private final SpanExporter delegate;
 
 		private final Predicate<String> uriFilter;
 
-		private static final AttributeKey<String> URI = AttributeKey.stringKey("uri");
+		private static final AttributeKey<String> HTTP_URL = AttributeKey.stringKey("http.url");
 
-		UriFilteringSpanExporter(SpanExporter delegate, Predicate<String> uriFilter) {
+		HttpUrlFilteringSpanExporter(SpanExporter delegate, Predicate<String> uriFilter) {
 			this.delegate = delegate;
 			this.uriFilter = uriFilter;
 		}
@@ -75,7 +75,7 @@ public class OtelConfig {
 		@Override
 		public CompletableResultCode export(Collection<SpanData> spans) {
 			return delegate.export(spans.stream().filter(spanData -> {
-				final String uri = spanData.getAttributes().get(URI);
+				final String uri = spanData.getAttributes().get(HTTP_URL);
 				return uri != null && uriFilter.test(uri);
 			}).toList());
 		}
