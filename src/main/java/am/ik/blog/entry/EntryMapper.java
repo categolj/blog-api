@@ -173,6 +173,9 @@ public class EntryMapper {
 	}
 
 	private Map<Long, List<Tag>> tagsMap(List<Long> ids) {
+		if (ids.isEmpty()) {
+			return Map.of();
+		}
 		final MapSqlParameterSource params = entryIdsParameterSource(ids);
 		final String sql = this.sqlGenerator.generate(loadSqlAsString("am/ik/blog/entry/EntryMapper/tagsMap.sql"), params.getValues(), params::addValue);
 		final List<Tuple2<Long, Tag>> list = this.jdbcTemplate.query(sql, params,
@@ -181,6 +184,9 @@ public class EntryMapper {
 	}
 
 	private Map<Long, List<Category>> categoriesMap(List<Long> ids) {
+		if (ids.isEmpty()) {
+			return Map.of();
+		}
 		final MapSqlParameterSource params = entryIdsParameterSource(ids);
 		final String sql = this.sqlGenerator.generate(loadSqlAsString("am/ik/blog/entry/EntryMapper/categoriesMap.sql"), params.getValues(), params::addValue);
 		final List<Tuple2<Long, Category>> list = this.jdbcTemplate.query(sql, params,
@@ -201,6 +207,9 @@ public class EntryMapper {
 	}
 
 	private static MapSqlParameterSource entryIdsParameterSource(List<Long> ids) {
+		if (ids.isEmpty()) {
+			return new MapSqlParameterSource();
+		}
 		final MapSqlParameterSource params = new MapSqlParameterSource().addValue("entryIds", ids);
 		for (int i = 0; i < ids.size(); i++) {
 			params.addValue("entryIds[%d]".formatted(i), ids.get(i));
