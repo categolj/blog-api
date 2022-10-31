@@ -167,7 +167,7 @@ public class WebhookControllerTest {
 				.expectStatus() //
 				.isForbidden() //
 				.expectBody()//
-				.jsonPath("$.message").isEqualTo(
+				.jsonPath("$.detail").isEqualTo(
 						"Could not verify signature: 'sha1=b21805d592724f387d6e03be7b42c10a90ee109f'");
 	}
 }
