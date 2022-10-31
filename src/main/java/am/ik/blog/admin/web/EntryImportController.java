@@ -1,18 +1,20 @@
 package am.ik.blog.admin.web;
 
+import java.util.List;
+import java.util.Optional;
 import java.util.stream.IntStream;
 
+import am.ik.blog.entry.Entry;
 import am.ik.blog.entry.EntryMapper;
 import am.ik.blog.github.EntryFetcher;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Schedulers;
 
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.reactive.function.client.WebClientResponseException;
+import org.springframework.web.reactive.function.client.WebClientResponseException.NotFound;
 
 @RestController
 public class EntryImportController {
@@ -25,24 +27,28 @@ public class EntryImportController {
 		this.entryMapper = entryMapper;
 	}
 
-	@PostMapping(path = "/admin/import", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-	public Flux<String> importEntries(
+	@PostMapping(path = "/admin/import", produces = MediaType.APPLICATION_JSON_VALUE)
+	public Optional<List<String>> importEntries(
 			@RequestParam(defaultValue = "0") int from,
 			@RequestParam(defaultValue = "0") int to,
 			@RequestParam(defaultValue = "making") String owner,
 			@RequestParam(defaultValue = "blog.ik.am") String repo) {
-		return Flux.fromStream(IntStream.rangeClosed(from, to).boxed())
+		final Optional<List<Entry>> fetched = Flux.fromStream(IntStream.rangeClosed(from, to).boxed())
 				.flatMap(i -> this.entryFetcher
-								.fetch(owner, repo, String.format("content/%05d.md", i))
-								.onErrorResume(
-										e -> (e instanceof WebClientResponseException.NotFound)
-												? Mono.empty()
-												: Mono.error(e)),
-						2) //
-				.log("entry")
-				.doOnNext(this.entryMapper::save)
-				.log("save")
-				.publishOn(Schedulers.single())
-				.map(e -> e.getEntryId() + " " + e.getFrontMatter().getTitle());
+						.fetch(owner, repo, String.format("content/%05d.md", i))
+						.log("entry")
+						.onErrorResume(
+								e -> (e instanceof NotFound)
+										? Mono.empty()
+										: Mono.error(e)))
+				.collectList()
+				// blocking intentionally so that trace id is properly propagated
+				.blockOptional();
+		return fetched
+				.map(entries -> entries
+						.stream()
+						.peek(this.entryMapper::save)
+						.map(e -> e.getEntryId() + " " + e.getFrontMatter().getTitle())
+						.toList());
 	}
 }

@@ -17,6 +17,7 @@ import io.opentelemetry.sdk.trace.export.SpanExporter;
 
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.config.BeanPostProcessor;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpHeaders;
@@ -25,6 +26,7 @@ import org.springframework.util.StringUtils;
 @Configuration
 public class OtelConfig {
 	@Bean
+	@ConditionalOnProperty(name = "management.otlp.endpoint")
 	public OtlpGrpcSpanExporter otelOtlpGrpcSpanExporter(OtlpProperties properties) {
 		final OtlpGrpcSpanExporterBuilder builder = OtlpGrpcSpanExporter.builder();
 		final String endpoint = properties.getEndpoint();

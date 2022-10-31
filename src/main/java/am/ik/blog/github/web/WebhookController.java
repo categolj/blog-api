@@ -5,7 +5,9 @@ import java.io.UncheckedIOException;
 import java.nio.file.Paths;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
@@ -16,6 +18,7 @@ import am.ik.blog.github.EntryFetcher;
 import am.ik.blog.github.GitHubProps;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.tomcat.util.http.fileupload.util.Streams;
 import reactor.core.publisher.Flux;
 import reactor.core.scheduler.Schedulers;
 
@@ -45,7 +48,7 @@ public class WebhookController {
 	}
 
 	@PostMapping(path = "webhook")
-	public Flux<Map<String, Long>> webhook(@RequestHeader(name = "X-Hub-Signature") String signature, @RequestBody String payload) {
+	public List<Map<String, Long>> webhook(@RequestHeader(name = "X-Hub-Signature") String signature, @RequestBody String payload) {
 		this.webhookVerifier.verify(payload, signature);
 		final JsonNode node = this.node(payload);
 		final String[] repository = node.get("repository").get("full_name").asText().split("/");
@@ -55,33 +58,25 @@ public class WebhookController {
 			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "commit is empty!");
 		}
 		final Stream<JsonNode> commits = StreamSupport.stream(node.get("commits").spliterator(), false);
-		return Flux.fromStream(commits)
-				.flatMap(commit -> {
-					Flux<Long> added = this.paths(commit.get("added"))
-							.flatMap(path -> this.entryFetcher.fetch(owner, repo, path))
-							.doOnNext(entryMapper::save)
-							.publishOn(Schedulers.single())
+		final List<Map<String, Long>> result = new ArrayList<>();
+		commits.forEach(commit -> {
+			Stream.of("added", "modified").forEach(key -> {
+				this.paths(commit.get(key))
+						.forEach(path -> this.entryFetcher.fetch(owner, repo, path)
+								.doOnNext(e -> result.add(Map.of(key, e.getEntryId())))
+								// blocking intentionally so that trace id is properly propagated
+								.blockOptional()
+								.ifPresent(entryMapper::save));
+			});
+			this.paths(commit.get("removed"))
+					.forEach(path -> this.entryFetcher.fetch(owner, repo, path)
 							.map(Entry::getEntryId)
-							.log("added");
-					Flux<Long> modified = this.paths(commit.get("modified"))
-							.flatMap(path -> this.entryFetcher.fetch(owner, repo, path))
-							.doOnNext(entryMapper::save)
-							.publishOn(Schedulers.single())
-							.map(Entry::getEntryId)
-							.log("modified");
-					Flux<Long> removed = this.paths(commit.get("removed"))
-							.map(path -> Entry.parseId(Paths.get(path).getFileName().toString()))
-							.doOnNext(this.entryMapper::delete)
-							.publishOn(Schedulers.single())
-							.log("removed");
-					return added.map(id -> Collections.singletonMap("added", id))
-							.mergeWith(
-									modified.map(id -> Collections.singletonMap("modified", id)))
-							.mergeWith(
-									removed.map(id -> Collections.singletonMap("removed", id)))
-							.log("merged");
-				});
-
+							.doOnNext(id -> result.add(Map.of("removed", id)))
+							// blocking intentionally so that trace id is properly propagated
+							.blockOptional()
+							.ifPresent(entryMapper::delete));
+		});
+		return result;
 	}
 
 	JsonNode node(String payload) {
@@ -93,7 +88,7 @@ public class WebhookController {
 		}
 	}
 
-	Flux<String> paths(JsonNode paths) {
-		return Flux.fromStream(StreamSupport.stream(paths.spliterator(), false).map(JsonNode::asText));
+	Stream<String> paths(JsonNode paths) {
+		return StreamSupport.stream(paths.spliterator(), false).map(JsonNode::asText);
 	}
 }
