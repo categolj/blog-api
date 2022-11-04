@@ -9,7 +9,7 @@ import org.springframework.context.annotation.Configuration;
 import static org.mybatis.scripting.thymeleaf.processor.BindVariableRender.BuiltIn.SPRING_NAMED_PARAMETER;
 
 @Configuration
-public class MyBatisConfig {
+public class MyBatisThymeleafConfig {
 	@Bean
 	public SqlGenerator sqlGenerator() {
 		final SqlGeneratorConfig config = SqlGeneratorConfig.newInstanceWithCustomizer(c ->
