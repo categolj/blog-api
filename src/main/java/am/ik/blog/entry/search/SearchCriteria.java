@@ -79,17 +79,6 @@ public class SearchCriteria {
 		return StringUtils.hasText(this.keyword);
 	}
 
-	public String toJoinClause() {
-		StringBuilder sb = new StringBuilder();
-		if (this.tag != null) {
-			sb.append("LEFT JOIN entry_tag AS et ON e.entry_id = et.entry_id ");
-		}
-		if (this.categoryOrders != null) {
-			sb.append("LEFT JOIN category AS c ON e.entry_id = c.entry_id ");
-		}
-		return sb.toString();
-	}
-
 	public MapSqlParameterSource toParameterSource() {
 		final MapSqlParameterSource params = new MapSqlParameterSource();
 		if (this.hasKeyword()) {
@@ -114,71 +103,6 @@ public class SearchCriteria {
 			}
 		}
 		return params;
-	}
-
-	public ClauseAndParams toWhereClause() {
-		AtomicInteger i = new AtomicInteger(1);
-		Map<String, String> clause = new LinkedHashMap<>();
-		Map<String, Object> params = new HashMap<>();
-
-		if (this.hasKeyword()) {
-			params.put("$" + i, "%" + this.keyword + "%");
-			clause.put("$" + i, "AND e.content LIKE $" + i);
-			i.incrementAndGet();
-		}
-		if (this.createdBy != null) {
-			params.put("$" + i, this.createdBy);
-			clause.put("$" + i, "AND e.created_by = $" + i);
-			i.incrementAndGet();
-		}
-		if (this.lastModifiedBy != null) {
-			params.put("$" + i, this.lastModifiedBy);
-			clause.put("$" + i, "AND e.last_modified_by = $" + i);
-			i.incrementAndGet();
-		}
-		if (this.tag != null) {
-			params.put("$" + i, this.tag.name());
-			clause.put("$" + i, "AND et.tag_name = $" + i);
-			i.incrementAndGet();
-		}
-		else if (this.isExcludeSeries()) {
-			params.put("$" + i, SERIES);
-			clause.put("$" + i, "AND e.entry_id NOT IN (SELECT entry_id FROM entry_tag WHERE tag_name = $" + i + ")");
-			i.incrementAndGet();
-		}
-		if (this.categoryOrders != null) {
-			this.categoryOrders.getValue().forEach(c -> {
-				int categoryOrder = c.getCategoryOrder();
-				String categoryStringKey = "$" + i;
-				String categoryOrderKey = "$" + i.incrementAndGet();
-				params.put(categoryStringKey, c.getCategory().name());
-				clause.put(categoryStringKey, "AND c.category_name = " + categoryStringKey);
-				params.put(categoryOrderKey, categoryOrder);
-				clause.put(categoryOrderKey, "AND c.category_order = " + categoryOrderKey);
-				i.incrementAndGet();
-			});
-		}
-		return new ClauseAndParams(clause, params);
-	}
-
-	public static class ClauseAndParams {
-
-		private final Map<String, String> clause;
-
-		private final Map<String, Object> params;
-
-		ClauseAndParams(Map<String, String> clause, Map<String, Object> params) {
-			this.clause = clause;
-			this.params = params;
-		}
-
-		public String clauseForEntryId() {
-			return String.join(" ", this.clause.values());
-		}
-
-		public Map<String, Object> params() {
-			return this.params;
-		}
 	}
 
 	public static class SearchCriteriaBuilder {
