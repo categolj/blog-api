@@ -8,12 +8,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.stream.Stream;
 
 import am.ik.blog.category.Category;
 import am.ik.blog.entry.search.SearchCriteria;
 import am.ik.blog.tag.Tag;
-import am.ik.blog.util.FileLoader;
 import org.mybatis.scripting.thymeleaf.SqlGenerator;
 import reactor.util.function.Tuple2;
 import reactor.util.function.Tuples;
@@ -65,6 +63,7 @@ public class EntryMapper {
 		};
 	}
 
+	@Transactional(readOnly = true)
 	public Optional<Entry> findOne(Long entryId, boolean excludeContent) {
 		final List<Long> ids = List.of(entryId);
 		final Map<Long, List<Category>> categoriesMap = this.categoriesMap(ids);
@@ -82,8 +81,12 @@ public class EntryMapper {
 		}
 	}
 
+	@Transactional(readOnly = true)
 	public List<Entry> findAll(SearchCriteria searchCriteria, Pageable pageable) {
 		final List<Long> ids = this.entryIds(searchCriteria, pageable);
+		if (ids.isEmpty()) {
+			return List.of();
+		}
 		final Map<Long, List<Category>> categoriesMap = this.categoriesMap(ids);
 		final Map<Long, List<Tag>> tagsMap = this.tagsMap(ids);
 		final MapSqlParameterSource params = entryIdsParameterSource(ids);
@@ -91,6 +94,7 @@ public class EntryMapper {
 		return this.jdbcTemplate.query(sql, params, rowMapper(true, categoriesMap, tagsMap));
 	}
 
+	@Transactional(readOnly = true)
 	public Page<Entry> findPage(SearchCriteria searchCriteria, Pageable pageable) {
 		final List<Entry> content = this.findAll(searchCriteria, pageable);
 		final long total = this.count(searchCriteria);
