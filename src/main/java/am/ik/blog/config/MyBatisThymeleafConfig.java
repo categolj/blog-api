@@ -8,7 +8,7 @@ import org.springframework.context.annotation.Configuration;
 
 import static org.mybatis.scripting.thymeleaf.processor.BindVariableRender.BuiltIn.SPRING_NAMED_PARAMETER;
 
-@Configuration
+@Configuration(proxyBeanMethods = false)
 public class MyBatisThymeleafConfig {
 	@Bean
 	public SqlGenerator sqlGenerator() {

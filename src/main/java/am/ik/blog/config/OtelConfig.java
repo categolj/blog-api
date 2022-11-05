@@ -23,7 +23,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpHeaders;
 import org.springframework.util.StringUtils;
 
-@Configuration
+@Configuration(proxyBeanMethods = false)
 public class OtelConfig {
 	@Bean
 	@ConditionalOnProperty(name = "management.otlp.endpoint")

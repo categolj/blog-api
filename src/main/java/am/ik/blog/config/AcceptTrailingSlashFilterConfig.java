@@ -14,7 +14,7 @@ import jakarta.servlet.http.HttpServletRequestWrapper;
 import org.springframework.boot.actuate.autoconfigure.web.ManagementContextConfiguration;
 import org.springframework.context.annotation.Bean;
 
-@ManagementContextConfiguration
+@ManagementContextConfiguration(proxyBeanMethods = false)
 public class AcceptTrailingSlashFilterConfig {
 	@Bean
 	public Filter acceptTrailingSlashFilter() {

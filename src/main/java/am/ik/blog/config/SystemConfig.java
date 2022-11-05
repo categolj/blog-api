@@ -7,7 +7,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.util.AlternativeJdkIdGenerator;
 import org.springframework.util.IdGenerator;
 
-@Configuration
+@Configuration(proxyBeanMethods = false)
 public class SystemConfig {
 
 	@Bean

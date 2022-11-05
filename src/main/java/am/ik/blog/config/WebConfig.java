@@ -8,7 +8,7 @@ import org.springframework.web.filter.CommonsRequestLoggingFilter;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
-@Configuration
+@Configuration(proxyBeanMethods = false)
 public class WebConfig implements WebMvcConfigurer {
 	@Bean
 	public CommonsRequestLoggingFilter logFilter(UriFilter uriFilter) {
