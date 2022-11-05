@@ -15,6 +15,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
+import org.springframework.http.client.reactive.JdkClientHttpConnector;
 import org.springframework.test.context.TestConstructor;
 import org.springframework.test.web.reactive.server.WebTestClient;
 
@@ -41,8 +42,8 @@ public class WebhookControllerTest {
 
 	public WebhookControllerTest(ObjectMapper objectMapper, @Value("${local.server.port}") int port) {
 		this.objectMapper = objectMapper;
-		this.webClient = WebTestClient.bindToServer() //
-				.baseUrl("http://localhost:" + port) //
+		this.webClient = WebTestClient.bindToServer(new JdkClientHttpConnector())
+				.baseUrl("http://localhost:" + port)
 				.build();
 	}
 

@@ -3,11 +3,14 @@ package am.ik.blog.entry.web;
 import am.ik.blog.entry.Entry;
 import am.ik.blog.util.FileLoader;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.client.reactive.JdkClientHttpConnector;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.TestConstructor;
 import org.springframework.test.web.reactive.server.WebTestClient;
@@ -24,11 +27,16 @@ import static org.assertj.core.api.Assertions.assertThat;
 @TestConstructor(autowireMode = TestConstructor.AutowireMode.ALL)
 class EntryRestControllerIntegrationTest {
 
-	@Autowired
 	WebTestClient webTestClient;
 
 	@Autowired
 	JdbcTemplate jdbcTemplate;
+
+	public EntryRestControllerIntegrationTest(@Value("${local.server.port}") int port) {
+		this.webTestClient = WebTestClient.bindToServer(new JdkClientHttpConnector())
+				.baseUrl("http://localhost:" + port)
+				.build();
+	}
 
 	@BeforeEach
 	public void reset() {
