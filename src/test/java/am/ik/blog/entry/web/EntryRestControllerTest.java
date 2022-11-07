@@ -3,6 +3,7 @@ package am.ik.blog.entry.web;
 import java.util.List;
 import java.util.Optional;
 
+import am.ik.blog.config.SecurityConfig;
 import am.ik.blog.entry.Entry;
 import am.ik.blog.entry.EntryBuilder;
 import am.ik.blog.entry.EntryMapper;
@@ -13,7 +14,6 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -26,6 +26,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 
 @WebMvcTest
+@Import(SecurityConfig.class)
 class EntryRestControllerTest {
 	@Autowired
 	WebTestClient webTestClient;

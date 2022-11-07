@@ -7,6 +7,8 @@ import java.util.stream.IntStream;
 import am.ik.blog.entry.Entry;
 import am.ik.blog.entry.EntryMapper;
 import am.ik.blog.github.EntryFetcher;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -28,6 +30,7 @@ public class EntryImportController {
 	}
 
 	@PostMapping(path = "/admin/import", produces = MediaType.APPLICATION_JSON_VALUE)
+	@Operation(security = { @SecurityRequirement(name = "basic") })
 	public Optional<List<String>> importEntries(
 			@RequestParam(defaultValue = "0") int from,
 			@RequestParam(defaultValue = "0") int to,

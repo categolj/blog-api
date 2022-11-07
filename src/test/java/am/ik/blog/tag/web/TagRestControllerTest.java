@@ -2,21 +2,21 @@ package am.ik.blog.tag.web;
 
 import java.util.List;
 
+import am.ik.blog.config.SecurityConfig;
 import am.ik.blog.tag.Tag;
 import am.ik.blog.tag.TagMapper;
 import org.junit.jupiter.api.Test;
-import reactor.core.publisher.Flux;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.Import;
 import org.springframework.test.web.reactive.server.WebTestClient;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 
-@WebFluxTest
+@WebMvcTest
+@Import(SecurityConfig.class)
 class TagRestControllerTest {
 	@Autowired
 	WebTestClient webTestClient;

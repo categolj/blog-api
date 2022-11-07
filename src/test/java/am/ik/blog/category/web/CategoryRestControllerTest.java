@@ -4,16 +4,19 @@ import java.util.List;
 
 import am.ik.blog.category.Category;
 import am.ik.blog.category.CategoryMapper;
+import am.ik.blog.config.SecurityConfig;
 import org.junit.jupiter.api.Test;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.Import;
 import org.springframework.test.web.reactive.server.WebTestClient;
 
 import static org.mockito.BDDMockito.given;
 
 @WebMvcTest
+@Import(SecurityConfig.class)
 class CategoryRestControllerTest {
 	@Autowired
 	WebTestClient webTestClient;
