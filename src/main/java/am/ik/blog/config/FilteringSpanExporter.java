@@ -2,21 +2,26 @@ package am.ik.blog.config;
 
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.sdk.common.CompletableResultCode;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.export.SpanExporter;
 
-public class HttpUrlFilteringSpanExporter implements SpanExporter {
+public class FilteringSpanExporter implements SpanExporter {
 	private final SpanExporter delegate;
 
 	private final Predicate<String> uriFilter;
 
 
-	HttpUrlFilteringSpanExporter(SpanExporter delegate, Predicate<String> uriFilter) {
+	FilteringSpanExporter(SpanExporter delegate, Predicate<String> uriFilter) {
 		this.delegate = delegate;
 		this.uriFilter = uriFilter;
 	}
@@ -40,7 +45,14 @@ public class HttpUrlFilteringSpanExporter implements SpanExporter {
 				continue;
 			}
 		}
-		return delegate.export(spans.stream().filter(spanData -> !blockedTraces.contains(spanData.getTraceId())).toList());
+		final List<SpanData> filteredSpans = spans.stream().filter(spanData -> !blockedTraces.contains(spanData.getTraceId())).toList();
+		final Map<String, List<String>> groups = filteredSpans.stream().map(SpanData::getTraceId).collect(Collectors.groupingBy(Function.identity()));
+		return delegate.export(filteredSpans.stream().filter(spanData -> {
+			if (spanData.getName().startsWith("spring.security")) {
+				return groups.get(spanData.getTraceId()).size() > 3;
+			}
+			return true;
+		}).toList());
 	}
 
 	@Override

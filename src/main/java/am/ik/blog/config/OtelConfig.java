@@ -45,12 +45,12 @@ public class OtelConfig {
 	}
 
 	@Bean
-	public BeanPostProcessor uriFilteringSpanExporterRegistrar(UriFilter uriFilter) {
+	public BeanPostProcessor filteringSpanExporterRegistrar(UriFilter uriFilter) {
 		return new BeanPostProcessor() {
 			@Override
 			public Object postProcessAfterInitialization(Object bean, String beanName) throws BeansException {
 				if (bean instanceof final SpanExporter spanExporter) {
-					return new HttpUrlFilteringSpanExporter(spanExporter, uriFilter);
+					return new FilteringSpanExporter(spanExporter, uriFilter);
 				}
 				return bean;
 			}
