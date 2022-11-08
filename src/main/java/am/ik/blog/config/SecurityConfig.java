@@ -18,6 +18,8 @@ public class SecurityConfig {
 				.httpBasic()
 				.and()
 				.csrf(AbstractHttpConfigurer::disable)
+				.cors()
+				.and()
 				.build();
 	}
 }
