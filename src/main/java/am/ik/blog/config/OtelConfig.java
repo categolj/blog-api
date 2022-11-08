@@ -2,17 +2,12 @@ package am.ik.blog.config;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
-import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Predicate;
 
 import am.ik.blog.config.OtlpProperties.BasicAuth;
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.exporter.otlp.trace.OtlpGrpcSpanExporter;
 import io.opentelemetry.exporter.otlp.trace.OtlpGrpcSpanExporterBuilder;
-import io.opentelemetry.sdk.common.CompletableResultCode;
-import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.export.SpanExporter;
 
 import org.springframework.beans.BeansException;
@@ -60,36 +55,5 @@ public class OtelConfig {
 				return bean;
 			}
 		};
-	}
-
-	static class HttpUrlFilteringSpanExporter implements SpanExporter {
-		private final SpanExporter delegate;
-
-		private final Predicate<String> uriFilter;
-
-		private static final AttributeKey<String> HTTP_URL = AttributeKey.stringKey("http.url");
-
-		HttpUrlFilteringSpanExporter(SpanExporter delegate, Predicate<String> uriFilter) {
-			this.delegate = delegate;
-			this.uriFilter = uriFilter;
-		}
-
-		@Override
-		public CompletableResultCode export(Collection<SpanData> spans) {
-			return delegate.export(spans.stream().filter(spanData -> {
-				final String uri = spanData.getAttributes().get(HTTP_URL);
-				return uri == null || uriFilter.test(uri);
-			}).toList());
-		}
-
-		@Override
-		public CompletableResultCode flush() {
-			return delegate.flush();
-		}
-
-		@Override
-		public CompletableResultCode shutdown() {
-			return delegate.shutdown();
-		}
 	}
 }
