@@ -1,7 +1,5 @@
 package am.ik.blog.entry.web;
 
-import java.util.Optional;
-
 import am.ik.blog.entry.Entry;
 import am.ik.blog.entry.EntryService;
 import am.ik.blog.entry.search.SearchCriteria;
@@ -28,8 +26,8 @@ public class EntryRestController {
 	}
 
 	@GetMapping(path = "/entries/{entryId}")
-	public Mono<Entry> getEntry(@PathVariable("entryId") Long entryId, @RequestParam(defaultValue = "false") boolean excludeContext) {
-		final Mono<Entry> entry = this.entryService.findOne(entryId, excludeContext);
+	public Mono<Entry> getEntry(@PathVariable("entryId") Long entryId, @RequestParam(defaultValue = "false") boolean excludeContent) {
+		final Mono<Entry> entry = this.entryService.findOne(entryId, excludeContent);
 		return entry.switchIfEmpty(Mono.error(() -> new ResponseStatusException(NOT_FOUND, String.format("The requested entry is not found (entryId = %d)", entryId))));
 	}
 
