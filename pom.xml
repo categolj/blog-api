@@ -23,7 +23,7 @@
 		<start-class>am.ik.blog.BlogApiApplication</start-class>
 		<resilience4j.version>1.7.1</resilience4j.version>
 		<snakeyaml.version>1.32</snakeyaml.version>
-		<spring-doc.version>2.0.0-RC1</spring-doc.version>
+		<spring-doc.version>2.0.0-RC2</spring-doc.version>
 		<jar-classifier></jar-classifier>
 	</properties>
 
