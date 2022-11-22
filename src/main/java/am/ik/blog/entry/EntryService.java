@@ -2,9 +2,12 @@ package am.ik.blog.entry;
 
 import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 import am.ik.blog.entry.search.SearchCriteria;
 import am.ik.blog.github.GitHubUserContentClient;
+import am.ik.yavi.core.ConstraintViolationsException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Mono;
@@ -12,6 +15,7 @@ import reactor.core.publisher.Mono;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class EntryService {
@@ -32,8 +36,8 @@ public class EntryService {
 	}
 
 
-	public Mono<Entry> findOne(Long entryId, boolean excludeContent) {
-		return Mono.justOrEmpty(this.entryMapper.findOne(entryId, excludeContent));
+	public Optional<Entry> findOne(Long entryId, boolean excludeContent) {
+		return this.entryMapper.findOne(entryId, excludeContent);
 	}
 
 	/* TODO */
@@ -41,13 +45,13 @@ public class EntryService {
 		throw new UnsupportedOperationException();
 	}
 
-	Mono<Entry> fallbackFromGithub(Long entryId, boolean excludeContent, Throwable throwable) {
+	Optional<Entry> fallbackFromGithub(Long entryId, boolean excludeContent, Throwable throwable) {
 		return this.findOneFromGithub(entryId);
 	}
 
-	Mono<Entry> findOneFromGithub(Long entryId) {
+	Optional<Entry> findOneFromGithub(Long entryId) {
 		final Mono<String> markdown = this.gitHubUserContentClient.getContent("making", "blog.ik.am", "master", "content/%05d.md".formatted(entryId));
-		return this.parseMarkdown(entryId, markdown);
+		return this.parseMarkdown(entryId, markdown).blockOptional();
 	}
 
 	Mono<Entry> parseMarkdown(Long entryId, Mono<String> markdown) {
@@ -60,5 +64,17 @@ public class EntryService {
 
 	public List<Entry> findAll(SearchCriteria criteria, Pageable pageable) {
 		return entryMapper.findAll(criteria, pageable);
+	}
+
+	@Transactional
+	public Map<String, Integer> save(Entry entry) {
+		log.info("Saving {}", entry);
+		Entry.validator.validate(entry).throwIfInvalid(ConstraintViolationsException::new);
+		return this.entryMapper.save(entry);
+	}
+
+	@Transactional
+	public int delete(Long entryId) {
+		return this.entryMapper.delete(entryId);
 	}
 }

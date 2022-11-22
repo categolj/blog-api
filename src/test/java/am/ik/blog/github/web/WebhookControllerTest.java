@@ -2,6 +2,7 @@ package am.ik.blog.github.web;
 
 import java.util.Map;
 
+import am.ik.blog.MockConfig;
 import am.ik.blog.github.EntryFetcher;
 import am.ik.blog.github.Fixtures;
 import am.ik.blog.entry.Entry;
@@ -14,6 +15,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.http.client.reactive.JdkClientHttpConnector;
 import org.springframework.test.context.TestConstructor;

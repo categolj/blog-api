@@ -41,11 +41,11 @@ public class EntryFetcher {
 							.getT1();
 					final Author created = tpl.getT1().getT2()
 							// use frontMatter date if present
-							.map(date -> tpl.getT2().getT1().changeDate(date))
+							.map(date -> tpl.getT2().getT1().withDate(date))
 							// otherwise use commit date
 							.orElseGet(() -> tpl.getT2().getT1());
 					final Author updated = tpl.getT1().getT2()
-							.map(date -> tpl.getT2().getT2().changeDate(date))
+							.map(date -> tpl.getT2().getT2().withDate(date))
 							.orElseGet(() -> tpl.getT2().getT2());
 					return entryBuilder
 							.withCreated(created) //

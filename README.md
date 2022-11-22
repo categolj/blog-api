@@ -10,11 +10,6 @@ A headless Blog Entries API
 
 ## Getting Started
 
-
-### Prepare GitHub integration
-
-TBD
-
 ### Run blog-api locally
 
 #### How to build blog-api
@@ -33,17 +28,28 @@ docker-compose up
 
 Run the app
 
-blog.github.access-token
+```
+java -jar target/blog-api-5.0.0-SNAPSHOT.jar 
+```
+
+Put a first blog post from template
 
 ```
-java -jar target/blog-api-5.0.0-SNAPSHOT.jar --blog.github.access-token=TBD --blog.github.webhook-secret=TBD 
+curl -s http://localhost:8080/entries/template.md > template.md
+curl -s -u admin:changeme -XPUT http://localhost:8080/entries/1 -H "Content-Type: text/markdown" -d "$(cat template.md)"
 ```
+
+Check the entries
 
 ```
 curl -s https://localhost:8080/entries
 ```
 
 Go to http://localhost:8080/swagger-ui/index.html for the Swagger UI
+
+### GitHub integration
+
+TBD
 
 ### Run on Kubernetes
 

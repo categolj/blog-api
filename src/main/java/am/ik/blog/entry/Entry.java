@@ -1,5 +1,9 @@
 package am.ik.blog.entry;
 
+import am.ik.blog.category.Category;
+import am.ik.blog.tag.Tag;
+import am.ik.yavi.builder.ValidatorBuilder;
+import am.ik.yavi.core.Validator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
@@ -11,76 +15,104 @@ import java.util.StringJoiner;
 @JsonDeserialize(builder = EntryBuilder.class)
 public class Entry {
 
-    private final Long entryId;
+	static public Validator<Entry> validator = ValidatorBuilder.<Entry>of()
+			.constraint(Entry::getEntryId, "entryId", c -> c.notNull().positive())
+			.constraint(Entry::getContent, "content", c -> c.notBlank().asByteArray().lessThanOrEqual(1024 * 1024 * 1024))
+			.nest(Entry::getFrontMatter, "frontMatter", FrontMatter.validator)
+			.nest(Entry::getCreated, "created", Author.validator)
+			.nest(Entry::getUpdated, "updated", Author.validator)
+			.build();
 
-    private final FrontMatter frontMatter;
+	private final Long entryId;
 
-    private final String content;
+	private final FrontMatter frontMatter;
 
-    private final Author created;
+	private final String content;
 
-    private final Author updated;
+	private final Author created;
 
-    Entry(Long entryId, FrontMatter frontMatter, String content, Author created, Author updated) {
-        this.entryId = entryId;
-        this.frontMatter = frontMatter;
-        this.content = content;
-        this.created = created;
-        this.updated = updated;
-    }
+	private final Author updated;
 
-    public static Long parseId(String fileName) {
-        return Long.parseLong(fileName.replace(".md", "").replace(".markdown", ""));
-    }
+	Entry(Long entryId, FrontMatter frontMatter, String content, Author created, Author updated) {
+		this.entryId = entryId;
+		this.frontMatter = frontMatter;
+		this.content = content;
+		this.created = created;
+		this.updated = updated;
+	}
 
-    public Long getEntryId() {
-        return entryId;
-    }
+	public static Long parseId(String fileName) {
+		return Long.parseLong(fileName.replace(".md", "").replace(".markdown", ""));
+	}
 
-    public FrontMatter getFrontMatter() {
-        return frontMatter;
-    }
+	public Long getEntryId() {
+		return entryId;
+	}
 
-    public String getContent() {
-        return content;
-    }
+	public FrontMatter getFrontMatter() {
+		return frontMatter;
+	}
 
-    public Author getCreated() {
-        return created;
-    }
+	public String getContent() {
+		return content;
+	}
 
-    public Author getUpdated() {
-        return updated;
-    }
+	public Author getCreated() {
+		return created;
+	}
 
-    @JsonIgnore
-    public boolean isOverHalfYearOld() {
-        return this.isOld(6, ChronoUnit.MONTHS);
-    }
+	public Author getUpdated() {
+		return updated;
+	}
 
-    @JsonIgnore
-    public boolean isOverOneYearOld() {
-        return this.isOld(1, ChronoUnit.YEARS);
-    }
+	@JsonIgnore
+	public boolean isOverHalfYearOld() {
+		return this.isOld(6, ChronoUnit.MONTHS);
+	}
 
-    @JsonIgnore
-    public boolean isOverThreeYearsOld() {
-        return this.isOld(3, ChronoUnit.YEARS);
-    }
+	@JsonIgnore
+	public boolean isOverOneYearOld() {
+		return this.isOld(1, ChronoUnit.YEARS);
+	}
 
-    @JsonIgnore
-    public boolean isOverFiveYearsOld() {
-        return this.isOld(5, ChronoUnit.YEARS);
-    }
+	@JsonIgnore
+	public boolean isOverThreeYearsOld() {
+		return this.isOld(3, ChronoUnit.YEARS);
+	}
 
-    private boolean isOld(long amount, TemporalUnit unit) {
-        return this.getUpdated().getDate().plus(amount, unit) //
-            .isBefore(OffsetDateTime.now());
-    }
+	@JsonIgnore
+	public boolean isOverFiveYearsOld() {
+		return this.isOld(5, ChronoUnit.YEARS);
+	}
 
-    @Override
-    public String toString() {
-        return new StringJoiner(", ", Entry.class.getSimpleName() + "[", "]")
-            .add("entryId=" + entryId).toString();
-    }
+	private boolean isOld(long amount, TemporalUnit unit) {
+		return this.getUpdated().getDate().plus(amount, unit) //
+				.isBefore(OffsetDateTime.now());
+	}
+
+	@Override
+	public String toString() {
+		return "Entry{" +
+			   "entryId=" + entryId +
+			   ", frontMatter=" + frontMatter +
+			   ", created=" + created +
+			   ", updated=" + updated +
+			   '}';
+	}
+
+	public String toMarkdown() {
+		return """
+				---
+				title: %s
+				tags: %s
+				categories: %s%s
+				---
+								
+				%s
+				""".formatted(frontMatter.getTitle(),
+				frontMatter.getTags().stream().map(t -> "\"%s\"".formatted(t.name())).toList(),
+				frontMatter.getCategories().stream().map(c -> "\"%s\"".formatted(c.name())).toList(),
+				created.getDate() == null ? "" : "%ndate: %s".formatted(created.getDate()),
+				content);
+	}
 }
