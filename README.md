@@ -43,6 +43,14 @@ Check the entries
 
 ```
 curl -s http://localhost:8080/entries
+curl -s http://localhost:8080/entries/1
+```
+
+Delete the entry
+
+
+```
+curl -s -u admin:changeme -XDELETE http://localhost:8080/entries/1
 ```
 
 Go to http://localhost:8080/swagger-ui/index.html for the Swagger UI
