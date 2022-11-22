@@ -10,6 +10,8 @@ import am.ik.blog.entry.Entry;
 import am.ik.blog.entry.EntryBuilder;
 import am.ik.blog.entry.EntryService;
 import am.ik.blog.entry.search.SearchCriteria;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -29,6 +31,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import static org.springframework.http.HttpStatus.BAD_REQUEST;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
 
 @RestController
@@ -55,12 +58,14 @@ public class EntryRestController {
 	}
 
 	@DeleteMapping(path = "/entries/{entryId}")
+	@Operation(security = { @SecurityRequirement(name = "basic") })
 	public ResponseEntity<Void> deleteEntry(@PathVariable("entryId") Long entryId) {
 		this.entryService.delete(entryId);
 		return ResponseEntity.noContent().build();
 	}
 
 	@PutMapping(path = "/entries/{entryId}", consumes = MediaType.TEXT_MARKDOWN_VALUE)
+	@Operation(security = { @SecurityRequirement(name = "basic") })
 	@Transactional
 	public ResponseEntity<?> putEntryFromMarkdown(@PathVariable("entryId") Long entryId,
 			@RequestBody String markdown,
@@ -73,7 +78,7 @@ public class EntryRestController {
 					final OffsetDateTime now = OffsetDateTime.ofInstant(this.clock.instant(), ZoneId.of("UTC"));
 					final Author created = this.entryService.findOne(entryId, true)
 							.map(Entry::getCreated)
-							.map(author -> tpl.getT2().map(author::changeDate).orElse(author))
+							.map(author -> tpl.getT2().map(author::withDate).orElse(author))
 							.orElseGet(() -> new Author(username, tpl.getT2().orElse(now)));
 					final Author updated = new Author(username, tpl.getT3().orElse(now));
 					final Entry entry = entryBuilder
@@ -84,6 +89,31 @@ public class EntryRestController {
 					return entry;
 				})
 				.map(entry -> ResponseEntity.created(builder.path("/entries/{entryId}").build(entryId)).body(entry))
-				.orElseGet(() -> ResponseEntity.badRequest().build());
+				.orElseThrow(() -> new ResponseStatusException(BAD_REQUEST, "Can't parse the markdown file"));
+	}
+
+	@PutMapping(path = "/entries/{entryId}", consumes = MediaType.APPLICATION_JSON_VALUE)
+	@Operation(security = { @SecurityRequirement(name = "basic") })
+	@Transactional
+	public ResponseEntity<?> putEntryFromJson(@PathVariable("entryId") Long entryId,
+			@RequestBody EntryRequest request,
+			@AuthenticationPrincipal UserDetails userDetails,
+			UriComponentsBuilder builder) {
+		final String username = userDetails.getUsername();
+		final OffsetDateTime now = OffsetDateTime.ofInstant(this.clock.instant(), ZoneId.of("UTC"));
+		final Author created = this.entryService.findOne(entryId, true)
+				.map(Entry::getCreated)
+				.map(author -> request.createdOrNullAuthor().setNameIfAbsent(author.getName()).setDateIfAbsent(author.getDate()))
+				.orElseGet(() -> request.createdOrNullAuthor().setNameIfAbsent(username).setDateIfAbsent(now));
+		final Author updated = request.updatedOrNullAuthor().setNameIfAbsent(username).setDateIfAbsent(now);
+		final Entry entry = new EntryBuilder()
+				.withEntryId(entryId)
+				.withContent(request.content())
+				.withFrontMatter(request.frontMatter())
+				.withCreated(created)
+				.withUpdated(updated)
+				.build();
+		this.entryService.save(entry);
+		return ResponseEntity.created(builder.path("/entries/{entryId}").build(entryId)).body(entry);
 	}
 }

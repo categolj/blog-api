@@ -14,8 +14,10 @@ import static java.time.format.DateTimeFormatter.RFC_1123_DATE_TIME;
 public class Author {
 	public static Validator<Author> validator = ValidatorBuilder.<Author>of()
 			.constraint(Author::getName, "name", c -> c.notBlank().lessThanOrEqual(128))
-			.constraint(Author::getDate, "date", c -> c.notNull().afterOrEqual(() -> OffsetDateTime.ofInstant(Instant.EPOCH, ZoneId.systemDefault())))
+			.constraint(Author::getDate, "date", c -> c.notNull().afterOrEqual(() -> OffsetDateTime.ofInstant(Instant.EPOCH, ZoneId.of("UTC"))))
 			.build();
+
+	public static Author NULL_AUTHOR = new Author(null, null);
 
 	private final String name;
 
@@ -34,9 +36,26 @@ public class Author {
 		return date;
 	}
 
+	public Author withName(String name) {
+		return new Author(name, this.date);
+	}
 
-	public Author changeDate(OffsetDateTime date) {
+	public Author setNameIfAbsent(String name) {
+		if (this.name != null) {
+			return this;
+		}
+		return this.withName(name);
+	}
+
+	public Author withDate(OffsetDateTime date) {
 		return new Author(this.name, date);
+	}
+
+	public Author setDateIfAbsent(OffsetDateTime date) {
+		if (this.date != null) {
+			return this;
+		}
+		return this.withDate(date);
 	}
 
 	public String rfc1123DateTime() {
