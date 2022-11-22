@@ -24,7 +24,7 @@ public class FrontMatter {
 
 	private final List<Tag> tags;
 
-	FrontMatter(String title, List<Category> categories, List<Tag> tags) {
+	public FrontMatter(String title, List<Category> categories, List<Tag> tags) {
 		this.title = title;
 		this.categories = categories;
 		this.tags = tags;

@@ -3,13 +3,17 @@ package am.ik.blog.entry.web;
 import java.time.Clock;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
+import java.util.List;
 import java.util.Optional;
 
+import am.ik.blog.category.Category;
 import am.ik.blog.entry.Author;
 import am.ik.blog.entry.Entry;
 import am.ik.blog.entry.EntryBuilder;
 import am.ik.blog.entry.EntryService;
+import am.ik.blog.entry.FrontMatter;
 import am.ik.blog.entry.search.SearchCriteria;
+import am.ik.blog.tag.Tag;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 
@@ -49,6 +53,11 @@ public class EntryRestController {
 	public Entry getEntry(@PathVariable("entryId") Long entryId, @RequestParam(defaultValue = "false") boolean excludeContent) {
 		final Optional<Entry> entry = this.entryService.findOne(entryId, excludeContent);
 		return entry.orElseThrow(() -> new ResponseStatusException(NOT_FOUND, String.format("The requested entry is not found (entryId = %d)", entryId)));
+	}
+
+	@GetMapping(path = "/entries/{entryId}.md", produces = MediaType.TEXT_MARKDOWN_VALUE)
+	public String getEntryAsMarkdown(@PathVariable("entryId") Long entryId, @RequestParam(defaultValue = "false") boolean excludeContent) {
+		return this.getEntry(entryId, excludeContent).toMarkdown();
 	}
 
 	@GetMapping(path = "/entries", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -115,5 +124,24 @@ public class EntryRestController {
 				.build();
 		this.entryService.save(entry);
 		return ResponseEntity.created(builder.path("/entries/{entryId}").build(entryId)).body(entry);
+	}
+
+	@GetMapping(path = "/entries/template.md", produces = MediaType.TEXT_MARKDOWN_VALUE)
+	public String getTemplateMarkdown() {
+		return new EntryBuilder()
+				.withContent("""
+						Welcome
+						      
+						**Hello world**, this is my first Categolj blog post.
+						      
+						I hope you like it!
+						""")
+				.withFrontMatter(new FrontMatter("Welcome to CategolJ!",
+						List.of(new Category("Blog"), new Category("Posts"), new Category("Templates")),
+						List.of(new Tag("Hello World"), new Tag("CategolJ"))))
+				.withCreated(Author.NULL_AUTHOR)
+				.withUpdated(Author.NULL_AUTHOR)
+				.build()
+				.toMarkdown();
 	}
 }

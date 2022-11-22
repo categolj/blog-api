@@ -1,5 +1,7 @@
 package am.ik.blog.entry;
 
+import am.ik.blog.category.Category;
+import am.ik.blog.tag.Tag;
 import am.ik.yavi.builder.ValidatorBuilder;
 import am.ik.yavi.core.Validator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -91,10 +93,26 @@ public class Entry {
 	@Override
 	public String toString() {
 		return "Entry{" +
-				"entryId=" + entryId +
-				", frontMatter=" + frontMatter +
-				", created=" + created +
-				", updated=" + updated +
-				'}';
+			   "entryId=" + entryId +
+			   ", frontMatter=" + frontMatter +
+			   ", created=" + created +
+			   ", updated=" + updated +
+			   '}';
+	}
+
+	public String toMarkdown() {
+		return """
+				---
+				title: %s
+				tags: %s
+				categories: %s%s
+				---
+								
+				%s
+				""".formatted(frontMatter.getTitle(),
+				frontMatter.getTags().stream().map(t -> "\"%s\"".formatted(t.name())).toList(),
+				frontMatter.getCategories().stream().map(c -> "\"%s\"".formatted(c.name())).toList(),
+				created.getDate() == null ? "" : "%ndate: %s".formatted(created.getDate()),
+				content);
 	}
 }
