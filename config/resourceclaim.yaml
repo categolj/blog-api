@@ -1,9 +1,0 @@
-apiVersion: services.apps.tanzu.vmware.com/v1alpha1
-kind: ResourceClaim
-metadata:
-  name: blog-db
-spec:
-  ref:
-    apiVersion: v1
-    kind: Secret
-    name: blog-db
