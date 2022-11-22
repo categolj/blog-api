@@ -2,27 +2,21 @@ package am.ik.blog.github.web;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
-import java.nio.file.Paths;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 import am.ik.blog.entry.Entry;
-import am.ik.blog.entry.EntryMapper;
+import am.ik.blog.entry.EntryService;
 import am.ik.blog.github.EntryFetcher;
 import am.ik.blog.github.GitHubProps;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.tomcat.util.http.fileupload.util.Streams;
-import reactor.core.publisher.Flux;
-import reactor.core.scheduler.Schedulers;
 
-import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -34,15 +28,15 @@ import org.springframework.web.server.ResponseStatusException;
 public class WebhookController {
 	private final EntryFetcher entryFetcher;
 
-	private final EntryMapper entryMapper;
+	private final EntryService entryService;
 
 	private final WebhookVerifier webhookVerifier;
 
 	private final ObjectMapper objectMapper;
 
-	public WebhookController(GitHubProps props, EntryFetcher entryFetcher, EntryMapper entryMapper, ObjectMapper objectMapper) throws NoSuchAlgorithmException, InvalidKeyException {
+	public WebhookController(GitHubProps props, EntryFetcher entryFetcher, EntryService entryService, ObjectMapper objectMapper) throws NoSuchAlgorithmException, InvalidKeyException {
 		this.entryFetcher = entryFetcher;
-		this.entryMapper = entryMapper;
+		this.entryService = entryService;
 		this.webhookVerifier = new WebhookVerifier(props.getWebhookSecret());
 		this.objectMapper = objectMapper;
 	}
@@ -66,7 +60,7 @@ public class WebhookController {
 								.doOnNext(e -> result.add(Map.of(key, e.getEntryId())))
 								// blocking intentionally so that trace id is properly propagated
 								.blockOptional()
-								.ifPresent(entryMapper::save));
+								.ifPresent(entryService::save));
 			});
 			this.paths(commit.get("removed"))
 					.forEach(path -> this.entryFetcher.fetch(owner, repo, path)
@@ -74,7 +68,7 @@ public class WebhookController {
 							.doOnNext(id -> result.add(Map.of("removed", id)))
 							// blocking intentionally so that trace id is properly propagated
 							.blockOptional()
-							.ifPresent(entryMapper::delete));
+							.ifPresent(entryService::delete));
 		});
 		return result;
 	}

@@ -1,33 +1,35 @@
 package am.ik.blog.entry.web;
 
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Optional;
 
+import am.ik.blog.MockConfig;
 import am.ik.blog.config.SecurityConfig;
+import am.ik.blog.entry.Author;
 import am.ik.blog.entry.Entry;
 import am.ik.blog.entry.EntryBuilder;
 import am.ik.blog.entry.EntryMapper;
-import am.ik.blog.entry.EntryService;
 import am.ik.blog.entry.FrontMatterBuilder;
-import am.ik.blog.github.GitHubUserContentClient;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.PageImpl;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.test.web.reactive.server.WebTestClient;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
 @WebMvcTest
-@Import(SecurityConfig.class)
+@Import({ SecurityConfig.class, MockConfig.class })
 class EntryRestControllerTest {
 	@Autowired
 	WebTestClient webTestClient;
@@ -76,7 +78,7 @@ class EntryRestControllerTest {
 	}
 
 	@Test
-	void getEntries() {
+	void getEntries_200() {
 		given(this.entryMapper.findPage(any(), any())).willReturn(new PageImpl<>(List.of(this.entry100, this.entry200)));
 		this.webTestClient.get()
 				.uri("/entries")
@@ -93,7 +95,223 @@ class EntryRestControllerTest {
 	}
 
 	@Test
-	void delete() {
+	void putEntryFromMarkdown_201() {
+		given(this.entryMapper.findOne(100L, true)).willReturn(Optional.empty());
+		this.webTestClient.put()
+				.uri("/entries/100")
+				.header(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_MARKDOWN_VALUE)
+				.headers(httpHeaders -> httpHeaders.setBasicAuth("admin", "changeme"))
+				.bodyValue("""
+						---
+						title: Hello World!
+						tags: ["Test", "Demo"]
+						categories: ["Dev", "Blog", "Test"]
+						---
+
+						Hello World!
+						Test Test Test!
+						""")
+				.exchange()
+				.expectStatus().isCreated()
+				.expectHeader()
+				.location("http://localhost/entries/100")
+				.expectBody()
+				.jsonPath("$.entryId").isEqualTo(100)
+				.jsonPath("$.content").isEqualTo("Hello World!\nTest Test Test!")
+				.jsonPath("$.created.name").isEqualTo("admin")
+				.jsonPath("$.created.date").isEqualTo("2022-04-01T01:00:00Z")
+				.jsonPath("$.updated.name").isEqualTo("admin")
+				.jsonPath("$.updated.date").isEqualTo("2022-04-01T01:00:00Z")
+				.jsonPath("$.frontMatter.title").isEqualTo("Hello World!")
+				.jsonPath("$.frontMatter.tags.length()").isEqualTo(2)
+				.jsonPath("$.frontMatter.tags[0].name").isEqualTo("Test")
+				.jsonPath("$.frontMatter.tags[1].name").isEqualTo("Demo")
+				.jsonPath("$.frontMatter.categories.length()").isEqualTo(3)
+				.jsonPath("$.frontMatter.categories[0].name").isEqualTo("Dev")
+				.jsonPath("$.frontMatter.categories[1].name").isEqualTo("Blog")
+				.jsonPath("$.frontMatter.categories[2].name").isEqualTo("Test");
+		verify(this.entryMapper).save(any());
+	}
+
+	@Test
+	void putEntryFromMarkdown_201_fixedDate() {
+		given(this.entryMapper.findOne(100L, true)).willReturn(Optional.empty());
+		this.webTestClient.put()
+				.uri("/entries/100")
+				.header(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_MARKDOWN_VALUE)
+				.headers(httpHeaders -> httpHeaders.setBasicAuth("admin", "changeme"))
+				.bodyValue("""
+						---
+						title: Hello World!
+						tags: ["Test", "Demo"]
+						categories: ["Dev", "Blog", "Test"]
+						date: 2023-01-01T01:00:00Z
+						updated: 2023-01-01T01:00:00Z
+						---
+
+						Hello World!
+						Test Test Test!
+						""")
+				.exchange()
+				.expectStatus().isCreated()
+				.expectHeader()
+				.location("http://localhost/entries/100")
+				.expectBody()
+				.jsonPath("$.entryId").isEqualTo(100)
+				.jsonPath("$.content").isEqualTo("Hello World!\nTest Test Test!")
+				.jsonPath("$.created.name").isEqualTo("admin")
+				.jsonPath("$.created.date").isEqualTo("2023-01-01T01:00:00Z")
+				.jsonPath("$.updated.name").isEqualTo("admin")
+				.jsonPath("$.updated.date").isEqualTo("2023-01-01T01:00:00Z")
+				.jsonPath("$.frontMatter.title").isEqualTo("Hello World!")
+				.jsonPath("$.frontMatter.tags.length()").isEqualTo(2)
+				.jsonPath("$.frontMatter.tags[0].name").isEqualTo("Test")
+				.jsonPath("$.frontMatter.tags[1].name").isEqualTo("Demo")
+				.jsonPath("$.frontMatter.categories.length()").isEqualTo(3)
+				.jsonPath("$.frontMatter.categories[0].name").isEqualTo("Dev")
+				.jsonPath("$.frontMatter.categories[1].name").isEqualTo("Blog")
+				.jsonPath("$.frontMatter.categories[2].name").isEqualTo("Test");
+		verify(this.entryMapper).save(any());
+	}
+
+	@Test
+	void putEntryFromMarkdown_201_updated() {
+		final OffsetDateTime createdDate = OffsetDateTime.of(2022, 3, 1, 1, 0, 0, 0, ZoneOffset.UTC);
+		given(this.entryMapper.findOne(100L, true)).willReturn(Optional.of(new EntryBuilder()
+				.withEntryId(100L)
+				.withCreated(new Author("test", createdDate))
+				.withUpdated(new Author("test", createdDate))
+				.build()));
+		this.webTestClient.put()
+				.uri("/entries/100")
+				.header(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_MARKDOWN_VALUE)
+				.headers(httpHeaders -> httpHeaders.setBasicAuth("admin", "changeme"))
+				.bodyValue("""
+						---
+						title: Hello World!
+						tags: ["Test", "Demo"]
+						categories: ["Dev", "Blog", "Test"]
+						---
+
+						Hello World!
+						Test Test Test!
+						""")
+				.exchange()
+				.expectStatus().isCreated()
+				.expectHeader()
+				.location("http://localhost/entries/100")
+				.expectBody()
+				.jsonPath("$.entryId").isEqualTo(100)
+				.jsonPath("$.content").isEqualTo("Hello World!\nTest Test Test!")
+				.jsonPath("$.created.name").isEqualTo("test")
+				.jsonPath("$.created.date").isEqualTo("2022-03-01T01:00:00Z")
+				.jsonPath("$.updated.name").isEqualTo("admin")
+				.jsonPath("$.updated.date").isEqualTo("2022-04-01T01:00:00Z")
+				.jsonPath("$.frontMatter.title").isEqualTo("Hello World!")
+				.jsonPath("$.frontMatter.tags.length()").isEqualTo(2)
+				.jsonPath("$.frontMatter.tags[0].name").isEqualTo("Test")
+				.jsonPath("$.frontMatter.tags[1].name").isEqualTo("Demo")
+				.jsonPath("$.frontMatter.categories.length()").isEqualTo(3)
+				.jsonPath("$.frontMatter.categories[0].name").isEqualTo("Dev")
+				.jsonPath("$.frontMatter.categories[1].name").isEqualTo("Blog")
+				.jsonPath("$.frontMatter.categories[2].name").isEqualTo("Test");
+		verify(this.entryMapper).save(any());
+	}
+
+	@Test
+	void putEntryFromMarkdown_201_updated_fixedDate() {
+		final OffsetDateTime createdDate = OffsetDateTime.of(2022, 3, 1, 1, 0, 0, 0, ZoneOffset.UTC);
+		given(this.entryMapper.findOne(100L, true)).willReturn(Optional.of(new EntryBuilder()
+				.withEntryId(100L)
+				.withCreated(new Author("test", createdDate))
+				.withUpdated(new Author("test", createdDate))
+				.build()));
+		this.webTestClient.put()
+				.uri("/entries/100")
+				.header(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_MARKDOWN_VALUE)
+				.headers(httpHeaders -> httpHeaders.setBasicAuth("admin", "changeme"))
+				.bodyValue("""
+						---
+						title: Hello World!
+						tags: ["Test", "Demo"]
+						categories: ["Dev", "Blog", "Test"]
+						date: 2023-01-01T01:00:00Z
+						updated: 2023-01-01T01:00:00Z
+						---
+
+						Hello World!
+						Test Test Test!
+						""")
+				.exchange()
+				.expectStatus().isCreated()
+				.expectHeader()
+				.location("http://localhost/entries/100")
+				.expectBody()
+				.jsonPath("$.entryId").isEqualTo(100)
+				.jsonPath("$.content").isEqualTo("Hello World!\nTest Test Test!")
+				.jsonPath("$.created.name").isEqualTo("test")
+				.jsonPath("$.created.date").isEqualTo("2023-01-01T01:00:00Z")
+				.jsonPath("$.updated.name").isEqualTo("admin")
+				.jsonPath("$.updated.date").isEqualTo("2023-01-01T01:00:00Z")
+				.jsonPath("$.frontMatter.title").isEqualTo("Hello World!")
+				.jsonPath("$.frontMatter.tags.length()").isEqualTo(2)
+				.jsonPath("$.frontMatter.tags[0].name").isEqualTo("Test")
+				.jsonPath("$.frontMatter.tags[1].name").isEqualTo("Demo")
+				.jsonPath("$.frontMatter.categories.length()").isEqualTo(3)
+				.jsonPath("$.frontMatter.categories[0].name").isEqualTo("Dev")
+				.jsonPath("$.frontMatter.categories[1].name").isEqualTo("Blog")
+				.jsonPath("$.frontMatter.categories[2].name").isEqualTo("Test");
+		verify(this.entryMapper).save(any());
+	}
+
+	@Test
+	void putEntryFromMarkdown_400() {
+		given(this.entryMapper.findOne(100L, true)).willReturn(Optional.empty());
+		this.webTestClient.put()
+				.uri("/entries/-1")
+				.header(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_MARKDOWN_VALUE)
+				.headers(httpHeaders -> httpHeaders.setBasicAuth("admin", "changeme"))
+				.bodyValue("""
+						---
+						---
+						""")
+				.exchange()
+				.expectStatus().isBadRequest()
+				.expectHeader().contentType(MediaType.APPLICATION_PROBLEM_JSON)
+				.expectBody()
+				.jsonPath("$.title").isEqualTo("Bad Request")
+				.jsonPath("$.status").isEqualTo(400)
+				.jsonPath("$.detail").isEqualTo("Constraint violations found!")
+				.jsonPath("$.instance").isEqualTo("/entries/-1")
+				.jsonPath("$.violations.length()").isEqualTo(3)
+				.jsonPath("$.violations[0].defaultMessage").isEqualTo("\"entryId\" must be positive")
+				.jsonPath("$.violations[1].defaultMessage").isEqualTo("\"content\" must not be blank")
+				.jsonPath("$.violations[2].defaultMessage").isEqualTo("The size of \"frontMatter.categories\" must be greater than or equal to 1. The given size is 0");
+		verify(this.entryMapper, never()).save(any());
+	}
+
+	@Test
+	void putEntryFromMarkdown_401() {
+		this.webTestClient.put()
+				.uri("/entries/100")
+				.header(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_MARKDOWN_VALUE)
+				.headers(httpHeaders -> httpHeaders.setBasicAuth("invalid", "invalid"))
+				.bodyValue("""
+						---
+						title: Hello World!
+						tags: ["Test", "Demo"]
+						categories: ["Dev", "Blog", "Test"]
+						---
+
+						Hello World!
+						Test Test Test!
+						""")
+				.exchange()
+				.expectStatus().isUnauthorized();
+	}
+
+	@Test
+	void deleteEntry_204() {
 		given(this.entryMapper.delete(100L)).willReturn(1);
 		this.webTestClient.delete()
 				.uri("/entries/100")
@@ -103,11 +321,12 @@ class EntryRestControllerTest {
 		verify(this.entryMapper).delete(100L);
 	}
 
-	@TestConfiguration
-	static class Config {
-		@Bean
-		public EntryService entryService(EntryMapper entryMapper) {
-			return new EntryService(entryMapper, Mockito.mock(GitHubUserContentClient.class));
-		}
+	@Test
+	void deleteEntry_401() {
+		this.webTestClient.delete()
+				.uri("/entries/100")
+				.headers(httpHeaders -> httpHeaders.setBasicAuth("invalid", "invalid"))
+				.exchange()
+				.expectStatus().isUnauthorized();
 	}
 }

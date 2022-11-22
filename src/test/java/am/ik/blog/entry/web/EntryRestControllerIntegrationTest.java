@@ -10,6 +10,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.client.reactive.JdkClientHttpConnector;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.TestConstructor;
@@ -32,10 +34,13 @@ class EntryRestControllerIntegrationTest {
 	@Autowired
 	JdbcTemplate jdbcTemplate;
 
+	int port;
+
 	public EntryRestControllerIntegrationTest(@Value("${local.server.port}") int port) {
 		this.webTestClient = WebTestClient.bindToServer(new JdkClientHttpConnector())
 				.baseUrl("http://localhost:" + port)
 				.build();
+		this.port = port;
 	}
 
 	@BeforeEach
@@ -107,6 +112,122 @@ class EntryRestControllerIntegrationTest {
 					assertEntry99999(entryPage.getContent().get(0)).assertThatContentIsNotSet();
 					assertEntry99997(entryPage.getContent().get(1)).assertThatContentIsNotSet();
 				});
+	}
+
+	@Test
+	void createFromMarkdown() {
+		this.webTestClient.put()
+				.uri("/entries/99991")
+				.header(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_MARKDOWN_VALUE)
+				.headers(httpHeaders -> httpHeaders.setBasicAuth("admin", "changeme"))
+				.bodyValue("""
+						---
+						title: Hello World!
+						tags: ["Test", "Demo"]
+						categories: ["Dev", "Blog", "Test"]
+						---
+
+						Hello World!
+						Test Test Test!
+						""")
+				.exchange()
+				.expectStatus().isCreated()
+				.expectHeader()
+				.location("http://localhost:%d/entries/99991".formatted(port))
+				.expectBody()
+				.jsonPath("$.entryId").isEqualTo(99991)
+				.jsonPath("$.content").isEqualTo("Hello World!\nTest Test Test!")
+				.jsonPath("$.created.name").isEqualTo("admin")
+				.jsonPath("$.created.date").isNotEmpty()
+				.jsonPath("$.updated.name").isEqualTo("admin")
+				.jsonPath("$.updated.date").isNotEmpty()
+				.jsonPath("$.frontMatter.title").isEqualTo("Hello World!")
+				.jsonPath("$.frontMatter.tags.length()").isEqualTo(2)
+				.jsonPath("$.frontMatter.tags[0].name").isEqualTo("Test")
+				.jsonPath("$.frontMatter.tags[1].name").isEqualTo("Demo")
+				.jsonPath("$.frontMatter.categories.length()").isEqualTo(3)
+				.jsonPath("$.frontMatter.categories[0].name").isEqualTo("Dev")
+				.jsonPath("$.frontMatter.categories[1].name").isEqualTo("Blog")
+				.jsonPath("$.frontMatter.categories[2].name").isEqualTo("Test");
+
+
+		this.webTestClient.get()
+				.uri("/entries/99991")
+				.exchange()
+				.expectStatus().isOk()
+				.expectBody()
+				.jsonPath("$.entryId").isEqualTo(99991)
+				.jsonPath("$.content").isEqualTo("Hello World!\nTest Test Test!")
+				.jsonPath("$.created.name").isEqualTo("admin")
+				.jsonPath("$.created.date").isNotEmpty()
+				.jsonPath("$.updated.name").isEqualTo("admin")
+				.jsonPath("$.updated.date").isNotEmpty()
+				.jsonPath("$.frontMatter.title").isEqualTo("Hello World!")
+				.jsonPath("$.frontMatter.tags.length()").isEqualTo(2)
+				.jsonPath("$.frontMatter.tags[0].name").isEqualTo("Demo") // alphabetic order
+				.jsonPath("$.frontMatter.tags[1].name").isEqualTo("Test")
+				.jsonPath("$.frontMatter.categories.length()").isEqualTo(3)
+				.jsonPath("$.frontMatter.categories[0].name").isEqualTo("Dev")
+				.jsonPath("$.frontMatter.categories[1].name").isEqualTo("Blog")
+				.jsonPath("$.frontMatter.categories[2].name").isEqualTo("Test");
+	}
+
+	@Test
+	void updateFromMarkdown() {
+		this.webTestClient.put()
+				.uri("/entries/99999")
+				.header(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_MARKDOWN_VALUE)
+				.headers(httpHeaders -> httpHeaders.setBasicAuth("admin", "changeme"))
+				.bodyValue("""
+						---
+						title: Hello World!
+						tags: ["Test", "Demo"]
+						categories: ["Dev", "Blog", "Test"]
+						---
+
+						Hello World!
+						Test Test Test!
+						""")
+				.exchange()
+				.expectStatus().isCreated()
+				.expectHeader()
+				.location("http://localhost:%d/entries/99999".formatted(port))
+				.expectBody()
+				.jsonPath("$.entryId").isEqualTo(99999)
+				.jsonPath("$.content").isEqualTo("Hello World!\nTest Test Test!")
+				.jsonPath("$.created.name").isEqualTo("making") // creator remains unchanged
+				.jsonPath("$.created.date").isEqualTo("2017-03-31T16:00:00Z")
+				.jsonPath("$.updated.name").isEqualTo("admin")
+				.jsonPath("$.updated.date").isNotEmpty()
+				.jsonPath("$.frontMatter.title").isEqualTo("Hello World!")
+				.jsonPath("$.frontMatter.tags.length()").isEqualTo(2)
+				.jsonPath("$.frontMatter.tags[0].name").isEqualTo("Test")
+				.jsonPath("$.frontMatter.tags[1].name").isEqualTo("Demo")
+				.jsonPath("$.frontMatter.categories.length()").isEqualTo(3)
+				.jsonPath("$.frontMatter.categories[0].name").isEqualTo("Dev")
+				.jsonPath("$.frontMatter.categories[1].name").isEqualTo("Blog")
+				.jsonPath("$.frontMatter.categories[2].name").isEqualTo("Test");
+
+
+		this.webTestClient.get()
+				.uri("/entries/99999")
+				.exchange()
+				.expectStatus().isOk()
+				.expectBody()
+				.jsonPath("$.entryId").isEqualTo(99999)
+				.jsonPath("$.content").isEqualTo("Hello World!\nTest Test Test!")
+				.jsonPath("$.created.name").isEqualTo("making")
+				.jsonPath("$.created.date").isEqualTo("2017-03-31T16:00:00Z")
+				.jsonPath("$.updated.name").isEqualTo("admin")
+				.jsonPath("$.updated.date").isNotEmpty()
+				.jsonPath("$.frontMatter.title").isEqualTo("Hello World!")
+				.jsonPath("$.frontMatter.tags.length()").isEqualTo(2)
+				.jsonPath("$.frontMatter.tags[0].name").isEqualTo("Demo") // alphabetic order
+				.jsonPath("$.frontMatter.tags[1].name").isEqualTo("Test")
+				.jsonPath("$.frontMatter.categories.length()").isEqualTo(3)
+				.jsonPath("$.frontMatter.categories[0].name").isEqualTo("Dev")
+				.jsonPath("$.frontMatter.categories[1].name").isEqualTo("Blog")
+				.jsonPath("$.frontMatter.categories[2].name").isEqualTo("Test");
 	}
 
 	@Test

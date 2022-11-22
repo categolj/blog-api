@@ -1,5 +1,6 @@
 package am.ik.blog.admin.web;
 
+import am.ik.blog.MockConfig;
 import am.ik.blog.config.SecurityConfig;
 import am.ik.blog.entry.Entry;
 import am.ik.blog.entry.EntryMapper;
@@ -18,7 +19,7 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
 
 @WebMvcTest(properties = { "spring.security.user.name=admin", "spring.security.user.password=password" })
-@Import(SecurityConfig.class)
+@Import({ SecurityConfig.class, MockConfig.class })
 class EntryImportControllerTest {
 	@Autowired
 	WebTestClient webTestClient;

@@ -1,0 +1,97 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: blog-db
+  labels:
+    app.kubernetes.io/part-of: blog-db
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: blog-db
+  labels:
+    app.kubernetes.io/part-of: blog-db
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/part-of: blog-db
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/part-of: blog-db
+    spec:
+      initContainers:
+      - name: remove-lost-found
+        image: busybox
+        command:
+        - sh
+        - -c
+        - |
+          rm -fr /bitnami/postgresql/lost+found
+        volumeMounts:
+        - name: blog-db
+          mountPath: /bitnami/postgresql
+      containers:
+      - image: bitnami/postgresql:14
+        name: postgres
+        env:
+        - name: POSTGRES_DB
+          valueFrom:
+            secretKeyRef:
+              name: blog-db
+              key: database
+        - name: POSTGRES_USER
+          valueFrom:
+            secretKeyRef:
+              name: blog-db
+              key: username
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: blog-db
+              key: password
+        ports:
+        - containerPort: 5432
+          name: blog-db
+        volumeMounts:
+        - name: blog-db
+          mountPath: /bitnami/postgresql
+      volumes:
+      - name: blog-db
+        persistentVolumeClaim:
+          claimName: blog-db
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: blog-db
+  labels:
+    app.kubernetes.io/part-of: blog-db
+spec:
+  ports:
+  - port: 5432
+  selector:
+    app.kubernetes.io/part-of: blog-db
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: blog-db
+  labels:
+    app.kubernetes.io/part-of: blog-db
+type: servicebinding.io/postgresql
+stringData:
+  type: postgresql
+  host: blog-db
+  port: "5432"
+  username: blog
+  password: blog
+  database: blog

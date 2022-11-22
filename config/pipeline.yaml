@@ -1,0 +1,48 @@
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: maven-test-pipeline
+  labels:
+    apps.tanzu.vmware.com/pipeline: test
+    apps.tanzu.vmware.com/language: java
+spec:
+  params:
+  - name: source-url
+  - name: source-revision
+  tasks:
+  - name: test
+    params:
+    - name: source-url
+      value: $(params.source-url)
+    - name: source-revision
+      value: $(params.source-revision)
+    taskSpec:
+      volumes:
+      - name: dind-storage
+        emptyDir: { }
+      - name: dind-socket
+        emptyDir: { }
+      params:
+      - name: source-url
+      - name: source-revision
+      sidecars:
+      - name: docker
+        image: docker:20.10-dind
+        securityContext:
+          privileged: true
+        volumeMounts:
+        - mountPath: /var/lib/docker
+          name: dind-storage
+        - mountPath: /var/run/
+          name: dind-socket
+      steps:
+      - name: test
+        image: eclipse-temurin:17
+        volumeMounts:
+        - mountPath: /var/run/
+          name: dind-socket
+        script: |-
+          set -ex
+          cd `mktemp -d`
+          curl -s $(params.source-url) | tar -m -xzvf -
+          ./mvnw clean test -V --no-transfer-progress

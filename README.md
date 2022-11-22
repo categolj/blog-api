@@ -10,11 +10,6 @@ A headless Blog Entries API
 
 ## Getting Started
 
-
-### Prepare GitHub integration
-
-TBD
-
 ### Run blog-api locally
 
 #### How to build blog-api
@@ -33,10 +28,8 @@ docker-compose up
 
 Run the app
 
-blog.github.access-token
-
 ```
-java -jar target/blog-api-5.0.0-SNAPSHOT.jar --blog.github.access-token=TBD --blog.github.webhook-secret=TBD 
+java -jar target/blog-api-5.0.0-SNAPSHOT.jar 
 ```
 
 ```
@@ -44,6 +37,10 @@ curl -s https://localhost:8080/entries
 ```
 
 Go to http://localhost:8080/swagger-ui/index.html for the Swagger UI
+
+### GitHub integration
+
+TBD
 
 ### Run on Kubernetes
 

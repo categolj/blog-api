@@ -12,6 +12,7 @@ import java.util.Optional;
 import am.ik.blog.category.Category;
 import am.ik.blog.entry.search.SearchCriteria;
 import am.ik.blog.tag.Tag;
+import am.ik.yavi.core.ConstraintViolationsException;
 import org.mybatis.scripting.thymeleaf.SqlGenerator;
 import reactor.util.function.Tuple2;
 import reactor.util.function.Tuples;
@@ -118,6 +119,7 @@ public class EntryMapper {
 
 	@Transactional
 	public Map<String, Integer> save(Entry entry) {
+		Entry.validator.validate(entry).throwIfInvalid(ConstraintViolationsException::new);
 		final Map<String, Integer> result = new LinkedHashMap<>();
 		final FrontMatter frontMatter = entry.getFrontMatter();
 		final Author created = entry.getCreated();

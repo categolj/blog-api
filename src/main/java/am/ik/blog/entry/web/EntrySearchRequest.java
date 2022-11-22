@@ -7,7 +7,7 @@ import am.ik.blog.entry.search.SearchCriteria;
 import am.ik.blog.entry.search.SearchCriteria.SearchCriteriaBuilder;
 import am.ik.blog.tag.Tag;
 
-public class EntryRequest {
+public class EntrySearchRequest {
 	private String query;
 
 	private String tag;
