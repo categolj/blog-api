@@ -196,7 +196,7 @@ class EntryRestControllerIntegrationTest {
 				.jsonPath("$.entryId").isEqualTo(99999)
 				.jsonPath("$.content").isEqualTo("Hello World!\nTest Test Test!")
 				.jsonPath("$.created.name").isEqualTo("making") // creator remains unchanged
-				.jsonPath("$.created.date").isEqualTo("2017-03-31T16:00:00Z")
+				.jsonPath("$.created.date").isEqualTo("2017-04-01T01:00:00Z")
 				.jsonPath("$.updated.name").isEqualTo("admin")
 				.jsonPath("$.updated.date").isNotEmpty()
 				.jsonPath("$.frontMatter.title").isEqualTo("Hello World!")
@@ -217,7 +217,7 @@ class EntryRestControllerIntegrationTest {
 				.jsonPath("$.entryId").isEqualTo(99999)
 				.jsonPath("$.content").isEqualTo("Hello World!\nTest Test Test!")
 				.jsonPath("$.created.name").isEqualTo("making")
-				.jsonPath("$.created.date").isEqualTo("2017-03-31T16:00:00Z")
+				.jsonPath("$.created.date").isEqualTo("2017-04-01T01:00:00Z")
 				.jsonPath("$.updated.name").isEqualTo("admin")
 				.jsonPath("$.updated.date").isNotEmpty()
 				.jsonPath("$.frontMatter.title").isEqualTo("Hello World!")
