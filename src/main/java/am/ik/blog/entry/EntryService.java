@@ -12,6 +12,7 @@ import reactor.core.publisher.Mono;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class EntryService {
@@ -60,5 +61,10 @@ public class EntryService {
 
 	public List<Entry> findAll(SearchCriteria criteria, Pageable pageable) {
 		return entryMapper.findAll(criteria, pageable);
+	}
+
+	@Transactional
+	public int delete(Long entryId) {
+		return this.entryMapper.delete(entryId);
 	}
 }

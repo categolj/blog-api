@@ -24,6 +24,7 @@ import org.springframework.test.web.reactive.server.WebTestClient;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.verify;
 
 @WebMvcTest
 @Import(SecurityConfig.class)
@@ -89,6 +90,17 @@ class EntryRestControllerTest {
 				.jsonPath("$.content[1].entryId").isEqualTo(200L)
 				.jsonPath("$.content[1].content").isEqualTo("Hello Blog!")
 				.jsonPath("$.content[1].frontMatter.title").isEqualTo("Blog");
+	}
+
+	@Test
+	void delete() {
+		given(this.entryMapper.delete(100L)).willReturn(1);
+		this.webTestClient.delete()
+				.uri("/entries/100")
+				.headers(httpHeaders -> httpHeaders.setBasicAuth("admin", "changeme"))
+				.exchange()
+				.expectStatus().isNoContent();
+		verify(this.entryMapper).delete(100L);
 	}
 
 	@TestConfiguration

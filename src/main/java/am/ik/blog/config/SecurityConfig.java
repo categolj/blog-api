@@ -2,6 +2,7 @@ package am.ik.blog.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -21,6 +22,10 @@ public class SecurityConfig {
 		return http
 				.authorizeHttpRequests(authorize -> authorize
 						.requestMatchers("/admin/**").authenticated()
+						.requestMatchers(HttpMethod.POST, "/entries/**").authenticated()
+						.requestMatchers(HttpMethod.PATCH, "/entries/**").authenticated()
+						.requestMatchers(HttpMethod.PUT, "/entries/**").authenticated()
+						.requestMatchers(HttpMethod.DELETE, "/entries/**").authenticated()
 						.anyRequest().permitAll()
 				)
 				.httpBasic()

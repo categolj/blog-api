@@ -109,6 +109,19 @@ class EntryRestControllerIntegrationTest {
 				});
 	}
 
+	@Test
+	void delete() {
+		this.webTestClient.delete()
+				.uri("/entries/99999")
+				.headers(httpHeaders -> httpHeaders.setBasicAuth("admin", "changeme"))
+				.exchange()
+				.expectStatus().isNoContent();
+
+		this.webTestClient.get().uri("/entries/99999")
+				.exchange()
+				.expectStatus().isNotFound();
+	}
+
 	@JsonIgnoreProperties(ignoreUnknown = true)
 	static class EntryPage {
 
