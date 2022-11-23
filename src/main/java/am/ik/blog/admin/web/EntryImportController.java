@@ -14,6 +14,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import org.springframework.http.MediaType;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -31,6 +32,7 @@ public class EntryImportController {
 	}
 
 	@PostMapping(path = "/admin/import", produces = MediaType.APPLICATION_JSON_VALUE)
+	@Transactional
 	@Operation(security = { @SecurityRequirement(name = "basic") })
 	public Optional<List<String>> importEntries(
 			@RequestParam(defaultValue = "0") int from,
