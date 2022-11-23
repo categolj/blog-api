@@ -114,7 +114,7 @@ public class EntryRestController {
 					this.entryService.save(entry);
 					return entry;
 				})
-				.map(entry -> buildEntryResponse(entry, builder, isUpdate.get()))
+				.map(entry -> buildEntryResponse(entry, builder, isUpdate))
 				.orElseThrow(() -> new ResponseStatusException(BAD_REQUEST, "Can't parse the markdown file"));
 	}
 
@@ -145,11 +145,11 @@ public class EntryRestController {
 				.withUpdated(updated)
 				.build();
 		this.entryService.save(entry);
-		return buildEntryResponse(entry, builder, isUpdate.get());
+		return buildEntryResponse(entry, builder, isUpdate);
 	}
 
-	private static ResponseEntity<?> buildEntryResponse(Entry entry, UriComponentsBuilder builder, boolean isUpdate) {
-		return isUpdate ? ResponseEntity.ok(entry) : ResponseEntity.created(builder.path("/entries/{entryId}").build(entry.getEntryId())).body(entry);
+	private static ResponseEntity<?> buildEntryResponse(Entry entry, UriComponentsBuilder builder, AtomicBoolean isUpdate) {
+		return isUpdate.get() ? ResponseEntity.ok(entry) : ResponseEntity.created(builder.path("/entries/{entryId}").build(entry.getEntryId())).body(entry);
 	}
 
 	@GetMapping(path = "/entries/template.md", produces = MediaType.TEXT_MARKDOWN_VALUE)
