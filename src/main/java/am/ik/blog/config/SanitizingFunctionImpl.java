@@ -1,4 +1,4 @@
-package am.ik.blog.admin.web;
+package am.ik.blog.config;
 
 import java.util.Set;
 
