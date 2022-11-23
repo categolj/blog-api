@@ -44,7 +44,7 @@ public class SearchCriteria {
 	}
 
 	public static SearchCriteria.SearchCriteriaBuilder defaults() {
-		return SearchCriteria.builder().excludeContent(true);
+		return SearchCriteria.builder().excludeContent();
 	}
 
 	public CategoryOrders getCategoryOrders() {
@@ -142,6 +142,14 @@ public class SearchCriteria {
 			return this;
 		}
 
+		public SearchCriteriaBuilder excludeContent() {
+			return this.excludeContent(true);
+		}
+
+		public SearchCriteriaBuilder includeContent() {
+			return this.excludeContent(false);
+		}
+
 		public SearchCriteriaBuilder keyword(String keyword) {
 			this.keyword = keyword;
 			return this;
@@ -161,12 +169,12 @@ public class SearchCriteria {
 	@Override
 	public String toString() {
 		return "SearchCriteria{" +
-				"excludeContent=" + excludeContent +
-				", createdBy='" + createdBy + '\'' +
-				", lastModifiedBy='" + lastModifiedBy + '\'' +
-				", tag=" + tag +
-				", categoryOrders=" + categoryOrders +
-				", keyword='" + keyword + '\'' +
-				'}';
+			   "excludeContent=" + excludeContent +
+			   ", createdBy='" + createdBy + '\'' +
+			   ", lastModifiedBy='" + lastModifiedBy + '\'' +
+			   ", tag=" + tag +
+			   ", categoryOrders=" + categoryOrders +
+			   ", keyword='" + keyword + '\'' +
+			   '}';
 	}
 }

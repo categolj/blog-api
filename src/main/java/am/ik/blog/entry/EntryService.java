@@ -54,7 +54,7 @@ public class EntryService {
 		try {
 			final Path zip = Files.createTempFile("entries", ".zip");
 			try (ZipOutputStream outputStream = new ZipOutputStream(Files.newOutputStream(zip, StandardOpenOption.CREATE, StandardOpenOption.WRITE))) {
-				final List<Entry> entries = this.entryMapper.findAll(SearchCriteria.builder().excludeContent(false).build(), PageRequest.of(0, 10_0000));
+				final List<Entry> entries = this.entryMapper.findAll(SearchCriteria.builder().includeContent().build(), PageRequest.of(0, 10_0000));
 				for (Entry entry : entries) {
 					final ZipEntry zipEntry = new ZipEntry("content/%05d.md".formatted(entry.getEntryId()));
 					log.info("Exporting {}", zipEntry);
