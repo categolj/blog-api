@@ -105,14 +105,15 @@ public class Entry {
 				---
 				title: %s
 				tags: %s
-				categories: %s%s
+				categories: %s%s%s
 				---
-								
+				
 				%s
 				""".formatted(frontMatter.getTitle(),
 				frontMatter.getTags().stream().map(t -> "\"%s\"".formatted(t.name())).toList(),
 				frontMatter.getCategories().stream().map(c -> "\"%s\"".formatted(c.name())).toList(),
 				created.getDate() == null ? "" : "%ndate: %s".formatted(created.getDate()),
+				updated.getDate() == null ? "" : "%nupdated: %s".formatted(updated.getDate()),
 				content);
 	}
 }
