@@ -1,9 +1,18 @@
 package am.ik.blog.entry;
 
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
+import java.nio.file.attribute.FileTime;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 import am.ik.blog.entry.search.SearchCriteria;
 import am.ik.blog.github.GitHubUserContentClient;
@@ -13,6 +22,7 @@ import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Mono;
 
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -38,6 +48,57 @@ public class EntryService {
 
 	public Optional<Entry> findOne(Long entryId, boolean excludeContent) {
 		return this.entryMapper.findOne(entryId, excludeContent);
+	}
+
+	public Path exportEntriesAsZip() {
+		try {
+			final Path zip = Files.createTempFile("entries", ".zip");
+			try (ZipOutputStream outputStream = new ZipOutputStream(Files.newOutputStream(zip, StandardOpenOption.CREATE, StandardOpenOption.WRITE))) {
+				final List<Entry> entries = this.entryMapper.findAll(SearchCriteria.builder().excludeContent(false).build(), PageRequest.of(0, 10_0000));
+				for (Entry entry : entries) {
+					final ZipEntry zipEntry = new ZipEntry("content/%05d.md".formatted(entry.getEntryId()));
+					log.info("Exporting {}", zipEntry);
+					zipEntry.setCreationTime(FileTime.from(entry.getCreated().getDate().toInstant()));
+					zipEntry.setLastModifiedTime(FileTime.from(entry.getUpdated().getDate().toInstant()));
+					outputStream.putNextEntry(zipEntry);
+					outputStream.write(entry.toMarkdown().getBytes(StandardCharsets.UTF_8));
+					outputStream.closeEntry();
+				}
+				final Map<String, String> additionalContents = Map.of(
+						"README.md", """
+								# Blog Entries
+								""",
+						"HELP.md", """
+								# Create a new git repository on the command line
+																
+								```
+								GIT_URL=...
+								git init
+								git add -A
+								git commit -m "first commit"
+								git branch -M main
+								git remote add origin ${GIT_URL}
+								git push -u origin main
+								```
+								""",
+						".gitignore", """
+								.DS_Store
+								HELP.md
+								*.iml
+								.idea
+								""");
+				for (Map.Entry<String, String> kv : additionalContents.entrySet()) {
+					final ZipEntry zipEntry = new ZipEntry(kv.getKey());
+					outputStream.putNextEntry(zipEntry);
+					outputStream.write(kv.getValue().getBytes(StandardCharsets.UTF_8));
+					outputStream.closeEntry();
+				}
+			}
+			return zip;
+		}
+		catch (IOException e) {
+			throw new UncheckedIOException(e);
+		}
 	}
 
 	/* TODO */

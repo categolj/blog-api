@@ -18,7 +18,7 @@ public class EntrySearchRequest {
 
 	private String updatedBy;
 
-	private boolean excludeContent;
+	private boolean excludeContent = true;
 
 	public String getQuery() {
 		return query;

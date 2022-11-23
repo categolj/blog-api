@@ -92,7 +92,7 @@ public class EntryMapper {
 		final Map<Long, List<Tag>> tagsMap = this.tagsMap(ids);
 		final MapSqlParameterSource params = entryIdsParameterSource(ids);
 		final String sql = this.sqlGenerator.generate(loadSqlAsString("am/ik/blog/entry/EntryMapper/findAll.sql"), params.getValues(), params::addValue);
-		return this.jdbcTemplate.query(sql, params, rowMapper(true, categoriesMap, tagsMap));
+		return this.jdbcTemplate.query(sql, params, rowMapper(searchCriteria.isExcludeContent(), categoriesMap, tagsMap));
 	}
 
 	@Transactional(readOnly = true)

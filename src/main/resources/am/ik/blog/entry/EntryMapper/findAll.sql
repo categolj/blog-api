@@ -1,5 +1,8 @@
 SELECT e.entry_id,
        e.title,
+/*[# th:if="!${excludeContent}"]*/
+       e.content,
+/*[/]*/
        e.created_by,
        e.created_date,
        e.last_modified_by,

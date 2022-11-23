@@ -1,5 +1,10 @@
 package am.ik.blog.entry.web;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.UncheckedIOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.Clock;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
@@ -16,14 +21,18 @@ import am.ik.blog.entry.search.SearchCriteria;
 import am.ik.blog.tag.Tag;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StreamUtils;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -43,6 +52,8 @@ public class EntryRestController {
 	private final EntryService entryService;
 
 	private final Clock clock;
+
+	private final Logger log = LoggerFactory.getLogger(EntryRestController.class);
 
 	public EntryRestController(EntryService entryService, Clock clock) {
 		this.entryService = entryService;
@@ -143,5 +154,28 @@ public class EntryRestController {
 				.withUpdated(Author.NULL_AUTHOR)
 				.build()
 				.toMarkdown();
+	}
+
+	@GetMapping(path = "/entries.zip", produces = "application/zip")
+	@Operation(security = { @SecurityRequirement(name = "basic") })
+	public ResponseEntity<?> exportEntries() {
+		final Path zip = this.entryService.exportEntriesAsZip();
+		try (final InputStream stream = Files.newInputStream(zip)) {
+			final byte[] content = StreamUtils.copyToByteArray(stream);
+			return ResponseEntity.ok()
+					.header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=entries.zip")
+					.body(content);
+		}
+		catch (IOException e) {
+			throw new UncheckedIOException(e);
+		}
+		finally {
+			try {
+				Files.deleteIfExists(zip);
+			}
+			catch (IOException e) {
+				log.warn("Failed to delete file (" + zip + ")", e);
+			}
+		}
 	}
 }

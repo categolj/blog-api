@@ -76,6 +76,9 @@ class SqlTest {
 		assertThat(sql.trim()).isEqualTo("""
 				SELECT e.entry_id,
 				       e.title,
+				
+				       e.content,
+				
 				       e.created_by,
 				       e.created_date,
 				       e.last_modified_by,
@@ -88,6 +91,9 @@ class SqlTest {
 		assertThat(sqlToUse.trim()).isEqualTo("""
 				SELECT e.entry_id,
 				       e.title,
+				
+				       e.content,
+				
 				       e.created_by,
 				       e.created_date,
 				       e.last_modified_by,

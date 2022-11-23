@@ -22,6 +22,7 @@ public class SecurityConfig {
 		return http
 				.authorizeHttpRequests(authorize -> authorize
 						.requestMatchers("/admin/**").authenticated()
+						.requestMatchers("/entries.zip").authenticated()
 						.requestMatchers(HttpMethod.POST, "/entries/**").authenticated()
 						.requestMatchers(HttpMethod.PATCH, "/entries/**").authenticated()
 						.requestMatchers(HttpMethod.PUT, "/entries/**").authenticated()
