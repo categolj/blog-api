@@ -1,0 +1,1 @@
+SELECT MAX(entry_id) + 1 AS next FROM entry

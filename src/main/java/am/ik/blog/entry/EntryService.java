@@ -50,14 +50,18 @@ public class EntryService {
 		return this.entryMapper.findOne(entryId, excludeContent);
 	}
 
+	public Long nextId() {
+		return this.entryMapper.nextId();
+	}
+
 	public Path exportEntriesAsZip() {
 		try {
 			final Path zip = Files.createTempFile("entries", ".zip");
+			log.info("Exporting entries to {}", zip);
 			try (ZipOutputStream outputStream = new ZipOutputStream(Files.newOutputStream(zip, StandardOpenOption.CREATE, StandardOpenOption.WRITE))) {
 				final List<Entry> entries = this.entryMapper.findAll(SearchCriteria.builder().includeContent().build(), PageRequest.of(0, 10_0000));
 				for (Entry entry : entries) {
-					final ZipEntry zipEntry = new ZipEntry("content/%05d.md".formatted(entry.getEntryId()));
-					log.info("Exporting {}", zipEntry);
+					final ZipEntry zipEntry = new ZipEntry("content/%s.md".formatted(entry.formatId()));
 					zipEntry.setCreationTime(FileTime.from(entry.getCreated().getDate().toInstant()));
 					zipEntry.setLastModifiedTime(FileTime.from(entry.getUpdated().getDate().toInstant()));
 					outputStream.putNextEntry(zipEntry);
@@ -130,7 +134,11 @@ public class EntryService {
 	@Transactional
 	public Map<String, Integer> save(Entry entry) {
 		log.info("Saving {}", entry);
-		Entry.validator.validate(entry).throwIfInvalid(ConstraintViolationsException::new);
+		Entry.validator.validate(entry)
+				.throwIfInvalid(violations -> {
+					log.info("Violated constraints {}", violations);
+					return new ConstraintViolationsException(violations);
+				});
 		return this.entryMapper.save(entry);
 	}
 

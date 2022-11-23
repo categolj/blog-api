@@ -9,6 +9,8 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import java.util.List;
 import java.util.StringJoiner;
 
+import org.springframework.util.CollectionUtils;
+
 @JsonDeserialize(builder = FrontMatterBuilder.class)
 public class FrontMatter {
 	public static Validator<FrontMatter> validator = ValidatorBuilder.<FrontMatter>of()
@@ -35,19 +37,25 @@ public class FrontMatter {
 	}
 
 	public List<Category> getCategories() {
+		if (CollectionUtils.isEmpty(categories)) {
+			return List.of();
+		}
 		return categories;
 	}
 
 	public List<Tag> getTags() {
+		if (CollectionUtils.isEmpty(tags)) {
+			return List.of();
+		}
 		return tags;
 	}
 
 	@Override
 	public String toString() {
 		return "FrontMatter{" +
-				"title='" + title + '\'' +
-				", categories=" + categories +
-				", tags=" + tags +
-				'}';
+			   "title='" + title + '\'' +
+			   ", categories=" + categories +
+			   ", tags=" + tags +
+			   '}';
 	}
 }

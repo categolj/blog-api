@@ -38,6 +38,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -68,8 +69,11 @@ public class EntryRestController {
 	}
 
 	@GetMapping(path = "/entries/{entryId}.md", produces = MediaType.TEXT_MARKDOWN_VALUE)
-	public String getEntryAsMarkdown(@PathVariable("entryId") Long entryId, @RequestParam(defaultValue = "false") boolean excludeContent) {
-		return this.getEntry(entryId, excludeContent).toMarkdown();
+	public ResponseEntity<String> getEntryAsMarkdown(@PathVariable("entryId") Long entryId, @RequestParam(defaultValue = "false") boolean excludeContent) {
+		final Entry entry = this.getEntry(entryId, excludeContent);
+		return ResponseEntity.ok()
+				.header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=%s.md".formatted(entry.formatId()))
+				.body(entry.toMarkdown());
 	}
 
 	@GetMapping(path = "/entries", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -85,6 +89,53 @@ public class EntryRestController {
 		return ResponseEntity.noContent().build();
 	}
 
+	@PostMapping(path = "/entries", consumes = MediaType.TEXT_MARKDOWN_VALUE)
+	@Operation(security = { @SecurityRequirement(name = "basic") })
+	@Transactional
+	public ResponseEntity<?> postEntryFromMarkdown(@RequestBody String markdown,
+			@AuthenticationPrincipal UserDetails userDetails,
+			UriComponentsBuilder builder) {
+		final Long entryId = this.entryService.nextId();
+		return EntryBuilder.parseBody(entryId, markdown.trim())
+				.map(tpl -> {
+					final EntryBuilder entryBuilder = tpl.getT1();
+					final String username = userDetails.getUsername();
+					final OffsetDateTime now = OffsetDateTime.ofInstant(this.clock.instant(), ZoneId.of("UTC"));
+					final Author created = new Author(username, tpl.getT2().orElse(now));
+					final Author updated = new Author(username, tpl.getT3().orElse(now));
+					final Entry entry = entryBuilder
+							.withCreated(created)
+							.withUpdated(updated)
+							.build();
+					this.entryService.save(entry);
+					return entry;
+				})
+				.map(entry -> buildEntryResponse(entry, builder, false))
+				.orElseThrow(() -> new ResponseStatusException(BAD_REQUEST, "Can't parse the markdown file"));
+	}
+
+	@PostMapping(path = "/entries", consumes = MediaType.APPLICATION_JSON_VALUE)
+	@Operation(security = { @SecurityRequirement(name = "basic") })
+	@Transactional
+	public ResponseEntity<?> postEntryFromJson(@RequestBody EntryRequest request,
+			@AuthenticationPrincipal UserDetails userDetails,
+			UriComponentsBuilder builder) {
+		final Long entryId = this.entryService.nextId();
+		final String username = userDetails.getUsername();
+		final OffsetDateTime now = OffsetDateTime.ofInstant(this.clock.instant(), ZoneId.of("UTC"));
+		final Author created = request.createdOrNullAuthor().setNameIfAbsent(username).setDateIfAbsent(now);
+		final Author updated = request.updatedOrNullAuthor().setNameIfAbsent(username).setDateIfAbsent(now);
+		final Entry entry = new EntryBuilder()
+				.withEntryId(entryId)
+				.withContent(request.content())
+				.withFrontMatter(request.frontMatter())
+				.withCreated(created)
+				.withUpdated(updated)
+				.build();
+		this.entryService.save(entry);
+		return buildEntryResponse(entry, builder, false);
+	}
+
 	@PutMapping(path = "/entries/{entryId}", consumes = MediaType.TEXT_MARKDOWN_VALUE)
 	@Operation(security = { @SecurityRequirement(name = "basic") })
 	@Transactional
@@ -93,7 +144,7 @@ public class EntryRestController {
 			@AuthenticationPrincipal UserDetails userDetails,
 			UriComponentsBuilder builder) {
 		final AtomicBoolean isUpdate = new AtomicBoolean(false);
-		return EntryBuilder.parseBody(entryId, markdown)
+		return EntryBuilder.parseBody(entryId, markdown.trim())
 				.map(tpl -> {
 					final EntryBuilder entryBuilder = tpl.getT1();
 					final String username = userDetails.getUsername();
@@ -114,7 +165,7 @@ public class EntryRestController {
 					this.entryService.save(entry);
 					return entry;
 				})
-				.map(entry -> buildEntryResponse(entry, builder, isUpdate))
+				.map(entry -> buildEntryResponse(entry, builder, isUpdate.get()))
 				.orElseThrow(() -> new ResponseStatusException(BAD_REQUEST, "Can't parse the markdown file"));
 	}
 
@@ -145,11 +196,11 @@ public class EntryRestController {
 				.withUpdated(updated)
 				.build();
 		this.entryService.save(entry);
-		return buildEntryResponse(entry, builder, isUpdate);
+		return buildEntryResponse(entry, builder, isUpdate.get());
 	}
 
-	private static ResponseEntity<?> buildEntryResponse(Entry entry, UriComponentsBuilder builder, AtomicBoolean isUpdate) {
-		return isUpdate.get() ? ResponseEntity.ok(entry) : ResponseEntity.created(builder.path("/entries/{entryId}").build(entry.getEntryId())).body(entry);
+	private static ResponseEntity<?> buildEntryResponse(Entry entry, UriComponentsBuilder builder, boolean isUpdate) {
+		return isUpdate ? ResponseEntity.ok(entry) : ResponseEntity.created(builder.path("/entries/{entryId}").build(entry.getEntryId())).body(entry);
 	}
 
 	@GetMapping(path = "/entries/template.md", produces = MediaType.TEXT_MARKDOWN_VALUE)
@@ -186,6 +237,7 @@ public class EntryRestController {
 		}
 		finally {
 			try {
+				log.info("Deleting {}", zip);
 				Files.deleteIfExists(zip);
 			}
 			catch (IOException e) {

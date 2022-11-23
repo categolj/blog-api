@@ -109,6 +109,12 @@ public class EntryMapper {
 		return Objects.<Long>requireNonNullElse(count, 0L);
 	}
 
+	public long nextId() {
+		final String sql = loadSqlAsString("am/ik/blog/entry/EntryMapper/nextId.sql");
+		final Long nextId = this.jdbcTemplate.queryForObject(sql, Map.of(), (rs, i) -> rs.getLong("next"));
+		return Objects.<Long>requireNonNullElse(nextId, -1L);
+	}
+
 	@Transactional
 	public int delete(Long entryId) {
 		final MapSqlParameterSource params = new MapSqlParameterSource()

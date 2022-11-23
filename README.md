@@ -32,11 +32,23 @@ Run the app
 java -jar target/blog-api-5.0.0-SNAPSHOT.jar 
 ```
 
-Put a first blog post from template
+Download a blog entry template
 
 ```
 curl -s http://localhost:8080/entries/template.md > template.md
+```
+
+
+Put a first blog entry from template
+
+```
 curl -s -u admin:changeme -XPUT http://localhost:8080/entries/1 -H "Content-Type: text/markdown" -d "$(cat template.md)"
+```
+
+or if you don't want to specify the entry id, post it
+
+```
+curl -s -u admin:changeme -XPOST http://localhost:8080/entries -H "Content-Type: text/markdown" -d "$(cat template.md)"
 ```
 
 Check the entries

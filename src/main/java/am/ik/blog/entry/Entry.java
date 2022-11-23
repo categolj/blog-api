@@ -49,6 +49,10 @@ public class Entry {
 		return entryId;
 	}
 
+	public String formatId() {
+		return "%05d".formatted(entryId);
+	}
+
 	public FrontMatter getFrontMatter() {
 		return frontMatter;
 	}
@@ -107,7 +111,7 @@ public class Entry {
 				tags: %s
 				categories: %s%s%s
 				---
-				
+								
 				%s
 				""".formatted(frontMatter.getTitle(),
 				frontMatter.getTags().stream().map(t -> "\"%s\"".formatted(t.name())).toList(),
