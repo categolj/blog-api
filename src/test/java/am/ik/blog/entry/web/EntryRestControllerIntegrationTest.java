@@ -189,9 +189,7 @@ class EntryRestControllerIntegrationTest {
 						Test Test Test!
 						""")
 				.exchange()
-				.expectStatus().isCreated()
-				.expectHeader()
-				.location("http://localhost:%d/entries/99999".formatted(port))
+				.expectStatus().isOk()
 				.expectBody()
 				.jsonPath("$.entryId").isEqualTo(99999)
 				.jsonPath("$.content").isEqualTo("Hello World!\nTest Test Test!")

@@ -10,6 +10,7 @@ import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import am.ik.blog.category.Category;
 import am.ik.blog.entry.Author;
@@ -91,12 +92,17 @@ public class EntryRestController {
 			@RequestBody String markdown,
 			@AuthenticationPrincipal UserDetails userDetails,
 			UriComponentsBuilder builder) {
+		final AtomicBoolean isUpdate = new AtomicBoolean(false);
 		return EntryBuilder.parseBody(entryId, markdown)
 				.map(tpl -> {
 					final EntryBuilder entryBuilder = tpl.getT1();
 					final String username = userDetails.getUsername();
 					final OffsetDateTime now = OffsetDateTime.ofInstant(this.clock.instant(), ZoneId.of("UTC"));
 					final Author created = this.entryService.findOne(entryId, true)
+							.filter(e -> {
+								isUpdate.set(true);
+								return true;
+							})
 							.map(Entry::getCreated)
 							.map(author -> tpl.getT2().map(author::withDate).orElse(author))
 							.orElseGet(() -> new Author(username, tpl.getT2().orElse(now)));
@@ -108,7 +114,7 @@ public class EntryRestController {
 					this.entryService.save(entry);
 					return entry;
 				})
-				.map(entry -> ResponseEntity.created(builder.path("/entries/{entryId}").build(entryId)).body(entry))
+				.map(entry -> buildEntryResponse(entry, builder, isUpdate.get()))
 				.orElseThrow(() -> new ResponseStatusException(BAD_REQUEST, "Can't parse the markdown file"));
 	}
 
@@ -119,9 +125,14 @@ public class EntryRestController {
 			@RequestBody EntryRequest request,
 			@AuthenticationPrincipal UserDetails userDetails,
 			UriComponentsBuilder builder) {
+		final AtomicBoolean isUpdate = new AtomicBoolean(false);
 		final String username = userDetails.getUsername();
 		final OffsetDateTime now = OffsetDateTime.ofInstant(this.clock.instant(), ZoneId.of("UTC"));
 		final Author created = this.entryService.findOne(entryId, true)
+				.filter(e -> {
+					isUpdate.set(true);
+					return true;
+				})
 				.map(Entry::getCreated)
 				.map(author -> request.createdOrNullAuthor().setNameIfAbsent(author.getName()).setDateIfAbsent(author.getDate()))
 				.orElseGet(() -> request.createdOrNullAuthor().setNameIfAbsent(username).setDateIfAbsent(now));
@@ -134,7 +145,11 @@ public class EntryRestController {
 				.withUpdated(updated)
 				.build();
 		this.entryService.save(entry);
-		return ResponseEntity.created(builder.path("/entries/{entryId}").build(entryId)).body(entry);
+		return buildEntryResponse(entry, builder, isUpdate.get());
+	}
+
+	private static ResponseEntity<?> buildEntryResponse(Entry entry, UriComponentsBuilder builder, boolean isUpdate) {
+		return isUpdate ? ResponseEntity.ok(entry) : ResponseEntity.created(builder.path("/entries/{entryId}").build(entry.getEntryId())).body(entry);
 	}
 
 	@GetMapping(path = "/entries/template.md", produces = MediaType.TEXT_MARKDOWN_VALUE)

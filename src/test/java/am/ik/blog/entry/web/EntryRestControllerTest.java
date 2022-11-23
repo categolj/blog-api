@@ -175,7 +175,7 @@ class EntryRestControllerTest {
 	}
 
 	@Test
-	void putEntryFromMarkdown_201_updated() {
+	void putEntryFromMarkdown_200() {
 		final OffsetDateTime createdDate = OffsetDateTime.of(2022, 3, 1, 1, 0, 0, 0, ZoneOffset.UTC);
 		given(this.entryMapper.findOne(100L, true)).willReturn(Optional.of(new EntryBuilder()
 				.withEntryId(100L)
@@ -197,9 +197,7 @@ class EntryRestControllerTest {
 						Test Test Test!
 						""")
 				.exchange()
-				.expectStatus().isCreated()
-				.expectHeader()
-				.location("http://localhost/entries/100")
+				.expectStatus().isOk()
 				.expectBody()
 				.jsonPath("$.entryId").isEqualTo(100)
 				.jsonPath("$.content").isEqualTo("Hello World!\nTest Test Test!")
@@ -219,7 +217,7 @@ class EntryRestControllerTest {
 	}
 
 	@Test
-	void putEntryFromMarkdown_201_updated_fixedDate() {
+	void putEntryFromMarkdown_200_fixedDate() {
 		final OffsetDateTime createdDate = OffsetDateTime.of(2022, 3, 1, 1, 0, 0, 0, ZoneOffset.UTC);
 		given(this.entryMapper.findOne(100L, true)).willReturn(Optional.of(new EntryBuilder()
 				.withEntryId(100L)
@@ -243,9 +241,7 @@ class EntryRestControllerTest {
 						Test Test Test!
 						""")
 				.exchange()
-				.expectStatus().isCreated()
-				.expectHeader()
-				.location("http://localhost/entries/100")
+				.expectStatus().isOk()
 				.expectBody()
 				.jsonPath("$.entryId").isEqualTo(100)
 				.jsonPath("$.content").isEqualTo("Hello World!\nTest Test Test!")
@@ -429,7 +425,7 @@ class EntryRestControllerTest {
 	}
 
 	@Test
-	void putEntryFromJson_201_updated() {
+	void putEntryFromJson_200() {
 		final OffsetDateTime createdDate = OffsetDateTime.of(2022, 3, 1, 1, 0, 0, 0, ZoneOffset.UTC);
 		given(this.entryMapper.findOne(100L, true)).willReturn(Optional.of(new EntryBuilder()
 				.withEntryId(100L)
@@ -468,9 +464,7 @@ class EntryRestControllerTest {
 						}
 						""")
 				.exchange()
-				.expectStatus().isCreated()
-				.expectHeader()
-				.location("http://localhost/entries/100")
+				.expectStatus().isOk()
 				.expectBody()
 				.jsonPath("$.entryId").isEqualTo(100)
 				.jsonPath("$.content").isEqualTo("Hello World!\nTest Test Test!")
@@ -490,7 +484,7 @@ class EntryRestControllerTest {
 	}
 
 	@Test
-	void putEntryFromJson_201_updated_fixedDate() {
+	void putEntryFromJson_200_fixedDate() {
 		final OffsetDateTime createdDate = OffsetDateTime.of(2022, 3, 1, 1, 0, 0, 0, ZoneOffset.UTC);
 		given(this.entryMapper.findOne(100L, true)).willReturn(Optional.of(new EntryBuilder()
 				.withEntryId(100L)
@@ -535,9 +529,7 @@ class EntryRestControllerTest {
 						}
 						""")
 				.exchange()
-				.expectStatus().isCreated()
-				.expectHeader()
-				.location("http://localhost/entries/100")
+				.expectStatus().isOk()
 				.expectBody()
 				.jsonPath("$.entryId").isEqualTo(100)
 				.jsonPath("$.content").isEqualTo("Hello World!\nTest Test Test!")
