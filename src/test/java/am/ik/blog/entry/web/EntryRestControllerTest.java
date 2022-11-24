@@ -687,7 +687,7 @@ class EntryRestControllerTest {
 		final String body = vals[1];
 		given(this.entryMapper.findOne(100L, true)).willReturn(Optional.empty());
 		this.webTestClient.put()
-				.uri("/entries/-1")
+				.uri("/entries/0")
 				.header(HttpHeaders.CONTENT_TYPE, contentType)
 				.headers(httpHeaders -> httpHeaders.setBasicAuth("admin", "changeme"))
 				.bodyValue(body)
@@ -698,7 +698,7 @@ class EntryRestControllerTest {
 				.jsonPath("$.title").isEqualTo("Bad Request")
 				.jsonPath("$.status").isEqualTo(400)
 				.jsonPath("$.detail").isEqualTo("Constraint violations found!")
-				.jsonPath("$.instance").isEqualTo("/entries/-1")
+				.jsonPath("$.instance").isEqualTo("/entries/0")
 				.jsonPath("$.violations.length()").isEqualTo(3)
 				.jsonPath("$.violations[0].defaultMessage").isEqualTo("\"entryId\" must be positive")
 				.jsonPath("$.violations[1].defaultMessage").isEqualTo("\"content\" must not be blank")

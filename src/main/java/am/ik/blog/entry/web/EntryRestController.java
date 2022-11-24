@@ -62,13 +62,13 @@ public class EntryRestController {
 		this.clock = clock;
 	}
 
-	@GetMapping(path = "/entries/{entryId}")
+	@GetMapping(path = "/entries/{entryId:\\d+}")
 	public Entry getEntry(@PathVariable("entryId") Long entryId, @RequestParam(defaultValue = "false") boolean excludeContent) {
 		final Optional<Entry> entry = this.entryService.findOne(entryId, excludeContent);
 		return entry.orElseThrow(() -> new ResponseStatusException(NOT_FOUND, String.format("The requested entry is not found (entryId = %d)", entryId)));
 	}
 
-	@GetMapping(path = "/entries/{entryId}.md", produces = MediaType.TEXT_MARKDOWN_VALUE)
+	@GetMapping(path = "/entries/{entryId:\\d+}.md", produces = MediaType.TEXT_MARKDOWN_VALUE)
 	public ResponseEntity<String> getEntryAsMarkdown(@PathVariable("entryId") Long entryId, @RequestParam(defaultValue = "false") boolean excludeContent) {
 		final Entry entry = this.getEntry(entryId, excludeContent);
 		return ResponseEntity.ok()
@@ -82,7 +82,7 @@ public class EntryRestController {
 		return this.entryService.findPage(searchCriteria, pageable);
 	}
 
-	@DeleteMapping(path = "/entries/{entryId}")
+	@DeleteMapping(path = "/entries/{entryId:\\d+}")
 	@Operation(security = { @SecurityRequirement(name = "basic") })
 	public ResponseEntity<Void> deleteEntry(@PathVariable("entryId") Long entryId) {
 		this.entryService.delete(entryId);
@@ -136,7 +136,7 @@ public class EntryRestController {
 		return buildEntryResponse(entry, builder, false);
 	}
 
-	@PutMapping(path = "/entries/{entryId}", consumes = MediaType.TEXT_MARKDOWN_VALUE)
+	@PutMapping(path = "/entries/{entryId:\\d+}", consumes = MediaType.TEXT_MARKDOWN_VALUE)
 	@Operation(security = { @SecurityRequirement(name = "basic") })
 	@Transactional
 	public ResponseEntity<?> putEntryFromMarkdown(@PathVariable("entryId") Long entryId,
@@ -169,7 +169,7 @@ public class EntryRestController {
 				.orElseThrow(() -> new ResponseStatusException(BAD_REQUEST, "Can't parse the markdown file"));
 	}
 
-	@PutMapping(path = "/entries/{entryId}", consumes = MediaType.APPLICATION_JSON_VALUE)
+	@PutMapping(path = "/entries/{entryId:\\d+}", consumes = MediaType.APPLICATION_JSON_VALUE)
 	@Operation(security = { @SecurityRequirement(name = "basic") })
 	@Transactional
 	public ResponseEntity<?> putEntryFromJson(@PathVariable("entryId") Long entryId,
@@ -200,7 +200,7 @@ public class EntryRestController {
 	}
 
 	private static ResponseEntity<?> buildEntryResponse(Entry entry, UriComponentsBuilder builder, boolean isUpdate) {
-		return isUpdate ? ResponseEntity.ok(entry) : ResponseEntity.created(builder.path("/entries/{entryId}").build(entry.getEntryId())).body(entry);
+		return isUpdate ? ResponseEntity.ok(entry) : ResponseEntity.created(builder.path("/entries/{entryId:\\d+}").build(entry.getEntryId())).body(entry);
 	}
 
 	@GetMapping(path = "/entries/template.md", produces = MediaType.TEXT_MARKDOWN_VALUE)
