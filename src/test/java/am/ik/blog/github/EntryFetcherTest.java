@@ -51,13 +51,11 @@ public class EntryFetcherTest {
 	void setup() throws Exception {
 		this.port = new Random().nextInt(60000, 65535);
 		this.server.start(this.port);
-
-		final HttpServiceProxyFactory httpServiceProxyFactory = WebClientAdapter.createHttpServiceProxyFactory(WebClient.builder()
+		final WebClientAdapter adapter = WebClientAdapter.forClient(WebClient.builder()
 				.baseUrl("http://localhost:" + port)
-				.defaultHeader(HttpHeaders.AUTHORIZATION, "token dummy"));
-		httpServiceProxyFactory.afterPropertiesSet();
-		this.gitHubClient = httpServiceProxyFactory
-				.createClient(GitHubClient.class);
+				.defaultHeader(HttpHeaders.AUTHORIZATION, "token dummy").build());
+		final HttpServiceProxyFactory factory = HttpServiceProxyFactory.builder(adapter).build();
+		this.gitHubClient = factory.createClient(GitHubClient.class);
 		this.entryFetcher = new EntryFetcher(this.gitHubClient);
 	}
 
