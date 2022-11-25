@@ -6,13 +6,11 @@ import am.ik.yavi.core.BiValidator;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.Errors;
-import org.springframework.validation.annotation.Validated;
 
 import static am.ik.yavi.constraint.charsequence.codepoints.AsciiCodePoints.ASCII_PRINTABLE_CHARS;
 
 @ConfigurationProperties(prefix = "blog.github")
 @Component
-@Validated
 public class GitHubProps implements org.springframework.validation.Validator {
 
 	private String accessToken;
