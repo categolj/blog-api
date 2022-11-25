@@ -18,7 +18,8 @@ public class CategoryMapper {
 	}
 
 	public List<List<Category>> findAll() {
-		final String sql = FileLoader.loadSqlAsString("am/ik/blog/category/CategoryMapper/findAll.sql");
+		final String sql = FileLoader
+				.loadSqlAsString("am/ik/blog/category/CategoryMapper/findAll.sql");
 		return this.jdbcTemplate.query(sql, Map.of(), (rs, rowNum) -> {
 			final String category = rs.getString("category");
 			if (category == null) {

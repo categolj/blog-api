@@ -69,12 +69,11 @@ public class EntrySearchRequest {
 	}
 
 	public SearchCriteria toCriteria() {
-		final SearchCriteriaBuilder builder = SearchCriteria.builder()
-				.keyword(query)
+		final SearchCriteriaBuilder builder = SearchCriteria.builder().keyword(query)
 				.tag((tag == null) ? null : new Tag(tag))
-				.categoryOrders((categories == null) ? null : CategoryOrders.from(categories))
-				.createdBy(createdBy)
-				.lastModifiedBy(updatedBy);
+				.categoryOrders(
+						(categories == null) ? null : CategoryOrders.from(categories))
+				.createdBy(createdBy).lastModifiedBy(updatedBy);
 		return builder.excludeContent(excludeContent).build();
 	}
 }

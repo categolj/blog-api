@@ -32,7 +32,8 @@ public class EntryImportController {
 
 	private final Logger log = LoggerFactory.getLogger(EntryImportController.class);
 
-	public EntryImportController(EntryFetcher entryFetcher, EntryService entryService, GitHubProps props) {
+	public EntryImportController(EntryFetcher entryFetcher, EntryService entryService,
+			GitHubProps props) {
 		this.entryFetcher = entryFetcher;
 		this.entryService = entryService;
 		this.props = props;
@@ -44,22 +45,19 @@ public class EntryImportController {
 	public Optional<List<String>> importEntries(
 			@RequestParam(defaultValue = "0") int from,
 			@RequestParam(defaultValue = "0") int to) {
-		log.info("Importing entries from https://github.com/{}/{} ({}-{})", this.props.getContentOwner(), this.props.getContentRepo(), from, to);
-		final Optional<List<Entry>> fetched = Flux.fromStream(IntStream.rangeClosed(from, to).boxed())
+		log.info("Importing entries from https://github.com/{}/{} ({}-{})",
+				this.props.getContentOwner(), this.props.getContentRepo(), from, to);
+		final Optional<List<Entry>> fetched = Flux
+				.fromStream(IntStream.rangeClosed(from, to).boxed())
 				.flatMap(i -> this.entryFetcher
-						.fetch(this.props.getContentOwner(), this.props.getContentRepo(), String.format("content/%05d.md", i))
-						.onErrorResume(
-								e -> (e instanceof NotFound)
-										? Mono.empty()
-										: Mono.error(e)))
+						.fetch(this.props.getContentOwner(), this.props.getContentRepo(),
+								String.format("content/%05d.md", i))
+						.onErrorResume(e -> (e instanceof NotFound) ? Mono.empty()
+								: Mono.error(e)))
 				.collectList()
 				// blocking intentionally so that trace id is properly propagated
 				.blockOptional();
-		return fetched
-				.map(entries -> entries
-						.stream()
-						.peek(this.entryService::save)
-						.map(e -> e.getEntryId() + " " + e.getFrontMatter().getTitle())
-						.toList());
+		return fetched.map(entries -> entries.stream().peek(this.entryService::save)
+				.map(e -> e.getEntryId() + " " + e.getFrontMatter().getTitle()).toList());
 	}
 }

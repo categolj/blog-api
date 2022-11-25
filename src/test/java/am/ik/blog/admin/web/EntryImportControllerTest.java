@@ -19,7 +19,9 @@ import org.springframework.test.web.reactive.server.WebTestClient;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
 
-@WebMvcTest(properties = { "spring.security.user.name=admin", "spring.security.user.password=password", "blog.github.content-owner=foo", "blog.github.content-repo=my-blog" })
+@WebMvcTest(properties = { "spring.security.user.name=admin",
+		"spring.security.user.password=password", "blog.github.content-owner=foo",
+		"blog.github.content-repo=my-blog" })
 @Import({ SecurityConfig.class, MockConfig.class, GitHubProps.class })
 class EntryImportControllerTest {
 	@Autowired
@@ -34,25 +36,22 @@ class EntryImportControllerTest {
 	@Test
 	void importEntries_200() {
 		final Entry entry = Fixtures.entry(100L);
-		given(this.entryFetcher.fetch("foo", "my-blog", "content/00100.md")).willReturn(Mono.just(entry));
-		this.webTestClient.post()
-				.uri("/admin/import?from=100&to=100")
+		given(this.entryFetcher.fetch("foo", "my-blog", "content/00100.md"))
+				.willReturn(Mono.just(entry));
+		this.webTestClient.post().uri("/admin/import?from=100&to=100")
 				.headers(httpHeaders -> httpHeaders.setBasicAuth("admin", "password"))
-				.exchange()
-				.expectStatus().isOk()
-				.expectBody()
-				.jsonPath("$.length()").isEqualTo(1)
-				.jsonPath("[0]", "100 Hello");
+				.exchange().expectStatus().isOk().expectBody().jsonPath("$.length()")
+				.isEqualTo(1).jsonPath("[0]", "100 Hello");
 		verify(entryMapper).save(entry);
 	}
 
 	@Test
 	void importEntries_401() {
 		final Entry entry = Fixtures.entry(100L);
-		given(this.entryFetcher.fetch("foo", "my-blog", "content/00100.md")).willReturn(Mono.just(entry));
+		given(this.entryFetcher.fetch("foo", "my-blog", "content/00100.md"))
+				.willReturn(Mono.just(entry));
 		this.webTestClient.post()
-				.uri("/admin/import?from=100&to=100&owner=foo&repo=my-blog")
-				.exchange()
+				.uri("/admin/import?from=100&to=100&owner=foo&repo=my-blog").exchange()
 				.expectStatus().isUnauthorized();
 	}
 }

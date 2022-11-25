@@ -27,8 +27,7 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, properties = {
-		"blog.github.access-token=foo",
-		"blog.github.webhook-secret=bar" })
+		"blog.github.access-token=foo", "blog.github.webhook-secret=bar" })
 @TestConstructor(autowireMode = TestConstructor.AutowireMode.ALL)
 public class WebhookControllerTest {
 
@@ -42,11 +41,11 @@ public class WebhookControllerTest {
 	@MockBean
 	EntryMapper entryRepository;
 
-	public WebhookControllerTest(ObjectMapper objectMapper, @Value("${local.server.port}") int port) {
+	public WebhookControllerTest(ObjectMapper objectMapper,
+			@Value("${local.server.port}") int port) {
 		this.objectMapper = objectMapper;
 		this.webClient = WebTestClient.bindToServer(new JdkClientHttpConnector())
-				.baseUrl("http://localhost:" + port)
-				.build();
+				.baseUrl("http://localhost:" + port).build();
 	}
 
 	@Test

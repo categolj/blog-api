@@ -51,9 +51,11 @@ class EntryMapperIntegrationTest {
 		final FrontMatter frontMatter = found.getFrontMatter();
 		assertThat(frontMatter.getTitle()).isEqualTo("Hello");
 		assertThat(frontMatter.getTags()).hasSize(3);
-		assertThat(frontMatter.getTags()).containsExactly(new Tag("a"), new Tag("b"), new Tag("c"));
+		assertThat(frontMatter.getTags()).containsExactly(new Tag("a"), new Tag("b"),
+				new Tag("c"));
 		assertThat(frontMatter.getCategories()).hasSize(3);
-		assertThat(frontMatter.getCategories()).containsExactly(new Category("foo"), new Category("bar"), new Category("hoge"));
+		assertThat(frontMatter.getCategories()).containsExactly(new Category("foo"),
+				new Category("bar"), new Category("hoge"));
 		assertThat(found.getCreated().getName()).isEqualTo("demo");
 		assertThat(found.getCreated().getDate()).isNotNull();
 		assertThat(found.getUpdated().getName()).isEqualTo("demo");
@@ -79,9 +81,11 @@ class EntryMapperIntegrationTest {
 		final FrontMatter frontMatter = found.getFrontMatter();
 		assertThat(frontMatter.getTitle()).isEqualTo("Hello");
 		assertThat(frontMatter.getTags()).hasSize(3);
-		assertThat(frontMatter.getTags()).containsExactly(new Tag("a"), new Tag("b"), new Tag("c"));
+		assertThat(frontMatter.getTags()).containsExactly(new Tag("a"), new Tag("b"),
+				new Tag("c"));
 		assertThat(frontMatter.getCategories()).hasSize(3);
-		assertThat(frontMatter.getCategories()).containsExactly(new Category("foo"), new Category("bar"), new Category("hoge"));
+		assertThat(frontMatter.getCategories()).containsExactly(new Category("foo"),
+				new Category("bar"), new Category("hoge"));
 		assertThat(found.getCreated().getName()).isEqualTo("demo");
 		assertThat(found.getCreated().getDate()).isNotNull();
 		assertThat(found.getUpdated().getName()).isEqualTo("demo");

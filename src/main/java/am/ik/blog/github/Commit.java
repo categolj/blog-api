@@ -17,8 +17,7 @@ public final class Commit extends Parent {
 	private final List<Parent> parents;
 
 	@JsonCreator
-	public Commit(@JsonProperty("sha") String sha,
-			@JsonProperty("url") String url,
+	public Commit(@JsonProperty("sha") String sha, @JsonProperty("url") String url,
 			@JsonProperty("html_url") String htmlUrl,
 			@JsonProperty("comments_url") String commentsUrl,
 			@JsonProperty("commit") GitCommit commit,
@@ -55,14 +54,9 @@ public final class Commit extends Parent {
 
 	@Override
 	public String toString() {
-		return "Commit[" +
-				"sha=" + sha() + ", " +
-				"url=" + url() + ", " +
-				"htmlUrl=" + htmlUrl() + ", " +
-				"commentsUrl=" + commentsUrl + ", " +
-				"commit=" + commit + ", " +
-				"author=" + author + ", " +
-				"committer=" + committer + ", " +
-				"parents=" + parents + ']';
+		return "Commit[" + "sha=" + sha() + ", " + "url=" + url() + ", " + "htmlUrl="
+				+ htmlUrl() + ", " + "commentsUrl=" + commentsUrl + ", " + "commit="
+				+ commit + ", " + "author=" + author + ", " + "committer=" + committer
+				+ ", " + "parents=" + parents + ']';
 	}
 }

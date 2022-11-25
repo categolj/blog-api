@@ -51,10 +51,11 @@ public class EntryFetcherTest {
 	void setup() throws Exception {
 		this.port = new Random().nextInt(60000, 65535);
 		this.server.start(this.port);
-		final WebClientAdapter adapter = WebClientAdapter.forClient(WebClient.builder()
-				.baseUrl("http://localhost:" + port)
-				.defaultHeader(HttpHeaders.AUTHORIZATION, "token dummy").build());
-		final HttpServiceProxyFactory factory = HttpServiceProxyFactory.builder(adapter).build();
+		final WebClientAdapter adapter = WebClientAdapter
+				.forClient(WebClient.builder().baseUrl("http://localhost:" + port)
+						.defaultHeader(HttpHeaders.AUTHORIZATION, "token dummy").build());
+		final HttpServiceProxyFactory factory = HttpServiceProxyFactory.builder(adapter)
+				.build();
 		this.gitHubClient = factory.createClient(GitHubClient.class);
 		this.entryFetcher = new EntryFetcher(this.gitHubClient);
 	}
@@ -66,10 +67,12 @@ public class EntryFetcherTest {
 
 	@Test
 	void fetch() throws Exception {
-		Buffer contentResponse = new Buffer().readFrom(
-				new ClassPathResource("github/sample-content-response.json").getInputStream());
-		Buffer commitsResponse = new Buffer().readFrom(
-				new ClassPathResource("github/sample-commits-response.json").getInputStream());
+		Buffer contentResponse = new Buffer()
+				.readFrom(new ClassPathResource("github/sample-content-response.json")
+						.getInputStream());
+		Buffer commitsResponse = new Buffer()
+				.readFrom(new ClassPathResource("github/sample-commits-response.json")
+						.getInputStream());
 
 		this.server.setDispatcher(new Dispatcher() {
 
@@ -97,21 +100,20 @@ public class EntryFetcherTest {
 				.assertNext(e -> {
 					assertThat(e).isNotNull();
 					assertThat(e.getEntryId()).isEqualTo(1L);
-					assertThat(e.getContent())
-							.isEqualTo("This is my first blog post!");
+					assertThat(e.getContent()).isEqualTo("This is my first blog post!");
 					assertThat(e.getCreated()).isNotNull();
-					assertThat(e.getCreated().getName())
-							.isEqualTo("Toshiaki Maki");
-					assertThat(e.getCreated().getDate()).isEqualTo(OffsetDateTime.parse("2015-12-28T17:16:23Z"));
+					assertThat(e.getCreated().getName()).isEqualTo("Toshiaki Maki");
+					assertThat(e.getCreated().getDate())
+							.isEqualTo(OffsetDateTime.parse("2015-12-28T17:16:23Z"));
 					assertThat(e.getUpdated()).isNotNull();
-					assertThat(e.getUpdated().getName())
-							.isEqualTo("Toshiaki Maki");
-					assertThat(e.getUpdated().getDate()).isEqualTo(OffsetDateTime.parse("2018-01-14T08:09:06Z"));
+					assertThat(e.getUpdated().getName()).isEqualTo("Toshiaki Maki");
+					assertThat(e.getUpdated().getDate())
+							.isEqualTo(OffsetDateTime.parse("2018-01-14T08:09:06Z"));
 					FrontMatter frontMatter = e.getFrontMatter();
 					assertThat(frontMatter).isNotNull();
 					assertThat(frontMatter.getTitle()).isEqualTo("First article");
-					assertThat(frontMatter.getCategories()).containsExactly(
-							new Category("Demo"), new Category("Hello"));
+					assertThat(frontMatter.getCategories())
+							.containsExactly(new Category("Demo"), new Category("Hello"));
 					assertThat(frontMatter.getTags()).containsExactly(new Tag("Demo"));
 				}) //
 				.verifyComplete();

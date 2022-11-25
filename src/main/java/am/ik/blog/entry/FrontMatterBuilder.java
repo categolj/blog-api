@@ -47,7 +47,8 @@ public class FrontMatterBuilder {
 	}
 
 	@SuppressWarnings("unchecked")
-	public static Tuple3<FrontMatter, Optional<OffsetDateTime>, Optional<OffsetDateTime>> parseYaml(String string) {
+	public static Tuple3<FrontMatter, Optional<OffsetDateTime>, Optional<OffsetDateTime>> parseYaml(
+			String string) {
 		final Yaml yaml = new Yaml();
 		Map<String, Object> map = yaml.load(string);
 		if (map == null) {
@@ -55,19 +56,21 @@ public class FrontMatterBuilder {
 		}
 		final FrontMatter frontMatter = new FrontMatterBuilder()
 				.withTitle((String) map.getOrDefault("title", "no title"))
-				.withCategories(((List<String>) map.computeIfAbsent("categories", key -> emptyList()))
-						.stream().map(Category::new).collect(toList()))
-				.withTags(((List<String>) map.computeIfAbsent("tags", key -> emptyList())).stream()
-						.map(Tag::new).collect(toList()))
+				.withCategories(((List<String>) map.computeIfAbsent("categories",
+						key -> emptyList())).stream().map(Category::new)
+								.collect(toList()))
+				.withTags(((List<String>) map.computeIfAbsent("tags", key -> emptyList()))
+						.stream().map(Tag::new).collect(toList()))
 				.build();
 		final OffsetDateTime date = map.containsKey("date")
-				? OffsetDateTime.ofInstant(
-				((Date) map.get("date")).toInstant(), ZoneId.of("UTC"))
+				? OffsetDateTime.ofInstant(((Date) map.get("date")).toInstant(),
+						ZoneId.of("UTC"))
 				: null;
 		final OffsetDateTime updated = map.containsKey("updated")
-				? OffsetDateTime.ofInstant(
-				((Date) map.get("updated")).toInstant(), ZoneId.of("UTC"))
+				? OffsetDateTime.ofInstant(((Date) map.get("updated")).toInstant(),
+						ZoneId.of("UTC"))
 				: null;
-		return Tuples.of(frontMatter, Optional.ofNullable(date), Optional.ofNullable(updated));
+		return Tuples.of(frontMatter, Optional.ofNullable(date),
+				Optional.ofNullable(updated));
 	}
 }

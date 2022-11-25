@@ -63,21 +63,27 @@ public class EntryRestController {
 	}
 
 	@GetMapping(path = "/entries/{entryId:\\d+}")
-	public Entry getEntry(@PathVariable("entryId") Long entryId, @RequestParam(defaultValue = "false") boolean excludeContent) {
+	public Entry getEntry(@PathVariable("entryId") Long entryId,
+			@RequestParam(defaultValue = "false") boolean excludeContent) {
 		final Optional<Entry> entry = this.entryService.findOne(entryId, excludeContent);
-		return entry.orElseThrow(() -> new ResponseStatusException(NOT_FOUND, String.format("The requested entry is not found (entryId = %d)", entryId)));
+		return entry.orElseThrow(() -> new ResponseStatusException(NOT_FOUND, String
+				.format("The requested entry is not found (entryId = %d)", entryId)));
 	}
 
 	@GetMapping(path = "/entries/{entryId:\\d+}.md", produces = MediaType.TEXT_MARKDOWN_VALUE)
-	public ResponseEntity<String> getEntryAsMarkdown(@PathVariable("entryId") Long entryId, @RequestParam(defaultValue = "false") boolean excludeContent) {
+	public ResponseEntity<String> getEntryAsMarkdown(
+			@PathVariable("entryId") Long entryId,
+			@RequestParam(defaultValue = "false") boolean excludeContent) {
 		final Entry entry = this.getEntry(entryId, excludeContent);
 		return ResponseEntity.ok()
-				.header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=%s.md".formatted(entry.formatId()))
+				.header(HttpHeaders.CONTENT_DISPOSITION,
+						"attachment; filename=%s.md".formatted(entry.formatId()))
 				.body(entry.toMarkdown());
 	}
 
 	@GetMapping(path = "/entries", produces = MediaType.APPLICATION_JSON_VALUE)
-	public Page<Entry> getEntries(Pageable pageable, @ModelAttribute EntrySearchRequest request) {
+	public Page<Entry> getEntries(Pageable pageable,
+			@ModelAttribute EntrySearchRequest request) {
 		final SearchCriteria searchCriteria = request.toCriteria();
 		return this.entryService.findPage(searchCriteria, pageable);
 	}
@@ -96,22 +102,20 @@ public class EntryRestController {
 			@AuthenticationPrincipal UserDetails userDetails,
 			UriComponentsBuilder builder) {
 		final Long entryId = this.entryService.nextId();
-		return EntryBuilder.parseBody(entryId, markdown.trim())
-				.map(tpl -> {
-					final EntryBuilder entryBuilder = tpl.getT1();
-					final String username = userDetails.getUsername();
-					final OffsetDateTime now = OffsetDateTime.ofInstant(this.clock.instant(), ZoneId.of("UTC"));
-					final Author created = new Author(username, tpl.getT2().orElse(now));
-					final Author updated = new Author(username, tpl.getT3().orElse(now));
-					final Entry entry = entryBuilder
-							.withCreated(created)
-							.withUpdated(updated)
-							.build();
-					this.entryService.save(entry);
-					return entry;
-				})
-				.map(entry -> buildEntryResponse(entry, builder, false))
-				.orElseThrow(() -> new ResponseStatusException(BAD_REQUEST, "Can't parse the markdown file"));
+		return EntryBuilder.parseBody(entryId, markdown.trim()).map(tpl -> {
+			final EntryBuilder entryBuilder = tpl.getT1();
+			final String username = userDetails.getUsername();
+			final OffsetDateTime now = OffsetDateTime.ofInstant(this.clock.instant(),
+					ZoneId.of("UTC"));
+			final Author created = new Author(username, tpl.getT2().orElse(now));
+			final Author updated = new Author(username, tpl.getT3().orElse(now));
+			final Entry entry = entryBuilder.withCreated(created).withUpdated(updated)
+					.build();
+			this.entryService.save(entry);
+			return entry;
+		}).map(entry -> buildEntryResponse(entry, builder, false))
+				.orElseThrow(() -> new ResponseStatusException(BAD_REQUEST,
+						"Can't parse the markdown file"));
 	}
 
 	@PostMapping(path = "/entries", consumes = MediaType.APPLICATION_JSON_VALUE)
@@ -122,16 +126,15 @@ public class EntryRestController {
 			UriComponentsBuilder builder) {
 		final Long entryId = this.entryService.nextId();
 		final String username = userDetails.getUsername();
-		final OffsetDateTime now = OffsetDateTime.ofInstant(this.clock.instant(), ZoneId.of("UTC"));
-		final Author created = request.createdOrNullAuthor().setNameIfAbsent(username).setDateIfAbsent(now);
-		final Author updated = request.updatedOrNullAuthor().setNameIfAbsent(username).setDateIfAbsent(now);
-		final Entry entry = new EntryBuilder()
-				.withEntryId(entryId)
-				.withContent(request.content())
-				.withFrontMatter(request.frontMatter())
-				.withCreated(created)
-				.withUpdated(updated)
-				.build();
+		final OffsetDateTime now = OffsetDateTime.ofInstant(this.clock.instant(),
+				ZoneId.of("UTC"));
+		final Author created = request.createdOrNullAuthor().setNameIfAbsent(username)
+				.setDateIfAbsent(now);
+		final Author updated = request.updatedOrNullAuthor().setNameIfAbsent(username)
+				.setDateIfAbsent(now);
+		final Entry entry = new EntryBuilder().withEntryId(entryId)
+				.withContent(request.content()).withFrontMatter(request.frontMatter())
+				.withCreated(created).withUpdated(updated).build();
 		this.entryService.save(entry);
 		return buildEntryResponse(entry, builder, false);
 	}
@@ -144,29 +147,25 @@ public class EntryRestController {
 			@AuthenticationPrincipal UserDetails userDetails,
 			UriComponentsBuilder builder) {
 		final AtomicBoolean isUpdate = new AtomicBoolean(false);
-		return EntryBuilder.parseBody(entryId, markdown.trim())
-				.map(tpl -> {
-					final EntryBuilder entryBuilder = tpl.getT1();
-					final String username = userDetails.getUsername();
-					final OffsetDateTime now = OffsetDateTime.ofInstant(this.clock.instant(), ZoneId.of("UTC"));
-					final Author created = this.entryService.findOne(entryId, true)
-							.filter(e -> {
-								isUpdate.set(true);
-								return true;
-							})
-							.map(Entry::getCreated)
-							.map(author -> tpl.getT2().map(author::withDate).orElse(author))
-							.orElseGet(() -> new Author(username, tpl.getT2().orElse(now)));
-					final Author updated = new Author(username, tpl.getT3().orElse(now));
-					final Entry entry = entryBuilder
-							.withCreated(created)
-							.withUpdated(updated)
-							.build();
-					this.entryService.save(entry);
-					return entry;
-				})
-				.map(entry -> buildEntryResponse(entry, builder, isUpdate.get()))
-				.orElseThrow(() -> new ResponseStatusException(BAD_REQUEST, "Can't parse the markdown file"));
+		return EntryBuilder.parseBody(entryId, markdown.trim()).map(tpl -> {
+			final EntryBuilder entryBuilder = tpl.getT1();
+			final String username = userDetails.getUsername();
+			final OffsetDateTime now = OffsetDateTime.ofInstant(this.clock.instant(),
+					ZoneId.of("UTC"));
+			final Author created = this.entryService.findOne(entryId, true).filter(e -> {
+				isUpdate.set(true);
+				return true;
+			}).map(Entry::getCreated)
+					.map(author -> tpl.getT2().map(author::withDate).orElse(author))
+					.orElseGet(() -> new Author(username, tpl.getT2().orElse(now)));
+			final Author updated = new Author(username, tpl.getT3().orElse(now));
+			final Entry entry = entryBuilder.withCreated(created).withUpdated(updated)
+					.build();
+			this.entryService.save(entry);
+			return entry;
+		}).map(entry -> buildEntryResponse(entry, builder, isUpdate.get()))
+				.orElseThrow(() -> new ResponseStatusException(BAD_REQUEST,
+						"Can't parse the markdown file"));
 	}
 
 	@PutMapping(path = "/entries/{entryId:\\d+}", consumes = MediaType.APPLICATION_JSON_VALUE)
@@ -178,47 +177,46 @@ public class EntryRestController {
 			UriComponentsBuilder builder) {
 		final AtomicBoolean isUpdate = new AtomicBoolean(false);
 		final String username = userDetails.getUsername();
-		final OffsetDateTime now = OffsetDateTime.ofInstant(this.clock.instant(), ZoneId.of("UTC"));
-		final Author created = this.entryService.findOne(entryId, true)
-				.filter(e -> {
-					isUpdate.set(true);
-					return true;
-				})
-				.map(Entry::getCreated)
-				.map(author -> request.createdOrNullAuthor().setNameIfAbsent(author.getName()).setDateIfAbsent(author.getDate()))
-				.orElseGet(() -> request.createdOrNullAuthor().setNameIfAbsent(username).setDateIfAbsent(now));
-		final Author updated = request.updatedOrNullAuthor().setNameIfAbsent(username).setDateIfAbsent(now);
-		final Entry entry = new EntryBuilder()
-				.withEntryId(entryId)
-				.withContent(request.content())
-				.withFrontMatter(request.frontMatter())
-				.withCreated(created)
-				.withUpdated(updated)
-				.build();
+		final OffsetDateTime now = OffsetDateTime.ofInstant(this.clock.instant(),
+				ZoneId.of("UTC"));
+		final Author created = this.entryService.findOne(entryId, true).filter(e -> {
+			isUpdate.set(true);
+			return true;
+		}).map(Entry::getCreated).map(author -> request.createdOrNullAuthor()
+				.setNameIfAbsent(author.getName()).setDateIfAbsent(author.getDate()))
+				.orElseGet(() -> request.createdOrNullAuthor().setNameIfAbsent(username)
+						.setDateIfAbsent(now));
+		final Author updated = request.updatedOrNullAuthor().setNameIfAbsent(username)
+				.setDateIfAbsent(now);
+		final Entry entry = new EntryBuilder().withEntryId(entryId)
+				.withContent(request.content()).withFrontMatter(request.frontMatter())
+				.withCreated(created).withUpdated(updated).build();
 		this.entryService.save(entry);
 		return buildEntryResponse(entry, builder, isUpdate.get());
 	}
 
-	private static ResponseEntity<?> buildEntryResponse(Entry entry, UriComponentsBuilder builder, boolean isUpdate) {
-		return isUpdate ? ResponseEntity.ok(entry) : ResponseEntity.created(builder.path("/entries/{entryId:\\d+}").build(entry.getEntryId())).body(entry);
+	private static ResponseEntity<?> buildEntryResponse(Entry entry,
+			UriComponentsBuilder builder, boolean isUpdate) {
+		return isUpdate ? ResponseEntity.ok(entry)
+				: ResponseEntity.created(
+						builder.path("/entries/{entryId:\\d+}").build(entry.getEntryId()))
+						.body(entry);
 	}
 
 	@GetMapping(path = "/entries/template.md", produces = MediaType.TEXT_MARKDOWN_VALUE)
 	public String getTemplateMarkdown() {
-		return new EntryBuilder()
-				.withContent("""
-						Welcome
-						      
-						**Hello world**, this is my first Categolj blog post.
-						      
-						I hope you like it!
-						""")
+		return new EntryBuilder().withContent("""
+				Welcome
+
+				**Hello world**, this is my first Categolj blog post.
+
+				I hope you like it!
+				""")
 				.withFrontMatter(new FrontMatter("Welcome to CategolJ!",
-						List.of(new Category("Blog"), new Category("Posts"), new Category("Templates")),
+						List.of(new Category("Blog"), new Category("Posts"),
+								new Category("Templates")),
 						List.of(new Tag("Hello World"), new Tag("CategolJ"))))
-				.withCreated(Author.NULL_AUTHOR)
-				.withUpdated(Author.NULL_AUTHOR)
-				.build()
+				.withCreated(Author.NULL_AUTHOR).withUpdated(Author.NULL_AUTHOR).build()
 				.toMarkdown();
 	}
 
@@ -228,9 +226,8 @@ public class EntryRestController {
 		final Path zip = this.entryService.exportEntriesAsZip();
 		try (final InputStream stream = Files.newInputStream(zip)) {
 			final byte[] content = StreamUtils.copyToByteArray(stream);
-			return ResponseEntity.ok()
-					.header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=entries.zip")
-					.body(content);
+			return ResponseEntity.ok().header(HttpHeaders.CONTENT_DISPOSITION,
+					"attachment; filename=entries.zip").body(content);
 		}
 		catch (IOException e) {
 			throw new UncheckedIOException(e);

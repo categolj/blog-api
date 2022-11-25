@@ -24,20 +24,29 @@ import static org.mybatis.scripting.thymeleaf.processor.BindVariableRender.Built
 public class MyBatisThymeleafConfig {
 	@Bean
 	public SqlGenerator sqlGenerator() {
-		final SqlGeneratorConfig config = SqlGeneratorConfig.newInstanceWithCustomizer(c ->
-				c.getDialect().setBindVariableRenderInstance(SPRING_NAMED_PARAMETER));
+		final SqlGeneratorConfig config = SqlGeneratorConfig
+				.newInstanceWithCustomizer(c -> c.getDialect()
+						.setBindVariableRenderInstance(SPRING_NAMED_PARAMETER));
 		return new SqlGenerator(config);
 	}
 
 	public static class RuntimeHints implements RuntimeHintsRegistrar {
 		@Override
-		public void registerHints(org.springframework.aot.hint.RuntimeHints hints, ClassLoader classLoader) {
+		public void registerHints(org.springframework.aot.hint.RuntimeHints hints,
+				ClassLoader classLoader) {
 			hints.reflection()
-					.registerMethod(Objects.requireNonNull(ReflectionUtils.findMethod(Lists.class, "isEmpty", List.class)), ExecutableMode.INVOKE)
-					.registerMethod(Objects.requireNonNull(ReflectionUtils.findMethod(Strings.class, "toLowerCase", Object.class)), ExecutableMode.INVOKE)
-					.registerMethod(Objects.requireNonNull(ReflectionUtils.findMethod(Likes.class, "escapeWildcard", String.class)), ExecutableMode.INVOKE);
-			hints.resources()
-					.registerPattern("am/ik/blog/*");
+					.registerMethod(Objects.requireNonNull(ReflectionUtils
+							.findMethod(Lists.class, "isEmpty", List.class)),
+							ExecutableMode.INVOKE)
+					.registerMethod(
+							Objects.requireNonNull(ReflectionUtils.findMethod(
+									Strings.class, "toLowerCase", Object.class)),
+							ExecutableMode.INVOKE)
+					.registerMethod(
+							Objects.requireNonNull(ReflectionUtils.findMethod(Likes.class,
+									"escapeWildcard", String.class)),
+							ExecutableMode.INVOKE);
+			hints.resources().registerPattern("am/ik/blog/*");
 		}
 	}
 }

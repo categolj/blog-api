@@ -15,13 +15,13 @@ import java.util.StringJoiner;
 @JsonDeserialize(builder = EntryBuilder.class)
 public class Entry {
 
-	static public Validator<Entry> validator = ValidatorBuilder.<Entry>of()
+	static public Validator<Entry> validator = ValidatorBuilder.<Entry> of()
 			.constraint(Entry::getEntryId, "entryId", c -> c.notNull().positive())
-			.constraint(Entry::getContent, "content", c -> c.notBlank().asByteArray().lessThanOrEqual(1024 * 1024 * 1024))
+			.constraint(Entry::getContent, "content",
+					c -> c.notBlank().asByteArray().lessThanOrEqual(1024 * 1024 * 1024))
 			.nest(Entry::getFrontMatter, "frontMatter", FrontMatter.validator)
 			.nest(Entry::getCreated, "created", Author.validator)
-			.nest(Entry::getUpdated, "updated", Author.validator)
-			.build();
+			.nest(Entry::getUpdated, "updated", Author.validator).build();
 
 	private final Long entryId;
 
@@ -33,7 +33,8 @@ public class Entry {
 
 	private final Author updated;
 
-	Entry(Long entryId, FrontMatter frontMatter, String content, Author created, Author updated) {
+	Entry(Long entryId, FrontMatter frontMatter, String content, Author created,
+			Author updated) {
 		this.entryId = entryId;
 		this.frontMatter = frontMatter;
 		this.content = content;
@@ -96,12 +97,8 @@ public class Entry {
 
 	@Override
 	public String toString() {
-		return "Entry{" +
-			   "entryId=" + entryId +
-			   ", frontMatter=" + frontMatter +
-			   ", created=" + created +
-			   ", updated=" + updated +
-			   '}';
+		return "Entry{" + "entryId=" + entryId + ", frontMatter=" + frontMatter
+				+ ", created=" + created + ", updated=" + updated + '}';
 	}
 
 	public String toMarkdown() {
@@ -111,13 +108,17 @@ public class Entry {
 				tags: %s
 				categories: %s%s%s
 				---
-								
+
 				%s
 				""".formatted(frontMatter.getTitle(),
-				frontMatter.getTags().stream().map(t -> "\"%s\"".formatted(t.name())).toList(),
-				frontMatter.getCategories().stream().map(c -> "\"%s\"".formatted(c.name())).toList(),
-				created.getDate() == null ? "" : "%ndate: %s".formatted(created.getDate()),
-				updated.getDate() == null ? "" : "%nupdated: %s".formatted(updated.getDate()),
+				frontMatter.getTags().stream().map(t -> "\"%s\"".formatted(t.name()))
+						.toList(),
+				frontMatter.getCategories().stream()
+						.map(c -> "\"%s\"".formatted(c.name())).toList(),
+				created.getDate() == null ? ""
+						: "%ndate: %s".formatted(created.getDate()),
+				updated.getDate() == null ? ""
+						: "%nupdated: %s".formatted(updated.getDate()),
 				content);
 	}
 }

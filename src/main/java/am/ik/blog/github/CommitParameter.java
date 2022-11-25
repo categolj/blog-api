@@ -3,7 +3,6 @@ package am.ik.blog.github;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 
-
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 
@@ -59,10 +58,12 @@ public class CommitParameter {
 			queryParams.add("author", author);
 		}
 		if (since != null) {
-			queryParams.add("since", since.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME));
+			queryParams.add("since",
+					since.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME));
 		}
 		if (until != null) {
-			queryParams.add("until", until.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME));
+			queryParams.add("until",
+					until.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME));
 		}
 		return queryParams;
 	}

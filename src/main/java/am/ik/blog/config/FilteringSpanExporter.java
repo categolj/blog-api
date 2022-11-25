@@ -20,7 +20,6 @@ public class FilteringSpanExporter implements SpanExporter {
 
 	private final Predicate<String> uriFilter;
 
-
 	FilteringSpanExporter(SpanExporter delegate, Predicate<String> uriFilter) {
 		this.delegate = delegate;
 		this.uriFilter = uriFilter;
@@ -34,19 +33,26 @@ public class FilteringSpanExporter implements SpanExporter {
 			if (blockedTraces.contains(traceId)) {
 				continue;
 			}
-			final String requestLine = spanData.getAttributes().get(AttributeKey.stringKey("request.line"));
-			if (requestLine != null && requestLine.contains(" ") && !uriFilter.test(requestLine.split(" ", 2)[1])) {
+			final String requestLine = spanData.getAttributes()
+					.get(AttributeKey.stringKey("request.line"));
+			if (requestLine != null && requestLine.contains(" ")
+					&& !uriFilter.test(requestLine.split(" ", 2)[1])) {
 				blockedTraces.add(traceId);
 				continue;
 			}
-			final String uri = spanData.getAttributes().get(AttributeKey.stringKey("http.url"));
+			final String uri = spanData.getAttributes()
+					.get(AttributeKey.stringKey("http.url"));
 			if (uri != null && !uriFilter.test(uri)) {
 				blockedTraces.add(traceId);
 				continue;
 			}
 		}
-		final List<SpanData> filteredSpans = spans.stream().filter(spanData -> !blockedTraces.contains(spanData.getTraceId())).toList();
-		final Map<String, List<String>> groups = filteredSpans.stream().map(SpanData::getTraceId).collect(Collectors.groupingBy(Function.identity()));
+		final List<SpanData> filteredSpans = spans.stream()
+				.filter(spanData -> !blockedTraces.contains(spanData.getTraceId()))
+				.toList();
+		final Map<String, List<String>> groups = filteredSpans.stream()
+				.map(SpanData::getTraceId)
+				.collect(Collectors.groupingBy(Function.identity()));
 		return delegate.export(filteredSpans.stream().filter(spanData -> {
 			if (spanData.getName().startsWith("spring.security")) {
 				return groups.get(spanData.getTraceId()).size() > 3;

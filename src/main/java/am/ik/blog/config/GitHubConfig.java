@@ -30,35 +30,54 @@ public class GitHubConfig {
 
 	@Bean
 	public GitHubClient gitHubClient(GitHubProps props, WebClient.Builder builder) {
-		final WebClientAdapter adapter = WebClientAdapter.forClient(builder
-				.baseUrl("https://api.github.com")
-				.defaultHeader(HttpHeaders.AUTHORIZATION, "token " + props.getAccessToken()).build());
-		final HttpServiceProxyFactory factory = HttpServiceProxyFactory.builder(adapter).build();
+		final WebClientAdapter adapter = WebClientAdapter
+				.forClient(builder.baseUrl("https://api.github.com")
+						.defaultHeader(HttpHeaders.AUTHORIZATION,
+								"token " + props.getAccessToken())
+						.build());
+		final HttpServiceProxyFactory factory = HttpServiceProxyFactory.builder(adapter)
+				.build();
 		return factory.createClient(GitHubClient.class);
 	}
 
 	@Bean
-	public GitHubUserContentClient gitHubUserContentClient(GitHubProps props, WebClient.Builder builder) {
-		final WebClientAdapter adapter = WebClientAdapter.forClient(builder
-				.baseUrl("https://raw.githubusercontent.com")
-				.defaultHeader(HttpHeaders.AUTHORIZATION, "token " + props.getAccessToken()).build());
-		final HttpServiceProxyFactory factory = HttpServiceProxyFactory.builder(adapter).build();
+	public GitHubUserContentClient gitHubUserContentClient(GitHubProps props,
+			WebClient.Builder builder) {
+		final WebClientAdapter adapter = WebClientAdapter
+				.forClient(builder.baseUrl("https://raw.githubusercontent.com")
+						.defaultHeader(HttpHeaders.AUTHORIZATION,
+								"token " + props.getAccessToken())
+						.build());
+		final HttpServiceProxyFactory factory = HttpServiceProxyFactory.builder(adapter)
+				.build();
 		return factory.createClient(GitHubUserContentClient.class);
 	}
 
 	static class RuntimeHints implements RuntimeHintsRegistrar {
 
 		@Override
-		public void registerHints(org.springframework.aot.hint.RuntimeHints hints, ClassLoader classLoader) {
+		public void registerHints(org.springframework.aot.hint.RuntimeHints hints,
+				ClassLoader classLoader) {
 			hints.reflection()
-					.registerMethod(Objects.requireNonNull(ReflectionUtils.findMethod(WebhookController.class, "node", String.class)), ExecutableMode.INVOKE)
-					.registerMethod(Objects.requireNonNull(ReflectionUtils.findMethod(WebhookController.class, "paths", JsonNode.class)), ExecutableMode.INVOKE);
+					.registerMethod(
+							Objects.requireNonNull(ReflectionUtils.findMethod(
+									WebhookController.class, "node", String.class)),
+							ExecutableMode.INVOKE)
+					.registerMethod(
+							Objects.requireNonNull(ReflectionUtils.findMethod(
+									WebhookController.class, "paths", JsonNode.class)),
+							ExecutableMode.INVOKE);
 			hints.reflection()
-					.registerConstructor(GitCommit.class.getDeclaredConstructors()[0], ExecutableMode.INVOKE)
-					.registerConstructor(GitCommitter.class.getDeclaredConstructors()[0], ExecutableMode.INVOKE)
-					.registerConstructor(Committer.class.getDeclaredConstructors()[0], ExecutableMode.INVOKE)
-					.registerConstructor(Parent.class.getDeclaredConstructors()[0], ExecutableMode.INVOKE)
-					.registerConstructor(Tree.class.getDeclaredConstructors()[0], ExecutableMode.INVOKE);
+					.registerConstructor(GitCommit.class.getDeclaredConstructors()[0],
+							ExecutableMode.INVOKE)
+					.registerConstructor(GitCommitter.class.getDeclaredConstructors()[0],
+							ExecutableMode.INVOKE)
+					.registerConstructor(Committer.class.getDeclaredConstructors()[0],
+							ExecutableMode.INVOKE)
+					.registerConstructor(Parent.class.getDeclaredConstructors()[0],
+							ExecutableMode.INVOKE)
+					.registerConstructor(Tree.class.getDeclaredConstructors()[0],
+							ExecutableMode.INVOKE);
 		}
 	}
 }

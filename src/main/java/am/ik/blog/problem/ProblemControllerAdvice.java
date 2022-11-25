@@ -32,8 +32,10 @@ public class ProblemControllerAdvice {
 
 	@ExceptionHandler(ConstraintViolationsException.class)
 	@ResponseStatus(HttpStatus.BAD_REQUEST)
-	public ProblemDetail handleConstraintViolationsException(ConstraintViolationsException e) {
-		final ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, "Constraint violations found!");
+	public ProblemDetail handleConstraintViolationsException(
+			ConstraintViolationsException e) {
+		final ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(
+				HttpStatus.BAD_REQUEST, "Constraint violations found!");
 		problemDetail.setProperty("violations", e.violations().details());
 		return setTraceId(problemDetail);
 	}
@@ -41,7 +43,8 @@ public class ProblemControllerAdvice {
 	@ExceptionHandler(RuntimeException.class)
 	@ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
 	public ProblemDetail handleRuntimeException(RuntimeException e) {
-		final ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.INTERNAL_SERVER_ERROR, "Unexpected error occurred!");
+		final ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(
+				HttpStatus.INTERNAL_SERVER_ERROR, "Unexpected error occurred!");
 		log.error("Unexpected error occurred!", e);
 		return setTraceId(problemDetail);
 	}

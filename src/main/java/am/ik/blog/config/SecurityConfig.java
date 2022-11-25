@@ -20,22 +20,18 @@ public class SecurityConfig {
 	@Bean
 	public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 		return http
-				.authorizeHttpRequests(authorize -> authorize
-						.requestMatchers("/admin/**").authenticated()
-						.requestMatchers("/entries.zip").authenticated()
+				.authorizeHttpRequests(authorize -> authorize.requestMatchers("/admin/**")
+						.authenticated().requestMatchers("/entries.zip").authenticated()
 						.requestMatchers(HttpMethod.POST, "/entries/**").authenticated()
 						.requestMatchers(HttpMethod.PATCH, "/entries/**").authenticated()
 						.requestMatchers(HttpMethod.PUT, "/entries/**").authenticated()
 						.requestMatchers(HttpMethod.DELETE, "/entries/**").authenticated()
-						.anyRequest().permitAll()
-				)
-				.httpBasic()
-				.and()
-				.csrf(AbstractHttpConfigurer::disable)
-				.cors()
-				.and()
-				.sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-				.addFilterBefore(new RequestLoggingFilter(uriFilter), DisableEncodeUrlFilter.class)
+						.anyRequest().permitAll())
+				.httpBasic().and().csrf(AbstractHttpConfigurer::disable).cors().and()
+				.sessionManagement(
+						s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+				.addFilterBefore(new RequestLoggingFilter(uriFilter),
+						DisableEncodeUrlFilter.class)
 				.build();
 	}
 }

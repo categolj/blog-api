@@ -13,9 +13,11 @@ import org.springframework.util.CollectionUtils;
 
 @JsonDeserialize(builder = FrontMatterBuilder.class)
 public class FrontMatter {
-	public static Validator<FrontMatter> validator = ValidatorBuilder.<FrontMatter>of()
-			.constraint(FrontMatter::getTitle, "title", c -> c.notBlank().asByteArray().lessThanOrEqual(512))
-			.constraint(FrontMatter::getCategories, "categories", c -> c.greaterThanOrEqual(1))
+	public static Validator<FrontMatter> validator = ValidatorBuilder.<FrontMatter> of()
+			.constraint(FrontMatter::getTitle, "title",
+					c -> c.notBlank().asByteArray().lessThanOrEqual(512))
+			.constraint(FrontMatter::getCategories, "categories",
+					c -> c.greaterThanOrEqual(1))
 			.build();
 
 	public static final String SEPARATOR = "---";
@@ -52,10 +54,7 @@ public class FrontMatter {
 
 	@Override
 	public String toString() {
-		return "FrontMatter{" +
-			   "title='" + title + '\'' +
-			   ", categories=" + categories +
-			   ", tags=" + tags +
-			   '}';
+		return "FrontMatter{" + "title='" + title + '\'' + ", categories=" + categories
+				+ ", tags=" + tags + '}';
 	}
 }

@@ -21,11 +21,16 @@ public class GitHubProps implements org.springframework.validation.Validator {
 
 	private String contentRepo;
 
-	private final BiValidator<GitHubProps, Errors> validator = ValidatorBuilder.<GitHubProps>of()
-			.constraint(GitHubProps::getAccessToken, "accessToken", c -> c.codePoints(ASCII_PRINTABLE_CHARS).asWhiteList())
-			.constraint(GitHubProps::getWebhookSecret, "webhookSecret", c -> c.codePoints(ASCII_PRINTABLE_CHARS).asWhiteList())
-			.constraint(GitHubProps::getContentOwner, "contentOwner", c -> c.codePoints(ASCII_PRINTABLE_CHARS).asWhiteList())
-			.constraint(GitHubProps::getContentRepo, "contentRepo", c -> c.codePoints(ASCII_PRINTABLE_CHARS).asWhiteList())
+	private final BiValidator<GitHubProps, Errors> validator = ValidatorBuilder
+			.<GitHubProps> of()
+			.constraint(GitHubProps::getAccessToken, "accessToken",
+					c -> c.codePoints(ASCII_PRINTABLE_CHARS).asWhiteList())
+			.constraint(GitHubProps::getWebhookSecret, "webhookSecret",
+					c -> c.codePoints(ASCII_PRINTABLE_CHARS).asWhiteList())
+			.constraint(GitHubProps::getContentOwner, "contentOwner",
+					c -> c.codePoints(ASCII_PRINTABLE_CHARS).asWhiteList())
+			.constraint(GitHubProps::getContentRepo, "contentRepo",
+					c -> c.codePoints(ASCII_PRINTABLE_CHARS).asWhiteList())
 			.build(Errors::rejectValue);
 
 	public String getAccessToken() {

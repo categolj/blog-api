@@ -28,13 +28,15 @@ public class EntryFetcher {
 	public Mono<Entry> fetch(String owner, String repo, String path) {
 		Long entryId = Entry.parseId(Paths.get(path).getFileName().toString());
 		Mono<File> file = this.gitHubClient.getFile(owner, repo, path);
-		Flux<Commit> commits = this.gitHubClient.getCommits(owner, repo, new CommitParameter().path(path).queryParams());
-		final Mono<Tuple3<EntryBuilder, Optional<OffsetDateTime>, Optional<OffsetDateTime>>> parsed = file.flatMap(f -> this.parse(entryId, f));
+		Flux<Commit> commits = this.gitHubClient.getCommits(owner, repo,
+				new CommitParameter().path(path).queryParams());
+		final Mono<Tuple3<EntryBuilder, Optional<OffsetDateTime>, Optional<OffsetDateTime>>> parsed = file
+				.flatMap(f -> this.parse(entryId, f));
 
-		Mono<Tuple2<Author, Author>> authors = commits
-				.collectList() //
+		Mono<Tuple2<Author, Author>> authors = commits.collectList() //
 				.filter(l -> !l.isEmpty()) //
-				.map(l -> Tuples.of(toAuthor(l.get(l.size() - 1)) /* created */, toAuthor(l.get(0)) /* updated */));
+				.map(l -> Tuples.of(toAuthor(l.get(l.size() - 1)) /* created */,
+						toAuthor(l.get(0)) /* updated */));
 		return Mono.zip(parsed, authors) //
 				.map(tpl -> {
 					final EntryBuilder entryBuilder = tpl.getT1() //
@@ -47,15 +49,16 @@ public class EntryFetcher {
 					final Author updated = tpl.getT1().getT2()
 							.map(date -> tpl.getT2().getT2().withDate(date))
 							.orElseGet(() -> tpl.getT2().getT2());
-					return entryBuilder
-							.withCreated(created) //
+					return entryBuilder.withCreated(created) //
 							.withUpdated(updated) //
 							.build();
 				});
 	}
 
-	private Mono<Tuple3<EntryBuilder, Optional<OffsetDateTime>, Optional<OffsetDateTime>>> parse(Long entryId, File file) {
-		Optional<Tuple3<EntryBuilder, Optional<OffsetDateTime>, Optional<OffsetDateTime>>> parsed = EntryBuilder.parseBody(entryId, file.decode());
+	private Mono<Tuple3<EntryBuilder, Optional<OffsetDateTime>, Optional<OffsetDateTime>>> parse(
+			Long entryId, File file) {
+		Optional<Tuple3<EntryBuilder, Optional<OffsetDateTime>, Optional<OffsetDateTime>>> parsed = EntryBuilder
+				.parseBody(entryId, file.decode());
 		return Mono.justOrEmpty(parsed);
 	}
 

@@ -29,8 +29,8 @@ public class SearchCriteria {
 
 	private String keyword;
 
-	SearchCriteria(boolean excludeContent, String createdBy, String lastModifiedBy, Tag tag,
-			CategoryOrders categoryOrders, String keyword) {
+	SearchCriteria(boolean excludeContent, String createdBy, String lastModifiedBy,
+			Tag tag, CategoryOrders categoryOrders, String keyword) {
 		this.excludeContent = excludeContent;
 		this.createdBy = createdBy;
 		this.lastModifiedBy = lastModifiedBy;
@@ -94,12 +94,15 @@ public class SearchCriteria {
 			params.addValue("tag", tag.name());
 		}
 		if (this.categoryOrders != null) {
-			final List<CategoryOrder> value = this.categoryOrders.getValue().stream().toList();
+			final List<CategoryOrder> value = this.categoryOrders.getValue().stream()
+					.toList();
 			params.addValue("categoryOrders", value);
 			for (int i = 0; i < value.size(); i++) {
 				final CategoryOrder categoryOrder = value.get(i);
-				params.addValue("categoryOrder_0_%d.category.name".formatted(i), categoryOrder.getCategory().name());
-				params.addValue("categoryOrder_0_%d.categoryOrder".formatted(i), categoryOrder.getCategoryOrder());
+				params.addValue("categoryOrder_0_%d.category.name".formatted(i),
+						categoryOrder.getCategory().name());
+				params.addValue("categoryOrder_0_%d.categoryOrder".formatted(i),
+						categoryOrder.getCategoryOrder());
 			}
 		}
 		return params;
@@ -168,13 +171,9 @@ public class SearchCriteria {
 
 	@Override
 	public String toString() {
-		return "SearchCriteria{" +
-			   "excludeContent=" + excludeContent +
-			   ", createdBy='" + createdBy + '\'' +
-			   ", lastModifiedBy='" + lastModifiedBy + '\'' +
-			   ", tag=" + tag +
-			   ", categoryOrders=" + categoryOrders +
-			   ", keyword='" + keyword + '\'' +
-			   '}';
+		return "SearchCriteria{" + "excludeContent=" + excludeContent + ", createdBy='"
+				+ createdBy + '\'' + ", lastModifiedBy='" + lastModifiedBy + '\''
+				+ ", tag=" + tag + ", categoryOrders=" + categoryOrders + ", keyword='"
+				+ keyword + '\'' + '}';
 	}
 }

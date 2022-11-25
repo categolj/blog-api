@@ -26,14 +26,10 @@ class TagRestControllerTest {
 
 	@Test
 	void tags() {
-		given(this.tagMapper.findOrderByTagNameAsc()).willReturn(List.of(new Tag("aaa"), new Tag("bbb")));
-		this.webTestClient.get()
-				.uri("/tags")
-				.exchange()
-				.expectStatus().isOk()
-				.expectBody()
-				.jsonPath("$.length()").isEqualTo(2)
-				.jsonPath("$.[0].name").isEqualTo("aaa")
-				.jsonPath("$.[1].name").isEqualTo("bbb");
+		given(this.tagMapper.findOrderByTagNameAsc())
+				.willReturn(List.of(new Tag("aaa"), new Tag("bbb")));
+		this.webTestClient.get().uri("/tags").exchange().expectStatus().isOk()
+				.expectBody().jsonPath("$.length()").isEqualTo(2).jsonPath("$.[0].name")
+				.isEqualTo("aaa").jsonPath("$.[1].name").isEqualTo("bbb");
 	}
 }
