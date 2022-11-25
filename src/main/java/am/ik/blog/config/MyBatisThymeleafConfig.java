@@ -7,7 +7,6 @@ import am.ik.blog.config.MyBatisThymeleafConfig.RuntimeHints;
 import org.mybatis.scripting.thymeleaf.SqlGenerator;
 import org.mybatis.scripting.thymeleaf.SqlGeneratorConfig;
 import org.mybatis.scripting.thymeleaf.expression.Likes;
-import org.mybatis.scripting.thymeleaf.support.spring.SpringNamedParameterBindVariableRender;
 import org.thymeleaf.expression.Lists;
 import org.thymeleaf.expression.Strings;
 
@@ -26,7 +25,7 @@ public class MyBatisThymeleafConfig {
 	@Bean
 	public SqlGenerator sqlGenerator() {
 		final SqlGeneratorConfig config = SqlGeneratorConfig.newInstanceWithCustomizer(c ->
-				c.getDialect().setBindVariableRender(SPRING_NAMED_PARAMETER.getType()));
+				c.getDialect().setBindVariableRenderInstance(SPRING_NAMED_PARAMETER));
 		return new SqlGenerator(config);
 	}
 
@@ -34,7 +33,6 @@ public class MyBatisThymeleafConfig {
 		@Override
 		public void registerHints(org.springframework.aot.hint.RuntimeHints hints, ClassLoader classLoader) {
 			hints.reflection()
-					.registerConstructor(SpringNamedParameterBindVariableRender.class.getConstructors()[0], ExecutableMode.INVOKE)
 					.registerMethod(Objects.requireNonNull(ReflectionUtils.findMethod(Lists.class, "isEmpty", List.class)), ExecutableMode.INVOKE)
 					.registerMethod(Objects.requireNonNull(ReflectionUtils.findMethod(Strings.class, "toLowerCase", Object.class)), ExecutableMode.INVOKE)
 					.registerMethod(Objects.requireNonNull(ReflectionUtils.findMethod(Likes.class, "escapeWildcard", String.class)), ExecutableMode.INVOKE);

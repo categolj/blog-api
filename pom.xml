@@ -22,6 +22,7 @@
 		<start-class>am.ik.blog.BlogApiApplication</start-class>
 		<resilience4j.version>1.7.1</resilience4j.version>
 		<spring-doc.version>2.0.0-RC2</spring-doc.version>
+		<mybatis-thymeleaf.version>1.0.4</mybatis-thymeleaf.version>
 		<jar-classifier></jar-classifier>
 	</properties>
 
@@ -87,7 +88,7 @@
 		<dependency>
 			<groupId>org.mybatis.scripting</groupId>
 			<artifactId>mybatis-thymeleaf</artifactId>
-			<version>1.0.3</version>
+			<version>${mybatis-thymeleaf.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.data</groupId>
