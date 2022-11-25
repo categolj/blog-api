@@ -27,7 +27,7 @@ public class ProblemControllerAdvice {
 	public ProblemDetail handleResponseStatusException(ResponseStatusException e) {
 		final ProblemDetail problemDetail = ProblemDetail.forStatus(e.getStatusCode());
 		problemDetail.setDetail(e.getReason());
-		return problemDetail;
+		return setTraceId(problemDetail);
 	}
 
 	@ExceptionHandler(ConstraintViolationsException.class)
@@ -35,7 +35,7 @@ public class ProblemControllerAdvice {
 	public ProblemDetail handleConstraintViolationsException(ConstraintViolationsException e) {
 		final ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, "Constraint violations found!");
 		problemDetail.setProperty("violations", e.violations().details());
-		return problemDetail;
+		return setTraceId(problemDetail);
 	}
 
 	@ExceptionHandler(RuntimeException.class)
@@ -43,6 +43,10 @@ public class ProblemControllerAdvice {
 	public ProblemDetail handleRuntimeException(RuntimeException e) {
 		final ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.INTERNAL_SERVER_ERROR, "Unexpected error occurred!");
 		log.error("Unexpected error occurred!", e);
+		return setTraceId(problemDetail);
+	}
+
+	private ProblemDetail setTraceId(ProblemDetail problemDetail) {
 		final Span currentSpan = tracer.currentSpan();
 		if (currentSpan != null) {
 			problemDetail.setProperty("traceId", currentSpan.context().traceId());
