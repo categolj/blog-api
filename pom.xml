@@ -21,7 +21,6 @@
 		<ecs-logging-java.version>1.5.0</ecs-logging-java.version>
 		<start-class>am.ik.blog.BlogApiApplication</start-class>
 		<resilience4j.version>1.7.1</resilience4j.version>
-		<snakeyaml.version>1.32</snakeyaml.version>
 		<spring-doc.version>2.0.0-RC2</spring-doc.version>
 		<jar-classifier></jar-classifier>
 	</properties>
