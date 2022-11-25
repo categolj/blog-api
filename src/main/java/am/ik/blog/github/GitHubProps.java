@@ -19,9 +19,15 @@ public class GitHubProps implements org.springframework.validation.Validator {
 
 	private String webhookSecret;
 
+	private String contentOwner;
+
+	private String contentRepo;
+
 	private final BiValidator<GitHubProps, Errors> validator = ValidatorBuilder.<GitHubProps>of()
 			.constraint(GitHubProps::getAccessToken, "accessToken", c -> c.codePoints(ASCII_PRINTABLE_CHARS).asWhiteList())
 			.constraint(GitHubProps::getWebhookSecret, "webhookSecret", c -> c.codePoints(ASCII_PRINTABLE_CHARS).asWhiteList())
+			.constraint(GitHubProps::getContentOwner, "contentOwner", c -> c.codePoints(ASCII_PRINTABLE_CHARS).asWhiteList())
+			.constraint(GitHubProps::getContentRepo, "contentRepo", c -> c.codePoints(ASCII_PRINTABLE_CHARS).asWhiteList())
 			.build(Errors::rejectValue);
 
 	public String getAccessToken() {
@@ -38,6 +44,22 @@ public class GitHubProps implements org.springframework.validation.Validator {
 
 	public void setWebhookSecret(String webhookSecret) {
 		this.webhookSecret = webhookSecret;
+	}
+
+	public String getContentOwner() {
+		return contentOwner;
+	}
+
+	public void setContentOwner(String contentOwner) {
+		this.contentOwner = contentOwner;
+	}
+
+	public String getContentRepo() {
+		return contentRepo;
+	}
+
+	public void setContentRepo(String contentRepo) {
+		this.contentRepo = contentRepo;
 	}
 
 	@Override

@@ -6,6 +6,7 @@ import am.ik.blog.entry.Entry;
 import am.ik.blog.entry.EntryMapper;
 import am.ik.blog.github.EntryFetcher;
 import am.ik.blog.github.Fixtures;
+import am.ik.blog.github.GitHubProps;
 import org.junit.jupiter.api.Test;
 import reactor.core.publisher.Mono;
 
@@ -18,8 +19,8 @@ import org.springframework.test.web.reactive.server.WebTestClient;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
 
-@WebMvcTest(properties = { "spring.security.user.name=admin", "spring.security.user.password=password" })
-@Import({ SecurityConfig.class, MockConfig.class })
+@WebMvcTest(properties = { "spring.security.user.name=admin", "spring.security.user.password=password", "blog.github.content-owner=foo", "blog.github.content-repo=my-blog" })
+@Import({ SecurityConfig.class, MockConfig.class, GitHubProps.class })
 class EntryImportControllerTest {
 	@Autowired
 	WebTestClient webTestClient;
@@ -35,7 +36,7 @@ class EntryImportControllerTest {
 		final Entry entry = Fixtures.entry(100L);
 		given(this.entryFetcher.fetch("foo", "my-blog", "content/00100.md")).willReturn(Mono.just(entry));
 		this.webTestClient.post()
-				.uri("/admin/import?from=100&to=100&owner=foo&repo=my-blog")
+				.uri("/admin/import?from=100&to=100")
 				.headers(httpHeaders -> httpHeaders.setBasicAuth("admin", "password"))
 				.exchange()
 				.expectStatus().isOk()

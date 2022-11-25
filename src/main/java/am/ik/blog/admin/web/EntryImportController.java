@@ -5,11 +5,13 @@ import java.util.Optional;
 import java.util.stream.IntStream;
 
 import am.ik.blog.entry.Entry;
-import am.ik.blog.entry.EntryMapper;
 import am.ik.blog.entry.EntryService;
 import am.ik.blog.github.EntryFetcher;
+import am.ik.blog.github.GitHubProps;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -26,9 +28,14 @@ public class EntryImportController {
 
 	private final EntryService entryService;
 
-	public EntryImportController(EntryFetcher entryFetcher, EntryService entryService) {
+	private final GitHubProps props;
+
+	private final Logger log = LoggerFactory.getLogger(EntryImportController.class);
+
+	public EntryImportController(EntryFetcher entryFetcher, EntryService entryService, GitHubProps props) {
 		this.entryFetcher = entryFetcher;
 		this.entryService = entryService;
+		this.props = props;
 	}
 
 	@PostMapping(path = "/admin/import", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -36,12 +43,11 @@ public class EntryImportController {
 	@Operation(security = { @SecurityRequirement(name = "basic") })
 	public Optional<List<String>> importEntries(
 			@RequestParam(defaultValue = "0") int from,
-			@RequestParam(defaultValue = "0") int to,
-			@RequestParam(defaultValue = "making") String owner,
-			@RequestParam(defaultValue = "blog.ik.am") String repo) {
+			@RequestParam(defaultValue = "0") int to) {
+		log.info("Importing entries from https://github.com/{}/{} ({}-{})", this.props.getContentOwner(), this.props.getContentRepo(), from, to);
 		final Optional<List<Entry>> fetched = Flux.fromStream(IntStream.rangeClosed(from, to).boxed())
 				.flatMap(i -> this.entryFetcher
-						.fetch(owner, repo, String.format("content/%05d.md", i))
+						.fetch(this.props.getContentOwner(), this.props.getContentRepo(), String.format("content/%05d.md", i))
 						.onErrorResume(
 								e -> (e instanceof NotFound)
 										? Mono.empty()
