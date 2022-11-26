@@ -2,7 +2,7 @@ package am.ik.blog.entry.web;
 
 import java.util.List;
 
-import am.ik.blog.entry.search.CategoryOrders;
+import am.ik.blog.category.Category;
 import am.ik.blog.entry.search.SearchCriteria;
 import am.ik.blog.entry.search.SearchCriteria.SearchCriteriaBuilder;
 import am.ik.blog.tag.Tag;
@@ -71,8 +71,8 @@ public class EntrySearchRequest {
 	public SearchCriteria toCriteria() {
 		final SearchCriteriaBuilder builder = SearchCriteria.builder().keyword(query)
 				.tag((tag == null) ? null : new Tag(tag))
-				.categoryOrders(
-						(categories == null) ? null : CategoryOrders.from(categories))
+				.categories((categories == null) ? List.of()
+						: categories.stream().map(Category::new).toList())
 				.createdBy(createdBy).lastModifiedBy(updatedBy);
 		return builder.excludeContent(excludeContent).build();
 	}

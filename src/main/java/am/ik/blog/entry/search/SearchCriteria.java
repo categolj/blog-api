@@ -1,15 +1,12 @@
 package am.ik.blog.entry.search;
 
+import am.ik.blog.category.Category;
 import am.ik.blog.tag.Tag;
 
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.util.StringUtils;
 
-import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.atomic.AtomicInteger;
 
 public class SearchCriteria {
 
@@ -25,17 +22,17 @@ public class SearchCriteria {
 
 	private Tag tag;
 
-	private CategoryOrders categoryOrders;
+	private List<Category> categories;
 
 	private String keyword;
 
 	SearchCriteria(boolean excludeContent, String createdBy, String lastModifiedBy,
-			Tag tag, CategoryOrders categoryOrders, String keyword) {
+			Tag tag, List<Category> categories, String keyword) {
 		this.excludeContent = excludeContent;
 		this.createdBy = createdBy;
 		this.lastModifiedBy = lastModifiedBy;
 		this.tag = tag;
-		this.categoryOrders = categoryOrders;
+		this.categories = categories;
 		this.keyword = keyword;
 	}
 
@@ -47,8 +44,8 @@ public class SearchCriteria {
 		return SearchCriteria.builder().excludeContent();
 	}
 
-	public CategoryOrders getCategoryOrders() {
-		return this.categoryOrders;
+	public List<Category> getCategories() {
+		return categories;
 	}
 
 	public String getCreatedBy() {
@@ -71,10 +68,6 @@ public class SearchCriteria {
 		return this.excludeContent;
 	}
 
-	boolean isExcludeSeries() {
-		return this.tag == null && this.categoryOrders == null && !this.hasKeyword();
-	}
-
 	boolean hasKeyword() {
 		return StringUtils.hasText(this.keyword);
 	}
@@ -93,16 +86,10 @@ public class SearchCriteria {
 		if (this.tag != null) {
 			params.addValue("tag", tag.name());
 		}
-		if (this.categoryOrders != null) {
-			final List<CategoryOrder> value = this.categoryOrders.getValue().stream()
-					.toList();
-			params.addValue("categoryOrders", value);
-			for (int i = 0; i < value.size(); i++) {
-				final CategoryOrder categoryOrder = value.get(i);
-				params.addValue("categoryOrder_0_%d.category.name".formatted(i),
-						categoryOrder.getCategory().name());
-				params.addValue("categoryOrder_0_%d.categoryOrder".formatted(i),
-						categoryOrder.getCategoryOrder());
+		if (this.categories != null) {
+			params.addValue("categories", this.categories);
+			for (int i = 0; i < categories.size(); i++) {
+				params.addValue("categories[" + i + "]", categories.get(i).name());
 			}
 		}
 		return params;
@@ -110,7 +97,7 @@ public class SearchCriteria {
 
 	public static class SearchCriteriaBuilder {
 
-		private CategoryOrders categoryOrders;
+		private List<Category> categories;
 
 		private String createdBy;
 
@@ -127,11 +114,11 @@ public class SearchCriteria {
 
 		public SearchCriteria build() {
 			return new SearchCriteria(excludeContent, createdBy, lastModifiedBy, tag,
-					categoryOrders, keyword);
+					categories, keyword);
 		}
 
-		public SearchCriteriaBuilder categoryOrders(CategoryOrders categoryOrders) {
-			this.categoryOrders = categoryOrders;
+		public SearchCriteriaBuilder categories(List<Category> categories) {
+			this.categories = categories;
 			return this;
 		}
 
@@ -167,13 +154,5 @@ public class SearchCriteria {
 			this.tag = tag;
 			return this;
 		}
-	}
-
-	@Override
-	public String toString() {
-		return "SearchCriteria{" + "excludeContent=" + excludeContent + ", createdBy='"
-				+ createdBy + '\'' + ", lastModifiedBy='" + lastModifiedBy + '\''
-				+ ", tag=" + tag + ", categoryOrders=" + categoryOrders + ", keyword='"
-				+ keyword + '\'' + '}';
 	}
 }

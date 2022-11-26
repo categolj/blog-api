@@ -3,6 +3,7 @@ SELECT e.entry_id,
 /*[# th:if="!${excludeContent}"]*/
        e.content,
 /*[/]*/
+       e.categories,
        e.created_by,
        e.created_date,
        e.last_modified_by,

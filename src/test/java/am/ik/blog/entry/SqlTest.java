@@ -3,8 +3,6 @@ package am.ik.blog.entry;
 import java.util.List;
 
 import am.ik.blog.category.Category;
-import am.ik.blog.entry.search.CategoryOrder;
-import am.ik.blog.entry.search.CategoryOrders;
 import am.ik.blog.util.FileLoader;
 import org.junit.jupiter.api.Test;
 import org.mybatis.scripting.thymeleaf.SqlGenerator;
@@ -20,9 +18,8 @@ import org.springframework.jdbc.core.namedparam.ParsedSql;
 import static org.assertj.core.api.Assertions.assertThat;
 
 class SqlTest {
-	final SqlGeneratorConfig config = SqlGeneratorConfig
-			.newInstanceWithCustomizer(c -> c.getDialect()
-					.setBindVariableRender(BuiltIn.SPRING_NAMED_PARAMETER.getType()));
+	final SqlGeneratorConfig config = SqlGeneratorConfig.newInstanceWithCustomizer(c -> c
+			.getDialect().setBindVariableRenderInstance(BuiltIn.SPRING_NAMED_PARAMETER));
 
 	final SqlGenerator sqlGenerator = new SqlGenerator(config);
 
@@ -37,6 +34,7 @@ class SqlTest {
 				SELECT e.entry_id,
 				       e.title,
 
+				       e.categories,
 				       e.created_by,
 				       e.created_date,
 				       e.last_modified_by,
@@ -59,6 +57,7 @@ class SqlTest {
 
 				       e.content,
 
+				       e.categories,
 				       e.created_by,
 				       e.created_date,
 				       e.last_modified_by,
@@ -82,6 +81,7 @@ class SqlTest {
 
 				       e.content,
 
+				       e.categories,
 				       e.created_by,
 				       e.created_date,
 				       e.last_modified_by,
@@ -98,6 +98,7 @@ class SqlTest {
 
 				       e.content,
 
+				       e.categories,
 				       e.created_by,
 				       e.created_date,
 				       e.last_modified_by,
@@ -221,8 +222,8 @@ class SqlTest {
 				params.getValues(), params::addValue);
 		assertThat(sql.trim()).isEqualTo(
 				"SELECT DISTINCT e.entry_id, e.last_modified_date\n" + "FROM entry AS e\n"
-						+ "         \n" + "    \n" + "WHERE 1 = 1\n" + "\n" + "\n" + "\n"
-						+ "\n" + "\n" + "ORDER BY e.last_modified_date DESC\n".trim());
+						+ "         \n" + "WHERE 1 = 1\n" + "\n" + "\n" + "\n" + "\n"
+						+ "\n" + "ORDER BY e.last_modified_date DESC\n".trim());
 	}
 
 	@Test
@@ -233,16 +234,16 @@ class SqlTest {
 				FileLoader.loadAsString("am/ik/blog/entry/EntryMapper/entryIds.sql"),
 				params.getValues(), params::addValue);
 		assertThat(sql).isEqualTo("SELECT DISTINCT e.entry_id, e.last_modified_date\n"
-				+ "FROM entry AS e\n" + "         \n" + "    \n" + "WHERE 1 = 1\n" + "\n"
-				+ "\n" + "  AND lower(e.content) LIKE :keywordPattern\n" + "\n" + "\n"
-				+ "\n" + "\n" + "\n" + "ORDER BY e.last_modified_date DESC\n");
+				+ "FROM entry AS e\n" + "         \n" + "WHERE 1 = 1\n" + "\n" + "\n"
+				+ "  AND lower(e.content) LIKE :keywordPattern\n" + "\n" + "\n" + "\n"
+				+ "\n" + "\n" + "ORDER BY e.last_modified_date DESC\n");
 		final String sqlToUse = NamedParameterUtils.substituteNamedParameters(sql,
 				params);
-		assertThat(sqlToUse.trim()).isEqualTo(
-				"SELECT DISTINCT e.entry_id, e.last_modified_date\n" + "FROM entry AS e\n"
-						+ "         \n" + "    \n" + "WHERE 1 = 1\n" + "\n" + "\n"
-						+ "  AND lower(e.content) LIKE ?\n" + "\n" + "\n" + "\n" + "\n"
-						+ "\n" + "ORDER BY e.last_modified_date DESC\n".trim());
+		assertThat(sqlToUse.trim())
+				.isEqualTo("SELECT DISTINCT e.entry_id, e.last_modified_date\n"
+						+ "FROM entry AS e\n" + "         \n" + "WHERE 1 = 1\n" + "\n"
+						+ "\n" + "  AND lower(e.content) LIKE ?\n" + "\n" + "\n" + "\n"
+						+ "\n" + "\n" + "ORDER BY e.last_modified_date DESC\n".trim());
 		final ParsedSql parsedSql = NamedParameterUtils.parseSqlStatement(sql);
 		final List<SqlParameter> declaredParameters = NamedParameterUtils
 				.buildSqlParameterList(parsedSql, params);
@@ -266,76 +267,54 @@ class SqlTest {
 				.isEqualTo("SELECT DISTINCT e.entry_id, e.last_modified_date\n"
 						+ "FROM entry AS e\n" + "         \n"
 						+ "         LEFT JOIN entry_tag AS et ON e.entry_id = et.entry_id\n"
-						+ "    \n" + "    \n" + "WHERE 1 = 1\n" + "\n" + "\n" + "\n"
-						+ "\n" + "  AND et.tag_name = :tag\n" + "\n" + "\n"
+						+ "    \n" + "WHERE 1 = 1\n" + "\n" + "\n" + "\n" + "\n"
+						+ "  AND et.tag_name = :tag\n" + "\n" + "\n"
 						+ "ORDER BY e.last_modified_date DESC\n".trim());
 	}
 
 	@Test
 	public void entryIdsWithCategoryOrders() {
-		final List<CategoryOrder> categoryOrders = new CategoryOrders()
-				.add(new Category("x"), 0).add(new Category("y"), 1)
-				.add(new Category("z"), 2).getValue().stream().toList();
+		final List<Category> categories = List.of(new Category("x"), new Category("y"),
+				new Category("z"));
 		final MapSqlParameterSource params = new MapSqlParameterSource()
-				.addValue("categoryOrders", categoryOrders)
-				.addValue("categoryOrder_0_0.category.name", "x")
-				.addValue("categoryOrder_0_0.categoryOrder", 0)
-				.addValue("categoryOrder_0_1.category.name", "y")
-				.addValue("categoryOrder_0_1.categoryOrder", 1)
-				.addValue("categoryOrder_0_2.category.name", "z")
-				.addValue("categoryOrder_0_2.categoryOrder", 2);
+				.addValue("categories", categories);
+		for (int i = 0; i < categories.size(); i++) {
+			params.addValue("categories[" + i + "]", categories.get(i).name());
+		}
 		final String sql = sqlGenerator.generate(
 				FileLoader.loadAsString("am/ik/blog/entry/EntryMapper/entryIds.sql"),
 				params.getValues(), params::addValue);
-		assertThat(sql.trim())
-				.isEqualTo("SELECT DISTINCT e.entry_id, e.last_modified_date\n"
-						+ "FROM entry AS e\n" + "         \n" + "    \n"
-						+ "         LEFT JOIN category AS c ON e.entry_id = c.entry_id\n"
-						+ "    \n" + "WHERE 1 = 1\n" + "\n" + "\n" + "\n" + "\n" + "\n"
-						+ "\n"
-						+ "  AND c.category_name = :categoryOrder_0_0.category.name\n"
-						+ "  AND c.category_order = :categoryOrder_0_0.categoryOrder\n"
-						+ "  AND c.category_name = :categoryOrder_0_1.category.name\n"
-						+ "  AND c.category_order = :categoryOrder_0_1.categoryOrder\n"
-						+ "  AND c.category_name = :categoryOrder_0_2.category.name\n"
-						+ "  AND c.category_order = :categoryOrder_0_2.categoryOrder\n"
-						+ "\n" + "\n" + "ORDER BY e.last_modified_date DESC\n".trim());
+		assertThat(sql.trim()).isEqualTo(
+				"SELECT DISTINCT e.entry_id, e.last_modified_date\n" + "FROM entry AS e\n"
+						+ "         \n" + "WHERE 1 = 1\n" + "\n" + "\n" + "\n" + "\n"
+						+ "\n" + "\n" + "  AND e.categories[1] = :categories[0]\n"
+						+ "  AND e.categories[2] = :categories[1]\n"
+						+ "  AND e.categories[3] = :categories[2]\n" + "\n" + "\n"
+						+ "ORDER BY e.last_modified_date DESC\n".trim());
 		final String sqlToUse = NamedParameterUtils.substituteNamedParameters(sql,
 				params);
 		assertThat(sqlToUse.trim())
 				.isEqualTo("SELECT DISTINCT e.entry_id, e.last_modified_date\n"
-						+ "FROM entry AS e\n" + "         \n" + "    \n"
-						+ "         LEFT JOIN category AS c ON e.entry_id = c.entry_id\n"
-						+ "    \n" + "WHERE 1 = 1\n" + "\n" + "\n" + "\n" + "\n" + "\n"
-						+ "\n" + "  AND c.category_name = ?\n"
-						+ "  AND c.category_order = ?\n" + "  AND c.category_name = ?\n"
-						+ "  AND c.category_order = ?\n" + "  AND c.category_name = ?\n"
-						+ "  AND c.category_order = ?\n" + "\n" + "\n"
-						+ "ORDER BY e.last_modified_date DESC\n".trim());
+						+ "FROM entry AS e\n" + "         \n" + "WHERE 1 = 1\n" + "\n"
+						+ "\n" + "\n" + "\n" + "\n" + "\n" + "  AND e.categories[1] = ?\n"
+						+ "  AND e.categories[2] = ?\n" + "  AND e.categories[3] = ?\n"
+						+ "\n" + "\n" + "ORDER BY e.last_modified_date DESC\n".trim());
 		final ParsedSql parsedSql = NamedParameterUtils.parseSqlStatement(sql);
 		final List<SqlParameter> declaredParameters = NamedParameterUtils
 				.buildSqlParameterList(parsedSql, params);
 		final Object[] buildValueArray = NamedParameterUtils.buildValueArray(parsedSql,
 				params, declaredParameters);
-		assertThat(buildValueArray).hasSize(6);
+		assertThat(buildValueArray).hasSize(3);
 		assertThat(((SqlParameterValue) buildValueArray[0]).getName())
-				.isEqualTo("categoryOrder_0_0.category.name");
+				.isEqualTo("categories[0]");
 		assertThat(((SqlParameterValue) buildValueArray[0]).getValue()).isEqualTo("x");
 		assertThat(((SqlParameterValue) buildValueArray[1]).getName())
-				.isEqualTo("categoryOrder_0_0.categoryOrder");
-		assertThat(((SqlParameterValue) buildValueArray[1]).getValue()).isEqualTo(0);
+				.isEqualTo("categories[1]");
+		assertThat(((SqlParameterValue) buildValueArray[1]).getValue()).isEqualTo("y");
 		assertThat(((SqlParameterValue) buildValueArray[2]).getName())
-				.isEqualTo("categoryOrder_0_1.category.name");
-		assertThat(((SqlParameterValue) buildValueArray[2]).getValue()).isEqualTo("y");
-		assertThat(((SqlParameterValue) buildValueArray[3]).getName())
-				.isEqualTo("categoryOrder_0_1.categoryOrder");
-		assertThat(((SqlParameterValue) buildValueArray[3]).getValue()).isEqualTo(1);
-		assertThat(((SqlParameterValue) buildValueArray[4]).getName())
-				.isEqualTo("categoryOrder_0_2.category.name");
-		assertThat(((SqlParameterValue) buildValueArray[4]).getValue()).isEqualTo("z");
-		assertThat(((SqlParameterValue) buildValueArray[5]).getName())
-				.isEqualTo("categoryOrder_0_2.categoryOrder");
-		assertThat(((SqlParameterValue) buildValueArray[5]).getValue()).isEqualTo(2);
+				.isEqualTo("categories[2]");
+		assertThat(((SqlParameterValue) buildValueArray[2]).getValue()).isEqualTo("z");
+		;
 	}
 
 	@Test

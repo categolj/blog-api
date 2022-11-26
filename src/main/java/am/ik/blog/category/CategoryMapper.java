@@ -1,8 +1,9 @@
 package am.ik.blog.category;
 
+import java.sql.Array;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Stream;
 
 import am.ik.blog.util.FileLoader;
 
@@ -21,11 +22,14 @@ public class CategoryMapper {
 		final String sql = FileLoader
 				.loadSqlAsString("am/ik/blog/category/CategoryMapper/findAll.sql");
 		return this.jdbcTemplate.query(sql, Map.of(), (rs, rowNum) -> {
-			final String category = rs.getString("category");
-			if (category == null) {
-				return List.of();
+			final List<Category> categories = new ArrayList<>();
+			final Array categoriesArray = rs.getArray("categories");
+			if (categoriesArray != null) {
+				for (Object category : ((Object[]) categoriesArray.getArray())) {
+					categories.add(new Category((String) category));
+				}
 			}
-			return Stream.of(category.split(",")).map(Category::new).toList();
+			return categories;
 		});
 	}
 }

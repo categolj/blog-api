@@ -1,7 +1,9 @@
 package am.ik.blog.entry;
 
+import java.sql.Array;
 import java.sql.Timestamp;
 import java.time.ZoneOffset;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -30,6 +32,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import static am.ik.blog.util.FileLoader.loadSqlAsString;
 import static java.util.stream.Collectors.groupingBy;
+import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 
@@ -46,15 +49,21 @@ public class EntryMapper {
 	}
 
 	static RowMapper<Entry> rowMapper(boolean excludeContent,
-			Map<Long, List<Category>> categoriesMap, Map<Long, List<Tag>> tagsMap) {
+			Map<Long, List<Tag>> tagsMap) {
 		return (rs, rowNum) -> {
 			final long entryId = rs.getLong("entry_id");
+			final List<Category> categories = new ArrayList<>();
+			final Array categoriesArray = rs.getArray("categories");
+			if (categoriesArray != null) {
+				final Object[] array = (Object[]) categoriesArray.getArray();
+				for (Object category : array) {
+					categories.add(new Category((String) category));
+				}
+			}
 			return new EntryBuilder().withEntryId(entryId)
 					.withContent(excludeContent ? "" : rs.getString("content"))
 					.withFrontMatter(new FrontMatterBuilder()
-							.withTitle(rs.getString("title"))
-							.withCategories(
-									categoriesMap.getOrDefault(entryId, List.of()))
+							.withTitle(rs.getString("title")).withCategories(categories)
 							.withTags(tagsMap.getOrDefault(entryId, List.of())).build())
 					.withCreated(new Author(rs.getString("created_by"),
 							rs.getTimestamp("created_date").toInstant()
@@ -69,7 +78,6 @@ public class EntryMapper {
 	@Transactional(readOnly = true)
 	public Optional<Entry> findOne(Long entryId, boolean excludeContent) {
 		final List<Long> ids = List.of(entryId);
-		final Map<Long, List<Category>> categoriesMap = this.categoriesMap(ids);
 		final Map<Long, List<Tag>> tagsMap = this.tagsMap(ids);
 		final MapSqlParameterSource params = new MapSqlParameterSource()
 				.addValue("entryId", entryId).addValue("excludeContent", excludeContent);
@@ -78,7 +86,7 @@ public class EntryMapper {
 				params.getValues(), params::addValue);
 		try {
 			final Entry entry = this.jdbcTemplate.queryForObject(sql, params,
-					rowMapper(excludeContent, categoriesMap, tagsMap));
+					rowMapper(excludeContent, tagsMap));
 			return Optional.ofNullable(entry);
 		}
 		catch (EmptyResultDataAccessException e) {
@@ -92,14 +100,13 @@ public class EntryMapper {
 		if (ids.isEmpty()) {
 			return List.of();
 		}
-		final Map<Long, List<Category>> categoriesMap = this.categoriesMap(ids);
 		final Map<Long, List<Tag>> tagsMap = this.tagsMap(ids);
 		final MapSqlParameterSource params = entryIdsParameterSource(ids);
 		final String sql = this.sqlGenerator.generate(
 				loadSqlAsString("am/ik/blog/entry/EntryMapper/findAll.sql"),
 				params.getValues(), params::addValue);
 		return this.jdbcTemplate.query(sql, params,
-				rowMapper(searchCriteria.isExcludeContent(), categoriesMap, tagsMap));
+				rowMapper(searchCriteria.isExcludeContent(), tagsMap));
 	}
 
 	@Transactional(readOnly = true)
@@ -145,9 +152,12 @@ public class EntryMapper {
 		final Author created = entry.getCreated();
 		final Author updated = entry.getUpdated();
 		final Long entryId = entry.getEntryId();
+		final List<Category> categories = frontMatter.getCategories();
 		final MapSqlParameterSource params = new MapSqlParameterSource()
 				.addValue("entryId", entryId).addValue("title", frontMatter.getTitle())
 				.addValue("content", entry.getContent())
+				.addValue("categories",
+						categories.stream().map(Category::name).collect(joining(",")))
 				.addValue("createdBy", created.getName())
 				.addValue("createdDate", Timestamp.from(created.getDate().toInstant()))
 				.addValue("lastModifiedBy", updated.getName())
@@ -158,28 +168,6 @@ public class EntryMapper {
 				params.getValues(), params::addValue);
 		final int upsertEntryCount = this.jdbcTemplate.update(upsertEntrySql, params);
 		result.put("upsertEntry", upsertEntryCount);
-		final String deleteCategorySql = this.sqlGenerator.generate(
-				loadSqlAsString("am/ik/blog/entry/EntryMapper/deleteCategory.sql"),
-				params.getValues(), params::addValue);
-		final int deleteCategoryCount = this.jdbcTemplate.update(deleteCategorySql,
-				params);
-		result.put("deleteCategory", deleteCategoryCount);
-		final String insertCategorySql = this.sqlGenerator.generate(
-				loadSqlAsString("am/ik/blog/entry/EntryMapper/insertCategory.sql"),
-				params.getValues(), params::addValue);
-		final List<Category> categories = frontMatter.getCategories();
-		final SqlParameterSource[] insertCategoryParams = new SqlParameterSource[categories
-				.size()];
-		for (int i = 0; i < categories.size(); i++) {
-			final Category category = categories.get(i);
-			insertCategoryParams[i] = new MapSqlParameterSource()
-					.addValue("entryId", entryId)
-					.addValue("categoryName", category.name())
-					.addValue("categoryOrder", i);
-		}
-		final int[] insertCategoryCount = this.jdbcTemplate.batchUpdate(insertCategorySql,
-				insertCategoryParams);
-		result.put("insertCategory", Arrays.stream(insertCategoryCount).sum());
 		final String deleteEntryTagSql = this.sqlGenerator.generate(
 				loadSqlAsString("am/ik/blog/entry/EntryMapper/deleteEntryTag.sql"),
 				params.getValues(), params::addValue);
@@ -230,20 +218,6 @@ public class EntryMapper {
 		final List<Tuple2<Long, Tag>> list = this.jdbcTemplate.query(sql, params,
 				(rs, rowNum) -> Tuples.of(rs.getLong("entry_id"),
 						new Tag(rs.getString("tag_name"))));
-		return aggregateByKey(list);
-	}
-
-	private Map<Long, List<Category>> categoriesMap(List<Long> ids) {
-		if (ids.isEmpty()) {
-			return Map.of();
-		}
-		final MapSqlParameterSource params = entryIdsParameterSource(ids);
-		final String sql = this.sqlGenerator.generate(
-				loadSqlAsString("am/ik/blog/entry/EntryMapper/categoriesMap.sql"),
-				params.getValues(), params::addValue);
-		final List<Tuple2<Long, Category>> list = this.jdbcTemplate.query(sql, params,
-				(rs, rowNum) -> Tuples.of(rs.getLong("entry_id"),
-						new Category(rs.getString("category_name"))));
 		return aggregateByKey(list);
 	}
 

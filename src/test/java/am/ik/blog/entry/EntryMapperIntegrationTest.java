@@ -39,7 +39,6 @@ class EntryMapperIntegrationTest {
 		final Entry entry = Fixtures.entry(99999L);
 		final Map<String, Integer> result = this.entryMapper.save(entry);
 		assertThat(result.get("upsertEntry")).isEqualTo(1);
-		assertThat(result.get("deleteCategory")).isEqualTo(0);
 		assertThat(result.get("deleteEntryTag")).isEqualTo(0);
 		assertThat(result.get("upsertTag")).isEqualTo(3);
 		assertThat(result.get("insertEntryTag")).isEqualTo(3);
@@ -69,7 +68,6 @@ class EntryMapperIntegrationTest {
 		final Entry entry = Fixtures.entry(99999L);
 		final Map<String, Integer> result = this.entryMapper.save(entry);
 		assertThat(result.get("upsertEntry")).isEqualTo(1);
-		assertThat(result.get("deleteCategory")).isEqualTo(3);
 		assertThat(result.get("deleteEntryTag")).isEqualTo(3);
 		assertThat(result.get("upsertTag")).isEqualTo(3);
 		assertThat(result.get("insertEntryTag")).isEqualTo(3);

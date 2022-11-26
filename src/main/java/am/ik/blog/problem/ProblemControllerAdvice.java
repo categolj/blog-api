@@ -6,6 +6,7 @@ import io.micrometer.tracing.Tracer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -37,6 +38,16 @@ public class ProblemControllerAdvice {
 		final ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(
 				HttpStatus.BAD_REQUEST, "Constraint violations found!");
 		problemDetail.setProperty("violations", e.violations().details());
+		return setTraceId(problemDetail);
+	}
+
+	@ExceptionHandler(DataAccessException.class)
+	@ResponseStatus(HttpStatus.SERVICE_UNAVAILABLE)
+	public ProblemDetail handleDataAccessException(DataAccessException e) {
+		final ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(
+				HttpStatus.SERVICE_UNAVAILABLE,
+				"There is a problem with database access.");
+		log.error("There is a problem with database access.", e);
 		return setTraceId(problemDetail);
 	}
 
