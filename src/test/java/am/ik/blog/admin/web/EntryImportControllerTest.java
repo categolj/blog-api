@@ -51,7 +51,7 @@ class EntryImportControllerTest {
 		given(this.entryFetcher.fetch("foo", "my-blog", "content/00100.md"))
 				.willReturn(Mono.just(entry));
 		this.webTestClient.post()
-				.uri("/admin/import?from=100&to=100&owner=foo&repo=my-blog").exchange()
+				.uri("/admin/import?from=100&to=100").exchange()
 				.expectStatus().isUnauthorized();
 	}
 }
