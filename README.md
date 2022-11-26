@@ -54,8 +54,41 @@ curl -s -u admin:changeme -XPOST http://localhost:8080/entries -H "Content-Type:
 Check the entries
 
 ```
-curl -s http://localhost:8080/entries
-curl -s http://localhost:8080/entries/1
+$ curl -s http://localhost:8080/entries/1 | jq .
+{
+  "entryId": 1,
+  "frontMatter": {
+    "title": "Welcome to CategolJ!",
+    "categories": [
+      {
+        "name": "Blog"
+      },
+      {
+        "name": "Posts"
+      },
+      {
+        "name": "Templates"
+      }
+    ],
+    "tags": [
+      {
+        "name": "CategolJ"
+      },
+      {
+        "name": "Hello World"
+      }
+    ]
+  },
+  "content": "Welcome\n\n**Hello world**, this is my first Categolj blog post.\n\nI hope you like it!",
+  "created": {
+    "name": "admin",
+    "date": "2022-11-26T08:42:52.032376Z"
+  },
+  "updated": {
+    "name": "admin",
+    "date": "2022-11-26T08:42:52.032376Z"
+  }
+}
 ```
 
 Delete the entry

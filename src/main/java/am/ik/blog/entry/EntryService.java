@@ -50,7 +50,7 @@ public class EntryService {
 	}
 
 	public Long nextId() {
-		return this.entryMapper.nextId();
+		return Math.max(this.entryMapper.nextId(), 1L);
 	}
 
 	public Path exportEntriesAsZip() {
