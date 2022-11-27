@@ -1,9 +1,7 @@
 package am.ik.blog.entry;
 
-import java.sql.Array;
 import java.sql.Timestamp;
 import java.time.ZoneOffset;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -36,45 +34,30 @@ public class EntryMapper {
 
 	private final SqlGenerator sqlGenerator;
 
+	private final RowMapper<Entry> rowMapper = (rs, rowNum) -> {
+		final long entryId = rs.getLong("entry_id");
+		return new EntryBuilder().withEntryId(entryId)
+				.withContent(rs.getString("content"))
+				.withFrontMatter(new FrontMatterBuilder().withTitle(rs.getString("title"))
+						.withCategories(Arrays
+								.stream((Object[]) rs.getArray("categories").getArray())
+								.map(String.class::cast).map(Category::new).toList())
+						.withTags(Arrays.stream((Object[]) rs.getArray("tags").getArray())
+								.map(String.class::cast).sorted().map(Tag::new).toList())
+						.build())
+				.withCreated(new Author(rs.getString("created_by"),
+						rs.getTimestamp("created_date").toInstant()
+								.atOffset(ZoneOffset.UTC)))
+				.withUpdated(new Author(rs.getString("last_modified_by"),
+						rs.getTimestamp("last_modified_date").toInstant()
+								.atOffset(ZoneOffset.UTC)))
+				.build();
+	};
+
 	public EntryMapper(NamedParameterJdbcTemplate jdbcTemplate,
 			SqlGenerator sqlGenerator) {
 		this.jdbcTemplate = jdbcTemplate;
 		this.sqlGenerator = sqlGenerator;
-	}
-
-	static RowMapper<Entry> rowMapper(boolean excludeContent) {
-		return (rs, rowNum) -> {
-			final long entryId = rs.getLong("entry_id");
-			final List<Category> categories = new ArrayList<>();
-			final List<Tag> tags = new ArrayList<>();
-			final Array categoriesArray = rs.getArray("categories");
-			if (categoriesArray != null) {
-				final Object[] array = (Object[]) categoriesArray.getArray();
-				for (Object category : array) {
-					categories.add(new Category((String) category));
-				}
-			}
-			final Array tagsArray = rs.getArray("tags");
-			if (tagsArray != null) {
-				final Object[] array = (Object[]) tagsArray.getArray();
-				Arrays.sort(array);
-				for (Object tag : array) {
-					tags.add(new Tag((String) tag));
-				}
-			}
-			return new EntryBuilder().withEntryId(entryId)
-					.withContent(excludeContent ? "" : rs.getString("content"))
-					.withFrontMatter(
-							new FrontMatterBuilder().withTitle(rs.getString("title"))
-									.withCategories(categories).withTags(tags).build())
-					.withCreated(new Author(rs.getString("created_by"),
-							rs.getTimestamp("created_date").toInstant()
-									.atOffset(ZoneOffset.UTC)))
-					.withUpdated(new Author(rs.getString("last_modified_by"),
-							rs.getTimestamp("last_modified_date").toInstant()
-									.atOffset(ZoneOffset.UTC)))
-					.build();
-		};
 	}
 
 	@Transactional(readOnly = true)
@@ -85,8 +68,7 @@ public class EntryMapper {
 				loadSqlAsString("am/ik/blog/entry/EntryMapper/findOne.sql"),
 				params.getValues(), params::addValue);
 		try {
-			final Entry entry = this.jdbcTemplate.queryForObject(sql, params,
-					rowMapper(excludeContent));
+			final Entry entry = this.jdbcTemplate.queryForObject(sql, params, rowMapper);
 			return Optional.ofNullable(entry);
 		}
 		catch (EmptyResultDataAccessException e) {
@@ -100,12 +82,12 @@ public class EntryMapper {
 		if (ids.isEmpty()) {
 			return List.of();
 		}
-		final MapSqlParameterSource params = entryIdsParameterSource(ids);
+		final MapSqlParameterSource params = entryIdsParameterSource(ids)
+				.addValue("excludeContent", searchCriteria.isExcludeContent());
 		final String sql = this.sqlGenerator.generate(
 				loadSqlAsString("am/ik/blog/entry/EntryMapper/findAll.sql"),
 				params.getValues(), params::addValue);
-		return this.jdbcTemplate.query(sql, params,
-				rowMapper(searchCriteria.isExcludeContent()));
+		return this.jdbcTemplate.query(sql, params, rowMapper);
 	}
 
 	@Transactional(readOnly = true)

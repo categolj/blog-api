@@ -92,6 +92,7 @@ public class SearchCriteria {
 				params.addValue("categories[" + i + "]", categories.get(i).name());
 			}
 		}
+		params.addValue("excludeContent", this.excludeContent);
 		return params;
 	}
 

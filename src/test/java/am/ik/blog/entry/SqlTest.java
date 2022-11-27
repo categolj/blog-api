@@ -34,8 +34,9 @@ class SqlTest {
 				SELECT e.entry_id,
 				       e.title,
 
-				       e.categories,
-				       e.tags,
+				       '' AS content,
+				       COALESCE(e.categories, '{}') AS categories,
+				       COALESCE(e.tags, '{}') AS tags,
 				       e.created_by,
 				       e.created_date,
 				       e.last_modified_by,
@@ -58,8 +59,9 @@ class SqlTest {
 
 				       e.content,
 
-				       e.categories,
-				       e.tags,
+
+				       COALESCE(e.categories, '{}') AS categories,
+				       COALESCE(e.tags, '{}') AS tags,
 				       e.created_by,
 				       e.created_date,
 				       e.last_modified_by,
@@ -83,8 +85,9 @@ class SqlTest {
 
 				       e.content,
 
-				       e.categories,
-				       e.tags,
+
+				       COALESCE(e.categories, '{}') AS categories,
+				       COALESCE(e.tags, '{}') AS tags,
 				       e.created_by,
 				       e.created_date,
 				       e.last_modified_by,
@@ -101,8 +104,9 @@ class SqlTest {
 
 				       e.content,
 
-				       e.categories,
-				       e.tags,
+
+				       COALESCE(e.categories, '{}') AS categories,
+				       COALESCE(e.tags, '{}') AS tags,
 				       e.created_by,
 				       e.created_date,
 				       e.last_modified_by,
