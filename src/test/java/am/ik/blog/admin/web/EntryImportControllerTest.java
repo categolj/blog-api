@@ -50,8 +50,7 @@ class EntryImportControllerTest {
 		final Entry entry = Fixtures.entry(100L);
 		given(this.entryFetcher.fetch("foo", "my-blog", "content/00100.md"))
 				.willReturn(Mono.just(entry));
-		this.webTestClient.post()
-				.uri("/admin/import?from=100&to=100").exchange()
+		this.webTestClient.post().uri("/admin/import?from=100&to=100").exchange()
 				.expectStatus().isUnauthorized();
 	}
 }

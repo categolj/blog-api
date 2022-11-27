@@ -16,8 +16,6 @@ import am.ik.blog.entry.search.SearchCriteria;
 import am.ik.blog.tag.Tag;
 import am.ik.yavi.core.ConstraintViolationsException;
 import org.mybatis.scripting.thymeleaf.SqlGenerator;
-import reactor.util.function.Tuple2;
-import reactor.util.function.Tuples;
 
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.data.domain.Page;
@@ -26,15 +24,11 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
-import org.springframework.jdbc.core.namedparam.SqlParameterSource;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
 import static am.ik.blog.util.FileLoader.loadSqlAsString;
-import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.joining;
-import static java.util.stream.Collectors.toList;
-import static java.util.stream.Collectors.toMap;
 
 @Repository
 public class EntryMapper {
@@ -48,11 +42,11 @@ public class EntryMapper {
 		this.sqlGenerator = sqlGenerator;
 	}
 
-	static RowMapper<Entry> rowMapper(boolean excludeContent,
-			Map<Long, List<Tag>> tagsMap) {
+	static RowMapper<Entry> rowMapper(boolean excludeContent) {
 		return (rs, rowNum) -> {
 			final long entryId = rs.getLong("entry_id");
 			final List<Category> categories = new ArrayList<>();
+			final List<Tag> tags = new ArrayList<>();
 			final Array categoriesArray = rs.getArray("categories");
 			if (categoriesArray != null) {
 				final Object[] array = (Object[]) categoriesArray.getArray();
@@ -60,11 +54,19 @@ public class EntryMapper {
 					categories.add(new Category((String) category));
 				}
 			}
+			final Array tagsArray = rs.getArray("tags");
+			if (tagsArray != null) {
+				final Object[] array = (Object[]) tagsArray.getArray();
+				Arrays.sort(array);
+				for (Object tag : array) {
+					tags.add(new Tag((String) tag));
+				}
+			}
 			return new EntryBuilder().withEntryId(entryId)
 					.withContent(excludeContent ? "" : rs.getString("content"))
-					.withFrontMatter(new FrontMatterBuilder()
-							.withTitle(rs.getString("title")).withCategories(categories)
-							.withTags(tagsMap.getOrDefault(entryId, List.of())).build())
+					.withFrontMatter(
+							new FrontMatterBuilder().withTitle(rs.getString("title"))
+									.withCategories(categories).withTags(tags).build())
 					.withCreated(new Author(rs.getString("created_by"),
 							rs.getTimestamp("created_date").toInstant()
 									.atOffset(ZoneOffset.UTC)))
@@ -77,8 +79,6 @@ public class EntryMapper {
 
 	@Transactional(readOnly = true)
 	public Optional<Entry> findOne(Long entryId, boolean excludeContent) {
-		final List<Long> ids = List.of(entryId);
-		final Map<Long, List<Tag>> tagsMap = this.tagsMap(ids);
 		final MapSqlParameterSource params = new MapSqlParameterSource()
 				.addValue("entryId", entryId).addValue("excludeContent", excludeContent);
 		final String sql = this.sqlGenerator.generate(
@@ -86,7 +86,7 @@ public class EntryMapper {
 				params.getValues(), params::addValue);
 		try {
 			final Entry entry = this.jdbcTemplate.queryForObject(sql, params,
-					rowMapper(excludeContent, tagsMap));
+					rowMapper(excludeContent));
 			return Optional.ofNullable(entry);
 		}
 		catch (EmptyResultDataAccessException e) {
@@ -100,13 +100,12 @@ public class EntryMapper {
 		if (ids.isEmpty()) {
 			return List.of();
 		}
-		final Map<Long, List<Tag>> tagsMap = this.tagsMap(ids);
 		final MapSqlParameterSource params = entryIdsParameterSource(ids);
 		final String sql = this.sqlGenerator.generate(
 				loadSqlAsString("am/ik/blog/entry/EntryMapper/findAll.sql"),
 				params.getValues(), params::addValue);
 		return this.jdbcTemplate.query(sql, params,
-				rowMapper(searchCriteria.isExcludeContent(), tagsMap));
+				rowMapper(searchCriteria.isExcludeContent()));
 	}
 
 	@Transactional(readOnly = true)
@@ -153,11 +152,13 @@ public class EntryMapper {
 		final Author updated = entry.getUpdated();
 		final Long entryId = entry.getEntryId();
 		final List<Category> categories = frontMatter.getCategories();
+		final List<Tag> tags = frontMatter.getTags();
 		final MapSqlParameterSource params = new MapSqlParameterSource()
 				.addValue("entryId", entryId).addValue("title", frontMatter.getTitle())
 				.addValue("content", entry.getContent())
 				.addValue("categories",
 						categories.stream().map(Category::name).collect(joining(",")))
+				.addValue("tags", tags.stream().map(Tag::name).collect(joining(",")))
 				.addValue("createdBy", created.getName())
 				.addValue("createdDate", Timestamp.from(created.getDate().toInstant()))
 				.addValue("lastModifiedBy", updated.getName())
@@ -168,31 +169,6 @@ public class EntryMapper {
 				params.getValues(), params::addValue);
 		final int upsertEntryCount = this.jdbcTemplate.update(upsertEntrySql, params);
 		result.put("upsertEntry", upsertEntryCount);
-		final String deleteEntryTagSql = this.sqlGenerator.generate(
-				loadSqlAsString("am/ik/blog/entry/EntryMapper/deleteEntryTag.sql"),
-				params.getValues(), params::addValue);
-		final int deleteEntryTagCount = this.jdbcTemplate.update(deleteEntryTagSql,
-				params);
-		result.put("deleteEntryTag", deleteEntryTagCount);
-		final String upsertTagSql = this.sqlGenerator.generate(
-				loadSqlAsString("am/ik/blog/entry/EntryMapper/upsertTag.sql"),
-				params.getValues(), params::addValue);
-		final String insertEntryTagSql = this.sqlGenerator.generate(
-				loadSqlAsString("am/ik/blog/entry/EntryMapper/insertEntryTag.sql"),
-				params.getValues(), params::addValue);
-		final List<Tag> tags = frontMatter.getTags();
-		final SqlParameterSource[] tagParams = new SqlParameterSource[tags.size()];
-		for (int i = 0; i < tags.size(); i++) {
-			final Tag tag = tags.get(i);
-			tagParams[i] = new MapSqlParameterSource().addValue("entryId", entryId)
-					.addValue("tagName", tag.name());
-		}
-		final int[] upsertTagCount = this.jdbcTemplate.batchUpdate(upsertTagSql,
-				tagParams);
-		result.put("upsertTag", Arrays.stream(upsertTagCount).sum());
-		final int[] insertEntryTagCount = this.jdbcTemplate.batchUpdate(insertEntryTagSql,
-				tagParams);
-		result.put("insertEntryTag", Arrays.stream(insertEntryTagCount).sum());
 		return result;
 	}
 
@@ -205,27 +181,6 @@ public class EntryMapper {
 						pageable.getOffset());
 		return this.jdbcTemplate.query(sql, params,
 				(rs, rowNum) -> rs.getLong("entry_id"));
-	}
-
-	private Map<Long, List<Tag>> tagsMap(List<Long> ids) {
-		if (ids.isEmpty()) {
-			return Map.of();
-		}
-		final MapSqlParameterSource params = entryIdsParameterSource(ids);
-		final String sql = this.sqlGenerator.generate(
-				loadSqlAsString("am/ik/blog/entry/EntryMapper/tagsMap.sql"),
-				params.getValues(), params::addValue);
-		final List<Tuple2<Long, Tag>> list = this.jdbcTemplate.query(sql, params,
-				(rs, rowNum) -> Tuples.of(rs.getLong("entry_id"),
-						new Tag(rs.getString("tag_name"))));
-		return aggregateByKey(list);
-	}
-
-	private static <K, V> Map<K, List<V>> aggregateByKey(List<Tuple2<K, V>> list) {
-		return list.stream().collect(groupingBy(Tuple2::getT1)).entrySet().stream()
-				.map(e -> Tuples.of(e.getKey(),
-						e.getValue().stream().map(Tuple2::getT2).collect(toList())))
-				.collect(toMap(Tuple2::getT1, Tuple2::getT2));
 	}
 
 	private static MapSqlParameterSource entryIdsParameterSource(List<Long> ids) {

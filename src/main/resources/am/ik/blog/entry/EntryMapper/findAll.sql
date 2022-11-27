@@ -4,6 +4,7 @@ SELECT e.entry_id,
        e.content,
 /*[/]*/
        e.categories,
+       e.tags,
        e.created_by,
        e.created_date,
        e.last_modified_by,

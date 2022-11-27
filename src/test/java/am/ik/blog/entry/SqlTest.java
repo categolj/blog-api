@@ -35,6 +35,7 @@ class SqlTest {
 				       e.title,
 
 				       e.categories,
+				       e.tags,
 				       e.created_by,
 				       e.created_date,
 				       e.last_modified_by,
@@ -58,6 +59,7 @@ class SqlTest {
 				       e.content,
 
 				       e.categories,
+				       e.tags,
 				       e.created_by,
 				       e.created_date,
 				       e.last_modified_by,
@@ -82,6 +84,7 @@ class SqlTest {
 				       e.content,
 
 				       e.categories,
+				       e.tags,
 				       e.created_by,
 				       e.created_date,
 				       e.last_modified_by,
@@ -99,6 +102,7 @@ class SqlTest {
 				       e.content,
 
 				       e.categories,
+				       e.tags,
 				       e.created_by,
 				       e.created_date,
 				       e.last_modified_by,
@@ -178,52 +182,15 @@ class SqlTest {
 	}
 
 	@Test
-	public void tagsMap() {
-		final MapSqlParameterSource params = new MapSqlParameterSource()
-				.addValue("entryIds", List.of(1, 2, 3)).addValue("entryIds[0]", 1)
-				.addValue("entryIds[1]", 2).addValue("entryIds[2]", 3);
-		final String sql = sqlGenerator.generate(
-				FileLoader.loadAsString("am/ik/blog/entry/EntryMapper/tagsMap.sql"),
-				params.getValues(), params::addValue);
-		assertThat(sql.trim()).isEqualTo("""
-				SELECT entry_id, tag_name
-				FROM entry_tag
-				WHERE entry_id IN (:entryIds[0], :entryIds[1], :entryIds[2])
-				""".trim());
-		final String sqlToUse = NamedParameterUtils.substituteNamedParameters(sql,
-				params);
-		assertThat(sqlToUse.trim()).isEqualTo("""
-				SELECT entry_id, tag_name
-				FROM entry_tag
-				WHERE entry_id IN (?, ?, ?)
-				""".trim());
-		final ParsedSql parsedSql = NamedParameterUtils.parseSqlStatement(sql);
-		final List<SqlParameter> declaredParameters = NamedParameterUtils
-				.buildSqlParameterList(parsedSql, params);
-		final Object[] buildValueArray = NamedParameterUtils.buildValueArray(parsedSql,
-				params, declaredParameters);
-		assertThat(buildValueArray).hasSize(3);
-		assertThat(((SqlParameterValue) buildValueArray[0]).getName())
-				.isEqualTo("entryIds[0]");
-		assertThat(((SqlParameterValue) buildValueArray[0]).getValue()).isEqualTo(1);
-		assertThat(((SqlParameterValue) buildValueArray[1]).getName())
-				.isEqualTo("entryIds[1]");
-		assertThat(((SqlParameterValue) buildValueArray[1]).getValue()).isEqualTo(2);
-		assertThat(((SqlParameterValue) buildValueArray[2]).getName())
-				.isEqualTo("entryIds[2]");
-		assertThat(((SqlParameterValue) buildValueArray[2]).getValue()).isEqualTo(3);
-	}
-
-	@Test
 	public void entryIds() {
 		final MapSqlParameterSource params = new MapSqlParameterSource();
 		final String sql = sqlGenerator.generate(
 				FileLoader.loadAsString("am/ik/blog/entry/EntryMapper/entryIds.sql"),
 				params.getValues(), params::addValue);
-		assertThat(sql.trim()).isEqualTo(
-				"SELECT DISTINCT e.entry_id, e.last_modified_date\n" + "FROM entry AS e\n"
-						+ "         \n" + "WHERE 1 = 1\n" + "\n" + "\n" + "\n" + "\n"
-						+ "\n" + "ORDER BY e.last_modified_date DESC\n".trim());
+		assertThat(sql.trim())
+				.isEqualTo("SELECT DISTINCT e.entry_id, e.last_modified_date\n"
+						+ "FROM entry AS e\n" + "WHERE 1 = 1\n" + "\n" + "\n" + "\n"
+						+ "\n" + "\n" + "ORDER BY e.last_modified_date DESC\n".trim());
 	}
 
 	@Test
@@ -233,17 +200,18 @@ class SqlTest {
 		final String sql = sqlGenerator.generate(
 				FileLoader.loadAsString("am/ik/blog/entry/EntryMapper/entryIds.sql"),
 				params.getValues(), params::addValue);
-		assertThat(sql).isEqualTo("SELECT DISTINCT e.entry_id, e.last_modified_date\n"
-				+ "FROM entry AS e\n" + "         \n" + "WHERE 1 = 1\n" + "\n" + "\n"
-				+ "  AND lower(e.content) LIKE :keywordPattern\n" + "\n" + "\n" + "\n"
-				+ "\n" + "\n" + "ORDER BY e.last_modified_date DESC\n");
+		assertThat(sql.trim())
+				.isEqualTo("SELECT DISTINCT e.entry_id, e.last_modified_date\n"
+						+ "FROM entry AS e\n" + "WHERE 1 = 1\n" + "\n" + "\n"
+						+ "  AND lower(e.content) LIKE :keywordPattern\n" + "\n" + "\n"
+						+ "\n" + "\n" + "\n" + "ORDER BY e.last_modified_date DESC");
 		final String sqlToUse = NamedParameterUtils.substituteNamedParameters(sql,
 				params);
 		assertThat(sqlToUse.trim())
 				.isEqualTo("SELECT DISTINCT e.entry_id, e.last_modified_date\n"
-						+ "FROM entry AS e\n" + "         \n" + "WHERE 1 = 1\n" + "\n"
-						+ "\n" + "  AND lower(e.content) LIKE ?\n" + "\n" + "\n" + "\n"
-						+ "\n" + "\n" + "ORDER BY e.last_modified_date DESC\n".trim());
+						+ "FROM entry AS e\n" + "WHERE 1 = 1\n" + "\n" + "\n"
+						+ "  AND lower(e.content) LIKE ?\n" + "\n" + "\n" + "\n" + "\n"
+						+ "\n" + "ORDER BY e.last_modified_date DESC".trim());
 		final ParsedSql parsedSql = NamedParameterUtils.parseSqlStatement(sql);
 		final List<SqlParameter> declaredParameters = NamedParameterUtils
 				.buildSqlParameterList(parsedSql, params);
@@ -265,11 +233,9 @@ class SqlTest {
 				params.getValues(), params::addValue);
 		assertThat(sql.trim())
 				.isEqualTo("SELECT DISTINCT e.entry_id, e.last_modified_date\n"
-						+ "FROM entry AS e\n" + "         \n"
-						+ "         LEFT JOIN entry_tag AS et ON e.entry_id = et.entry_id\n"
-						+ "    \n" + "WHERE 1 = 1\n" + "\n" + "\n" + "\n" + "\n"
-						+ "  AND et.tag_name = :tag\n" + "\n" + "\n"
-						+ "ORDER BY e.last_modified_date DESC\n".trim());
+						+ "FROM entry AS e\n" + "WHERE 1 = 1\n" + "\n" + "\n" + "\n"
+						+ "\n" + "\n" + "  AND :tag = ANY(e.tags)\n" + "\n"
+						+ "ORDER BY e.last_modified_date DESC".trim());
 	}
 
 	@Test
@@ -284,21 +250,21 @@ class SqlTest {
 		final String sql = sqlGenerator.generate(
 				FileLoader.loadAsString("am/ik/blog/entry/EntryMapper/entryIds.sql"),
 				params.getValues(), params::addValue);
-		assertThat(sql.trim()).isEqualTo(
-				"SELECT DISTINCT e.entry_id, e.last_modified_date\n" + "FROM entry AS e\n"
-						+ "         \n" + "WHERE 1 = 1\n" + "\n" + "\n" + "\n" + "\n"
+		assertThat(sql.trim())
+				.isEqualTo("SELECT DISTINCT e.entry_id, e.last_modified_date\n"
+						+ "FROM entry AS e\n" + "WHERE 1 = 1\n" + "\n" + "\n" + "\n"
 						+ "\n" + "\n" + "  AND e.categories[1] = :categories[0]\n"
 						+ "  AND e.categories[2] = :categories[1]\n"
-						+ "  AND e.categories[3] = :categories[2]\n" + "\n" + "\n"
+						+ "  AND e.categories[3] = :categories[2]\n" + "\n" + "\n" + "\n"
 						+ "ORDER BY e.last_modified_date DESC\n".trim());
 		final String sqlToUse = NamedParameterUtils.substituteNamedParameters(sql,
 				params);
-		assertThat(sqlToUse.trim())
-				.isEqualTo("SELECT DISTINCT e.entry_id, e.last_modified_date\n"
-						+ "FROM entry AS e\n" + "         \n" + "WHERE 1 = 1\n" + "\n"
-						+ "\n" + "\n" + "\n" + "\n" + "\n" + "  AND e.categories[1] = ?\n"
-						+ "  AND e.categories[2] = ?\n" + "  AND e.categories[3] = ?\n"
-						+ "\n" + "\n" + "ORDER BY e.last_modified_date DESC\n".trim());
+		assertThat(sqlToUse.trim()).isEqualTo(
+				"SELECT DISTINCT e.entry_id, e.last_modified_date\n" + "FROM entry AS e\n"
+						+ "WHERE 1 = 1\n" + "\n" + "\n" + "\n" + "\n" + "\n"
+						+ "  AND e.categories[1] = ?\n" + "  AND e.categories[2] = ?\n"
+						+ "  AND e.categories[3] = ?\n" + "\n" + "\n" + "\n"
+						+ "ORDER BY e.last_modified_date DESC".trim());
 		final ParsedSql parsedSql = NamedParameterUtils.parseSqlStatement(sql);
 		final List<SqlParameter> declaredParameters = NamedParameterUtils
 				.buildSqlParameterList(parsedSql, params);
@@ -315,38 +281,5 @@ class SqlTest {
 				.isEqualTo("categories[2]");
 		assertThat(((SqlParameterValue) buildValueArray[2]).getValue()).isEqualTo("z");
 		;
-	}
-
-	@Test
-	void upsertTag() {
-		final MapSqlParameterSource params = new MapSqlParameterSource()
-				.addValue("tagName", "Demo");
-		final String sql = sqlGenerator.generate(
-				FileLoader.loadAsString("am/ik/blog/entry/EntryMapper/upsertTag.sql"),
-				params.getValues(), params::addValue);
-		assertThat(sql.trim()).isEqualTo("""
-				INSERT INTO tag (tag_name)
-				VALUES (:tagName)
-				ON CONFLICT ON CONSTRAINT tag_pkey DO UPDATE SET tag_name = :tagName
-				""".trim());
-		final String sqlToUse = NamedParameterUtils.substituteNamedParameters(sql,
-				params);
-		assertThat(sqlToUse.trim()).isEqualTo("""
-				INSERT INTO tag (tag_name)
-				VALUES (?)
-				ON CONFLICT ON CONSTRAINT tag_pkey DO UPDATE SET tag_name = ?
-				""".trim());
-		final ParsedSql parsedSql = NamedParameterUtils.parseSqlStatement(sql);
-		final List<SqlParameter> declaredParameters = NamedParameterUtils
-				.buildSqlParameterList(parsedSql, params);
-		final Object[] buildValueArray = NamedParameterUtils.buildValueArray(parsedSql,
-				params, declaredParameters);
-		assertThat(buildValueArray).hasSize(2);
-		assertThat(((SqlParameterValue) buildValueArray[0]).getName())
-				.isEqualTo("tagName");
-		assertThat(((SqlParameterValue) buildValueArray[0]).getValue()).isEqualTo("Demo");
-		assertThat(((SqlParameterValue) buildValueArray[1]).getName())
-				.isEqualTo("tagName");
-		assertThat(((SqlParameterValue) buildValueArray[1]).getValue()).isEqualTo("Demo");
 	}
 }

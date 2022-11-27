@@ -15,10 +15,11 @@ public class TagMapper {
 		this.jdbcTemplate = jdbcTemplate;
 	}
 
-	public List<Tag> findOrderByTagNameAsc() {
+	public List<TagNameAndCount> findOrderByTagNameAsc() {
 		final String sql = FileLoader
 				.loadSqlAsString("am/ik/blog/tag/TagMapper/findOrderByTagNameAsc.sql");
 		return this.jdbcTemplate.query(sql,
-				(rs, rowNum) -> new Tag(rs.getString("tag_name")));
+				(rs, rowNum) -> new TagNameAndCount(rs.getString("tag_name"),
+						rs.getInt("count")));
 	}
 }

@@ -4,6 +4,7 @@ import java.util.List;
 
 import am.ik.blog.tag.Tag;
 import am.ik.blog.tag.TagMapper;
+import am.ik.blog.tag.TagNameAndCount;
 import reactor.core.publisher.Mono;
 
 import org.springframework.web.bind.annotation.GetMapping;
@@ -18,7 +19,7 @@ public class TagRestController {
 	}
 
 	@GetMapping(path = "/tags")
-	public List<Tag> tags() {
+	public List<TagNameAndCount> tags() {
 		return this.tagMapper.findOrderByTagNameAsc();
 	}
 }
