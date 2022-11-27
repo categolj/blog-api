@@ -103,12 +103,6 @@
 			<groupId>org.springdoc</groupId>
 			<artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
 			<version>${spring-doc.version}</version>
-			<exclusions>
-				<exclusion>
-					<groupId>jakarta.validation</groupId>
-					<artifactId>jakarta.validation-api</artifactId>
-				</exclusion>
-			</exclusions>
 		</dependency>
 		<dependency>
 			<groupId>org.yaml</groupId>
