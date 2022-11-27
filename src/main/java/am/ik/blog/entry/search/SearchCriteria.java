@@ -1,6 +1,7 @@
 package am.ik.blog.entry.search;
 
 import am.ik.blog.category.Category;
+import am.ik.blog.entry.keyword.KeywordExtractor;
 import am.ik.blog.tag.Tag;
 
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
@@ -68,14 +69,21 @@ public class SearchCriteria {
 		return this.excludeContent;
 	}
 
-	boolean hasKeyword() {
+	boolean hasKeywords() {
 		return StringUtils.hasText(this.keyword);
 	}
 
-	public MapSqlParameterSource toParameterSource() {
+	public MapSqlParameterSource toParameterSource(KeywordExtractor keywordExtractor) {
 		final MapSqlParameterSource params = new MapSqlParameterSource();
-		if (this.hasKeyword()) {
-			params.addValue("keyword", this.keyword);
+		if (this.hasKeywords()) {
+			final List<String> keywords = keywordExtractor.extract(this.keyword);
+			params.addValue("keywordsCount", keywords.size());
+			for (int i = 0; i < keywords.size(); i++) {
+				params.addValue("keywords[%d]".formatted(i), keywords.get(i));
+			}
+		}
+		else {
+			params.addValue("keywordsCount", 0);
 		}
 		if (this.createdBy != null) {
 			params.addValue("createdBy", this.createdBy);
@@ -89,7 +97,7 @@ public class SearchCriteria {
 		if (this.categories != null) {
 			params.addValue("categories", this.categories);
 			for (int i = 0; i < categories.size(); i++) {
-				params.addValue("categories[" + i + "]", categories.get(i).name());
+				params.addValue("categories[%d]".formatted(i), categories.get(i).name());
 			}
 		}
 		params.addValue("excludeContent", this.excludeContent);

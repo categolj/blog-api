@@ -73,7 +73,7 @@ class EntryRestControllerIntegrationTest {
 
 	@Test
 	void searchByKeyword() {
-		this.webTestClient.get().uri("/entries?query=This").exchange()
+		this.webTestClient.get().uri("/entries?query=test data").exchange()
 				.expectBody(EntryPage.class).consumeWith(result -> {
 					final EntryPage entryPage = result.getResponseBody();
 					assertThat(entryPage).isNotNull();

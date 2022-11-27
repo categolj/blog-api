@@ -10,6 +10,7 @@ import java.util.Objects;
 import java.util.Optional;
 
 import am.ik.blog.category.Category;
+import am.ik.blog.entry.keyword.KeywordExtractor;
 import am.ik.blog.entry.search.SearchCriteria;
 import am.ik.blog.tag.Tag;
 import am.ik.yavi.core.ConstraintViolationsException;
@@ -34,6 +35,8 @@ public class EntryMapper {
 
 	private final SqlGenerator sqlGenerator;
 
+	private final KeywordExtractor keywordExtractor;
+
 	private final RowMapper<Entry> rowMapper = (rs, rowNum) -> {
 		final long entryId = rs.getLong("entry_id");
 		return new EntryBuilder().withEntryId(entryId)
@@ -54,10 +57,11 @@ public class EntryMapper {
 				.build();
 	};
 
-	public EntryMapper(NamedParameterJdbcTemplate jdbcTemplate,
-			SqlGenerator sqlGenerator) {
+	public EntryMapper(NamedParameterJdbcTemplate jdbcTemplate, SqlGenerator sqlGenerator,
+			KeywordExtractor keywordExtractor) {
 		this.jdbcTemplate = jdbcTemplate;
 		this.sqlGenerator = sqlGenerator;
+		this.keywordExtractor = keywordExtractor;
 	}
 
 	@Transactional(readOnly = true)
@@ -98,7 +102,8 @@ public class EntryMapper {
 	}
 
 	public long count(SearchCriteria searchCriteria) {
-		final MapSqlParameterSource params = searchCriteria.toParameterSource();
+		final MapSqlParameterSource params = searchCriteria
+				.toParameterSource(this.keywordExtractor);
 		final String sql = this.sqlGenerator.generate(
 				loadSqlAsString("am/ik/blog/entry/EntryMapper/count.sql"),
 				params.getValues(), params::addValue);
@@ -135,12 +140,14 @@ public class EntryMapper {
 		final Long entryId = entry.getEntryId();
 		final List<Category> categories = frontMatter.getCategories();
 		final List<Tag> tags = frontMatter.getTags();
+		final List<String> keywords = this.keywordExtractor.extract(entry.getContent());
 		final MapSqlParameterSource params = new MapSqlParameterSource()
 				.addValue("entryId", entryId).addValue("title", frontMatter.getTitle())
 				.addValue("content", entry.getContent())
 				.addValue("categories",
 						categories.stream().map(Category::name).collect(joining(",")))
 				.addValue("tags", tags.stream().map(Tag::name).collect(joining(",")))
+				.addValue("keywords", String.join(",", keywords))
 				.addValue("createdBy", created.getName())
 				.addValue("createdDate", Timestamp.from(created.getDate().toInstant()))
 				.addValue("lastModifiedBy", updated.getName())
@@ -155,7 +162,8 @@ public class EntryMapper {
 	}
 
 	private List<Long> entryIds(SearchCriteria searchCriteria, Pageable pageable) {
-		final MapSqlParameterSource params = searchCriteria.toParameterSource();
+		final MapSqlParameterSource params = searchCriteria
+				.toParameterSource(this.keywordExtractor);
 		final String sql = this.sqlGenerator.generate(
 				loadSqlAsString("am/ik/blog/entry/EntryMapper/entryIds.sql"),
 				params.getValues(), params::addValue)

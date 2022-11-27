@@ -1,9 +1,10 @@
 SELECT DISTINCT e.entry_id, e.last_modified_date
 FROM entry AS e
 WHERE 1 = 1
-/*[# th:if="${keyword} != null"]*/
-/*[# mb:bind="keywordPattern=|%${#likes.escapeWildcard(#strings.toLowerCase(keyword))}%|" /]*/
-  AND lower(e.content) LIKE /*[# mb:p="keywordPattern"]*/ '%c%' /*[/]*/
+/*[# th:if="${keywordsCount > 0}"]*/
+/*[# th:each="i : ${#numbers.sequence(0, keywordsCount - 1)}"]*/
+  AND /*[# mb:p="keywords[${i}]"]*/ 'Java' /*[/]*/ = ANY(e.keywords)
+/*[/]*/
 /*[/]*/
 /*[# th:if="${createdBy} != null"]*/
   AND e.created_by = /*[# mb:p="createdBy"]*/ 'Toshiaki Maki' /*[/]*/

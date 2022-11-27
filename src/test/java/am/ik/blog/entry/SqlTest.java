@@ -147,45 +147,6 @@ class SqlTest {
 	}
 
 	@Test
-	public void categoriesMap() {
-		final MapSqlParameterSource params = new MapSqlParameterSource()
-				.addValue("entryIds", List.of(1, 2, 3)).addValue("entryIds[0]", 1)
-				.addValue("entryIds[1]", 2).addValue("entryIds[2]", 3);
-		final String sql = sqlGenerator.generate(
-				FileLoader.loadAsString("am/ik/blog/entry/EntryMapper/categoriesMap.sql"),
-				params.getValues(), params::addValue);
-		assertThat(sql.trim()).isEqualTo("""
-				SELECT entry_id, category_name
-				FROM category
-				WHERE entry_id IN (:entryIds[0], :entryIds[1], :entryIds[2])
-				ORDER BY category_order ASC
-				""".trim());
-		final String sqlToUse = NamedParameterUtils.substituteNamedParameters(sql,
-				params);
-		assertThat(sqlToUse.trim()).isEqualTo("""
-				SELECT entry_id, category_name
-				FROM category
-				WHERE entry_id IN (?, ?, ?)
-				ORDER BY category_order ASC
-				""".trim());
-		final ParsedSql parsedSql = NamedParameterUtils.parseSqlStatement(sql);
-		final List<SqlParameter> declaredParameters = NamedParameterUtils
-				.buildSqlParameterList(parsedSql, params);
-		final Object[] buildValueArray = NamedParameterUtils.buildValueArray(parsedSql,
-				params, declaredParameters);
-		assertThat(buildValueArray).hasSize(3);
-		assertThat(((SqlParameterValue) buildValueArray[0]).getName())
-				.isEqualTo("entryIds[0]");
-		assertThat(((SqlParameterValue) buildValueArray[0]).getValue()).isEqualTo(1);
-		assertThat(((SqlParameterValue) buildValueArray[1]).getName())
-				.isEqualTo("entryIds[1]");
-		assertThat(((SqlParameterValue) buildValueArray[1]).getValue()).isEqualTo(2);
-		assertThat(((SqlParameterValue) buildValueArray[2]).getName())
-				.isEqualTo("entryIds[2]");
-		assertThat(((SqlParameterValue) buildValueArray[2]).getValue()).isEqualTo(3);
-	}
-
-	@Test
 	public void entryIds() {
 		final MapSqlParameterSource params = new MapSqlParameterSource();
 		final String sql = sqlGenerator.generate(
@@ -200,32 +161,36 @@ class SqlTest {
 	@Test
 	public void entryIdsWithKeyword() {
 		final MapSqlParameterSource params = new MapSqlParameterSource()
-				.addValue("keyword", "xyz");
+				.addValue("keywordsCount", 2).addValue("keywords[0]", "xyz")
+				.addValue("keywords[1]", "abc");
 		final String sql = sqlGenerator.generate(
 				FileLoader.loadAsString("am/ik/blog/entry/EntryMapper/entryIds.sql"),
 				params.getValues(), params::addValue);
 		assertThat(sql.trim())
 				.isEqualTo("SELECT DISTINCT e.entry_id, e.last_modified_date\n"
 						+ "FROM entry AS e\n" + "WHERE 1 = 1\n" + "\n" + "\n"
-						+ "  AND lower(e.content) LIKE :keywordPattern\n" + "\n" + "\n"
+						+ "  AND :keywords[0] = ANY(e.keywords)\n"
+						+ "  AND :keywords[1] = ANY(e.keywords)\n" + "\n" + "\n" + "\n"
 						+ "\n" + "\n" + "\n" + "ORDER BY e.last_modified_date DESC");
 		final String sqlToUse = NamedParameterUtils.substituteNamedParameters(sql,
 				params);
-		assertThat(sqlToUse.trim())
-				.isEqualTo("SELECT DISTINCT e.entry_id, e.last_modified_date\n"
-						+ "FROM entry AS e\n" + "WHERE 1 = 1\n" + "\n" + "\n"
-						+ "  AND lower(e.content) LIKE ?\n" + "\n" + "\n" + "\n" + "\n"
+		assertThat(sqlToUse.trim()).isEqualTo(
+				"SELECT DISTINCT e.entry_id, e.last_modified_date\n" + "FROM entry AS e\n"
+						+ "WHERE 1 = 1\n" + "\n" + "\n" + "  AND ? = ANY(e.keywords)\n"
+						+ "  AND ? = ANY(e.keywords)\n" + "\n" + "\n" + "\n" + "\n" + "\n"
 						+ "\n" + "ORDER BY e.last_modified_date DESC".trim());
 		final ParsedSql parsedSql = NamedParameterUtils.parseSqlStatement(sql);
 		final List<SqlParameter> declaredParameters = NamedParameterUtils
 				.buildSqlParameterList(parsedSql, params);
 		final Object[] buildValueArray = NamedParameterUtils.buildValueArray(parsedSql,
 				params, declaredParameters);
-		assertThat(buildValueArray).hasSize(1);
+		assertThat(buildValueArray).hasSize(2);
 		assertThat(((SqlParameterValue) buildValueArray[0]).getName())
-				.isEqualTo("keywordPattern");
-		assertThat(((SqlParameterValue) buildValueArray[0]).getValue())
-				.isEqualTo("%xyz%");
+				.isEqualTo("keywords[0]");
+		assertThat(((SqlParameterValue) buildValueArray[0]).getValue()).isEqualTo("xyz");
+		assertThat(((SqlParameterValue) buildValueArray[1]).getName())
+				.isEqualTo("keywords[1]");
+		assertThat(((SqlParameterValue) buildValueArray[1]).getValue()).isEqualTo("abc");
 	}
 
 	@Test
