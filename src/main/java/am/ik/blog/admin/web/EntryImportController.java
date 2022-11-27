@@ -53,7 +53,7 @@ public class EntryImportController {
 						.fetch(this.props.getContentOwner(), this.props.getContentRepo(),
 								String.format("content/%05d.md", i))
 						.onErrorResume(e -> (e instanceof NotFound) ? Mono.empty()
-								: Mono.error(e)))
+								: Mono.error(e)), 2)
 				.collectList()
 				// blocking intentionally so that trace id is properly propagated
 				.blockOptional();
