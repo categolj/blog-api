@@ -55,6 +55,15 @@ public class ProblemControllerAdvice {
 	@ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
 	public ProblemDetail handleRuntimeException(RuntimeException e) {
 		final ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(
+				HttpStatus.INTERNAL_SERVER_ERROR, "Unexpected runtime error occurred!");
+		log.error("Unexpected runtime error occurred!", e);
+		return setTraceId(problemDetail);
+	}
+
+	@ExceptionHandler(Exception.class)
+	@ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+	public ProblemDetail handleException(Exception e) {
+		final ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(
 				HttpStatus.INTERNAL_SERVER_ERROR, "Unexpected error occurred!");
 		log.error("Unexpected error occurred!", e);
 		return setTraceId(problemDetail);
