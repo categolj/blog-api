@@ -97,7 +97,7 @@
 		<dependency>
 			<groupId>am.ik.yavi</groupId>
 			<artifactId>yavi</artifactId>
-			<version>0.12.0</version>
+			<version>0.12.1</version>
 		</dependency>
 		<dependency>
 			<groupId>org.springdoc</groupId>
