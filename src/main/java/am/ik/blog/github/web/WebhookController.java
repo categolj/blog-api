@@ -7,6 +7,7 @@ import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
@@ -18,6 +19,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -32,6 +34,8 @@ public class WebhookController {
 
 	private final WebhookVerifier webhookVerifier;
 
+	private final Map<String, WebhookVerifier> tenantsWebhookVerifier;
+
 	private final ObjectMapper objectMapper;
 
 	public WebhookController(GitHubProps props, EntryFetcher entryFetcher,
@@ -40,14 +44,25 @@ public class WebhookController {
 		this.entryFetcher = entryFetcher;
 		this.entryService = entryService;
 		this.webhookVerifier = new WebhookVerifier(props.getWebhookSecret());
+		this.tenantsWebhookVerifier = props.getTenants().entrySet().stream()
+				.collect(Collectors.toUnmodifiableMap(Map.Entry::getKey,
+						e -> new WebhookVerifier(e.getValue().getWebhookSecret())));
 		this.objectMapper = objectMapper;
 	}
 
-	@PostMapping(path = "webhook")
+	@PostMapping(path = { "webhook", "tenants/{tenantId}/webhook" })
 	public List<Map<String, Long>> webhook(
 			@RequestHeader(name = "X-Hub-Signature") String signature,
-			@RequestBody String payload) {
-		this.webhookVerifier.verify(payload, signature);
+			@RequestBody String payload,
+			@PathVariable(name = "tenantId", required = false) String tenantId) {
+		if (tenantId == null) {
+			this.webhookVerifier.verify(payload, signature);
+		}
+		else {
+			final WebhookVerifier verifier = this.tenantsWebhookVerifier
+					.getOrDefault(tenantId, this.webhookVerifier);
+			verifier.verify(payload, signature);
+		}
 		final JsonNode node = this.node(payload);
 		final String[] repository = node.get("repository").get("full_name").asText()
 				.split("/");
@@ -62,19 +77,22 @@ public class WebhookController {
 		commits.forEach(commit -> {
 			Stream.of("added", "modified").forEach(key -> {
 				this.paths(commit.get(key))
-						.forEach(path -> this.entryFetcher.fetch(owner, repo, path)
+						.forEach(path -> this.entryFetcher
+								.fetch(tenantId, owner, repo, path)
 								.doOnNext(e -> result.add(Map.of(key, e.getEntryId())))
 								// blocking intentionally so that trace id is properly
 								// propagated
-								.blockOptional().ifPresent(entryService::save));
+								.blockOptional()
+								.ifPresent(entry -> entryService.save(entry, tenantId)));
 			});
 			this.paths(commit.get("removed"))
-					.forEach(path -> this.entryFetcher.fetch(owner, repo, path)
+					.forEach(path -> this.entryFetcher.fetch(tenantId, owner, repo, path)
 							.map(Entry::getEntryId)
 							.doOnNext(id -> result.add(Map.of("removed", id)))
 							// blocking intentionally so that trace id is properly
 							// propagated
-							.blockOptional().ifPresent(entryService::delete));
+							.blockOptional().ifPresent(
+									entryId -> entryService.delete(entryId, tenantId)));
 		});
 		return result;
 	}

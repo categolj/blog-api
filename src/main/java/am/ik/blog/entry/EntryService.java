@@ -7,7 +7,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.FileTime;
-import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -19,7 +18,6 @@ import am.ik.blog.github.GitHubUserContentClient;
 import am.ik.yavi.core.ConstraintViolationsException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import reactor.core.publisher.Mono;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -33,34 +31,32 @@ public class EntryService {
 
 	private final EntryMapper entryMapper;
 
-	private final GitHubUserContentClient gitHubUserContentClient;
-
-	public EntryService(EntryMapper entryMapper,
-			GitHubUserContentClient gitHubUserContentClient) {
+	public EntryService(EntryMapper entryMapper) {
 		this.entryMapper = entryMapper;
-		this.gitHubUserContentClient = gitHubUserContentClient;
 	}
 
-	public Page<Entry> findPage(SearchCriteria criteria, Pageable pageable) {
-		return this.entryMapper.findPage(criteria, pageable);
+	public Long nextId(String tenantId) {
+		return this.entryMapper.nextId(tenantId);
 	}
 
-	public Optional<Entry> findOne(Long entryId, boolean excludeContent) {
-		return this.entryMapper.findOne(entryId, excludeContent);
+	public Page<Entry> findPage(SearchCriteria criteria, String tenantId,
+			Pageable pageable) {
+		return this.entryMapper.findPage(criteria, tenantId, pageable);
 	}
 
-	public Long nextId() {
-		return Math.max(this.entryMapper.nextId(), 1L);
+	public Optional<Entry> findOne(Long entryId, String tenantId,
+			boolean excludeContent) {
+		return this.entryMapper.findOne(entryId, tenantId, excludeContent);
 	}
 
-	public Path exportEntriesAsZip() {
+	public Path exportEntriesAsZip(String tenantId) {
 		try {
 			final Path zip = Files.createTempFile("entries", ".zip");
 			log.info("Exporting entries to {}", zip);
 			try (ZipOutputStream outputStream = new ZipOutputStream(Files.newOutputStream(
 					zip, StandardOpenOption.CREATE, StandardOpenOption.WRITE))) {
 				final List<Entry> entries = this.entryMapper.findAll(
-						SearchCriteria.builder().includeContent().build(),
+						SearchCriteria.builder().includeContent().build(), tenantId,
 						PageRequest.of(0, 10_0000));
 				for (Entry entry : entries) {
 					final ZipEntry zipEntry = new ZipEntry(
@@ -108,51 +104,23 @@ public class EntryService {
 		}
 	}
 
-	/* TODO */
-	public Entry translate(Long entryId, String lang) {
-		throw new UnsupportedOperationException();
-	}
-
-	Optional<Entry> fallbackFromGithub(Long entryId, boolean excludeContent,
-			Throwable throwable) {
-		return this.findOneFromGithub(entryId);
-	}
-
-	Optional<Entry> findOneFromGithub(Long entryId) {
-		final Mono<String> markdown = this.gitHubUserContentClient.getContent("making",
-				"blog.ik.am", "master", "content/%05d.md".formatted(entryId));
-		return this.parseMarkdown(entryId, markdown).blockOptional();
-	}
-
-	Mono<Entry> parseMarkdown(Long entryId, Mono<String> markdown) {
-		return markdown
-				.flatMap(body -> Mono.justOrEmpty(EntryBuilder.parseBody(entryId, body)))
-				.map(tpl -> tpl.getT1()
-						.withCreated(new Author("system",
-								tpl.getT2().orElse(
-										OffsetDateTime.parse("1970-01-01T00:00:00Z"))))
-						.withUpdated(new Author("system",
-								tpl.getT3().orElse(
-										OffsetDateTime.parse("1970-01-01T00:00:00Z"))))
-						.build());
-	}
-
-	public List<Entry> findAll(SearchCriteria criteria, Pageable pageable) {
-		return entryMapper.findAll(criteria, pageable);
+	public List<Entry> findAll(SearchCriteria criteria, String tenantId,
+			Pageable pageable) {
+		return this.entryMapper.findAll(criteria, tenantId, pageable);
 	}
 
 	@Transactional
-	public Map<String, Integer> save(Entry entry) {
-		log.info("Saving {}", entry);
+	public Map<String, Integer> save(Entry entry, String tenantId) {
+		log.info("Saving tenantId={}, entry={}", tenantId, entry);
 		Entry.validator.validate(entry).throwIfInvalid(violations -> {
 			log.info("Violated constraints {}", violations);
 			return new ConstraintViolationsException(violations);
 		});
-		return this.entryMapper.save(entry);
+		return this.entryMapper.save(entry, tenantId);
 	}
 
 	@Transactional
-	public int delete(Long entryId) {
-		return this.entryMapper.delete(entryId);
+	public int delete(Long entryId, String tenantId) {
+		return this.entryMapper.delete(entryId, tenantId);
 	}
 }

@@ -11,7 +11,8 @@ import am.ik.blog.github.Fixtures;
 import am.ik.blog.tag.Tag;
 import am.ik.blog.util.FileLoader;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -22,7 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, properties = "logging.level.sql=TRACE")
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @TestConstructor(autowireMode = TestConstructor.AutowireMode.ALL)
 class EntryMapperIntegrationTest {
 
@@ -37,13 +38,15 @@ class EntryMapperIntegrationTest {
 		jdbcTemplate.update(FileLoader.loadAsString("sql/delete-test-data.sql"));
 	}
 
-	@Test
+	@ParameterizedTest
+	@CsvSource({ ",", "demo," })
 	@Transactional
-	void insert() {
+	void insert(String tenantId) {
 		final Entry entry = Fixtures.entry(99999L);
-		final Map<String, Integer> result = this.entryMapper.save(entry);
+		final Map<String, Integer> result = this.entryMapper.save(entry, tenantId);
 		assertThat(result.get("upsertEntry")).isEqualTo(1);
-		final Optional<Entry> one = this.entryMapper.findOne(entry.getEntryId(), false);
+		final Optional<Entry> one = this.entryMapper.findOne(entry.getEntryId(), tenantId,
+				false);
 		assertThat(one.isPresent()).isTrue();
 		final Entry found = one.get();
 		assertThat(found.getEntryId()).isEqualTo(99999L);
@@ -60,16 +63,21 @@ class EntryMapperIntegrationTest {
 		assertThat(found.getCreated().getDate()).isNotNull();
 		assertThat(found.getUpdated().getName()).isEqualTo("demo");
 		assertThat(found.getUpdated().getDate()).isNotNull();
+		final Optional<Entry> defaultOne = this.entryMapper.findOne(entry.getEntryId(),
+				tenantId == null ? "demo" : null, false);
+		assertThat(defaultOne.isEmpty()).isTrue();
 	}
 
-	@Test
+	@ParameterizedTest
+	@CsvSource({ ",", "demo," })
 	@Transactional
-	void update() {
+	void update(String tenantId) {
 		jdbcTemplate.update(FileLoader.loadAsString("sql/insert-test-data.sql"));
 		final Entry entry = Fixtures.entry(99999L);
-		final Map<String, Integer> result = this.entryMapper.save(entry);
+		final Map<String, Integer> result = this.entryMapper.save(entry, tenantId);
 		assertThat(result.get("upsertEntry")).isEqualTo(1);
-		final Optional<Entry> one = this.entryMapper.findOne(entry.getEntryId(), false);
+		final Optional<Entry> one = this.entryMapper.findOne(entry.getEntryId(), tenantId,
+				false);
 		assertThat(one.isPresent()).isTrue();
 		final Entry found = one.get();
 		assertThat(found.getEntryId()).isEqualTo(99999L);
@@ -88,8 +96,10 @@ class EntryMapperIntegrationTest {
 		assertThat(found.getUpdated().getDate()).isNotNull();
 	}
 
-	@Test
-	void insertAndSearch() {
+	@ParameterizedTest
+	@CsvSource({ ",", ",demo" })
+	@Transactional
+	void insertAndSearch(String tenantId) {
 		final OffsetDateTime now = OffsetDateTime.now();
 		final Entry entry99993 = new EntryBuilder().withEntryId(99993L)
 				.withContent(
@@ -105,7 +115,7 @@ class EntryMapperIntegrationTest {
 						.withCategories(List.of(new Category("Document")))
 						.withTags(List.of(new Tag("Spring Boot"))).build())
 				.build();
-		this.entryMapper.save(entry99993);
+		this.entryMapper.save(entry99993, tenantId);
 		final Entry entry99994 = new EntryBuilder().withEntryId(99994L)
 				.withContent(
 						"""
@@ -119,30 +129,32 @@ class EntryMapperIntegrationTest {
 						.withCategories(List.of(new Category("Document")))
 						.withTags(List.of(new Tag("Spring Framework"))).build())
 				.build();
-		this.entryMapper.save(entry99994);
+		this.entryMapper.save(entry99994, tenantId);
 
 		final List<Entry> search1 = this.entryMapper.findAll(
-				SearchCriteria.builder().keyword("Spring Boot").build(),
+				SearchCriteria.builder().keyword("Spring Boot").build(), tenantId,
 				PageRequest.of(0, 100));
 		assertThat(search1).hasSize(1);
 		assertThat(search1.get(0).getEntryId()).isEqualTo(99993L);
 
 		final List<Entry> search2 = this.entryMapper.findAll(
-				SearchCriteria.builder().keyword("Spring Framework").build(),
+				SearchCriteria.builder().keyword("Spring Framework").build(), tenantId,
 				PageRequest.of(0, 100));
 		assertThat(search2).hasSize(1);
 		assertThat(search2.get(0).getEntryId()).isEqualTo(99994L);
 
 		final List<Entry> search3 = this.entryMapper.findAll(
 				SearchCriteria.builder().keyword("Applications Platform").build(),
-				PageRequest.of(0, 100));
+				tenantId, PageRequest.of(0, 100));
 		assertThat(search3).hasSize(2);
 		assertThat(search3.get(0).getEntryId()).isEqualTo(99994L);
 		assertThat(search3.get(1).getEntryId()).isEqualTo(99993L);
 	}
 
-	@Test
-	void insertAndSearch_Japanese() {
+	@ParameterizedTest
+	@CsvSource({ ",", "demo," })
+	@Transactional
+	void insertAndSearch_Japanese(String tenantId) {
 		final OffsetDateTime now = OffsetDateTime.now();
 		final Entry entry99993 = new EntryBuilder().withEntryId(99993L).withContent("""
 				むかし、むかし、あるところに、おじいさんとおばあさんがありました。まいにち、おじいさんは山へしば刈りに、おばあさんは川へ洗濯に行きました。
@@ -156,7 +168,7 @@ class EntryMapperIntegrationTest {
 						.withCategories(List.of(new Category("青空文庫")))
 						.withTags(List.of(new Tag("桃太郎"))).build())
 				.build();
-		this.entryMapper.save(entry99993);
+		this.entryMapper.save(entry99993, tenantId);
 		final Entry entry99994 = new EntryBuilder().withEntryId(99994L).withContent("""
 				むかし、金太郎という強い子供がありました。相模国足柄山の山奥に生まれて、おかあさんの山うばといっしょにくらしていました。
 				金太郎は生まれた時ときからそれはそれは力が強くって、もう七つ八つのころには、石臼やもみぬかの俵ぐらい、へいきで持ち上げました。
@@ -168,15 +180,15 @@ class EntryMapperIntegrationTest {
 						.withCategories(List.of(new Category("青空文庫")))
 						.withTags(List.of(new Tag("金太郎"))).build())
 				.build();
-		this.entryMapper.save(entry99994);
+		this.entryMapper.save(entry99994, tenantId);
 
 		final List<Entry> search1 = this.entryMapper.findAll(
-				SearchCriteria.builder().keyword("おじいさん おばあさん").build(),
+				SearchCriteria.builder().keyword("おじいさん おばあさん").build(), tenantId,
 				PageRequest.of(0, 100));
 		assertThat(search1).hasSize(1);
 		assertThat(search1.get(0).getEntryId()).isEqualTo(99993L);
 		final List<Entry> search2 = this.entryMapper.findAll(
-				SearchCriteria.builder().keyword("おかあさん うば").build(),
+				SearchCriteria.builder().keyword("おかあさん うば").build(), tenantId,
 				PageRequest.of(0, 100));
 		assertThat(search2).hasSize(1);
 		assertThat(search2.get(0).getEntryId()).isEqualTo(99994L);

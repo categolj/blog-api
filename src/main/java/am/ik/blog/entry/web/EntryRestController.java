@@ -62,46 +62,58 @@ public class EntryRestController {
 		this.clock = clock;
 	}
 
-	@GetMapping(path = "/entries/{entryId:\\d+}")
+	@GetMapping(path = { "/entries/{entryId:\\d+}",
+			"/tenants/{tenantId}/entries/{entryId:\\d+}" })
 	public Entry getEntry(@PathVariable("entryId") Long entryId,
+			@PathVariable(name = "tenantId", required = false) String tenantId,
 			@RequestParam(defaultValue = "false") boolean excludeContent) {
-		final Optional<Entry> entry = this.entryService.findOne(entryId, excludeContent);
+		final Optional<Entry> entry = this.entryService.findOne(entryId, tenantId,
+				excludeContent);
 		return entry.orElseThrow(() -> new ResponseStatusException(NOT_FOUND, String
 				.format("The requested entry is not found (entryId = %d)", entryId)));
 	}
 
-	@GetMapping(path = "/entries/{entryId:\\d+}.md", produces = MediaType.TEXT_MARKDOWN_VALUE)
+	@GetMapping(path = { "/entries/{entryId:\\d+}.md",
+			"/tenants/{tenantId}/entries/{entryId:\\d+}.md" }, produces = MediaType.TEXT_MARKDOWN_VALUE)
 	public ResponseEntity<String> getEntryAsMarkdown(
 			@PathVariable("entryId") Long entryId,
+			@PathVariable(name = "tenantId", required = false) String tenantId,
 			@RequestParam(defaultValue = "false") boolean excludeContent) {
-		final Entry entry = this.getEntry(entryId, excludeContent);
+		final Entry entry = this.getEntry(entryId, tenantId, excludeContent);
 		return ResponseEntity.ok()
 				.header(HttpHeaders.CONTENT_DISPOSITION,
 						"attachment; filename=%s.md".formatted(entry.formatId()))
 				.body(entry.toMarkdown());
 	}
 
-	@GetMapping(path = "/entries", produces = MediaType.APPLICATION_JSON_VALUE)
-	public Page<Entry> getEntries(Pageable pageable,
-			@ModelAttribute EntrySearchRequest request) {
+	@GetMapping(path = { "/entries",
+			"/tenants/{tenantId}/entries" }, produces = MediaType.APPLICATION_JSON_VALUE)
+	public Page<Entry> getEntries(
+			@PathVariable(name = "tenantId", required = false) String tenantId,
+			Pageable pageable, @ModelAttribute EntrySearchRequest request) {
 		final SearchCriteria searchCriteria = request.toCriteria();
-		return this.entryService.findPage(searchCriteria, pageable);
+		return this.entryService.findPage(searchCriteria, tenantId, pageable);
 	}
 
-	@DeleteMapping(path = "/entries/{entryId:\\d+}")
+	@DeleteMapping(path = { "/entries/{entryId:\\d+}",
+			"/tenants/{tenantId}/entries/{entryId:\\d+}" })
 	@Operation(security = { @SecurityRequirement(name = "basic") })
-	public ResponseEntity<Void> deleteEntry(@PathVariable("entryId") Long entryId) {
-		this.entryService.delete(entryId);
+	public ResponseEntity<Void> deleteEntry(@PathVariable("entryId") Long entryId,
+			@PathVariable(name = "tenantId", required = false) String tenantId) {
+		this.entryService.delete(entryId, tenantId);
 		return ResponseEntity.noContent().build();
 	}
 
-	@PostMapping(path = "/entries", consumes = MediaType.TEXT_MARKDOWN_VALUE)
+	@PostMapping(path = { "/entries",
+			"/tenants/{tenantId}/entries" }, consumes = MediaType.TEXT_MARKDOWN_VALUE)
 	@Operation(security = { @SecurityRequirement(name = "basic") })
 	@Transactional
-	public ResponseEntity<?> postEntryFromMarkdown(@RequestBody String markdown,
+	public ResponseEntity<?> postEntryFromMarkdown(
+			@PathVariable(name = "tenantId", required = false) String tenantId,
+			@RequestBody String markdown,
 			@AuthenticationPrincipal UserDetails userDetails,
 			UriComponentsBuilder builder) {
-		final Long entryId = this.entryService.nextId();
+		final Long entryId = this.entryService.nextId(tenantId);
 		return EntryBuilder.parseBody(entryId, markdown.trim()).map(tpl -> {
 			final EntryBuilder entryBuilder = tpl.getT1();
 			final String username = userDetails.getUsername();
@@ -111,20 +123,22 @@ public class EntryRestController {
 			final Author updated = new Author(username, tpl.getT3().orElse(now));
 			final Entry entry = entryBuilder.withCreated(created).withUpdated(updated)
 					.build();
-			this.entryService.save(entry);
+			this.entryService.save(entry, tenantId);
 			return entry;
 		}).map(entry -> buildEntryResponse(entry, builder, false))
 				.orElseThrow(() -> new ResponseStatusException(BAD_REQUEST,
 						"Can't parse the markdown file"));
 	}
 
-	@PostMapping(path = "/entries", consumes = MediaType.APPLICATION_JSON_VALUE)
+	@PostMapping(path = { "/entries",
+			"/tenants/{tenantId}/entries" }, consumes = MediaType.APPLICATION_JSON_VALUE)
 	@Operation(security = { @SecurityRequirement(name = "basic") })
 	@Transactional
 	public ResponseEntity<?> postEntryFromJson(@RequestBody EntryRequest request,
+			@PathVariable(name = "tenantId", required = false) String tenantId,
 			@AuthenticationPrincipal UserDetails userDetails,
 			UriComponentsBuilder builder) {
-		final Long entryId = this.entryService.nextId();
+		final Long entryId = this.entryService.nextId(tenantId);
 		final String username = userDetails.getUsername();
 		final OffsetDateTime now = OffsetDateTime.ofInstant(this.clock.instant(),
 				ZoneId.of("UTC"));
@@ -135,14 +149,16 @@ public class EntryRestController {
 		final Entry entry = new EntryBuilder().withEntryId(entryId)
 				.withContent(request.content()).withFrontMatter(request.frontMatter())
 				.withCreated(created).withUpdated(updated).build();
-		this.entryService.save(entry);
+		this.entryService.save(entry, tenantId);
 		return buildEntryResponse(entry, builder, false);
 	}
 
-	@PutMapping(path = "/entries/{entryId:\\d+}", consumes = MediaType.TEXT_MARKDOWN_VALUE)
+	@PutMapping(path = { "/entries/{entryId:\\d+}",
+			"/tenants/{tenantId}/entries/{entryId:\\d+}" }, consumes = MediaType.TEXT_MARKDOWN_VALUE)
 	@Operation(security = { @SecurityRequirement(name = "basic") })
 	@Transactional
 	public ResponseEntity<?> putEntryFromMarkdown(@PathVariable("entryId") Long entryId,
+			@PathVariable(name = "tenantId", required = false) String tenantId,
 			@RequestBody String markdown,
 			@AuthenticationPrincipal UserDetails userDetails,
 			UriComponentsBuilder builder) {
@@ -152,26 +168,29 @@ public class EntryRestController {
 			final String username = userDetails.getUsername();
 			final OffsetDateTime now = OffsetDateTime.ofInstant(this.clock.instant(),
 					ZoneId.of("UTC"));
-			final Author created = this.entryService.findOne(entryId, true).filter(e -> {
-				isUpdate.set(true);
-				return true;
-			}).map(Entry::getCreated)
+			final Author created = this.entryService.findOne(entryId, tenantId, true)
+					.filter(e -> {
+						isUpdate.set(true);
+						return true;
+					}).map(Entry::getCreated)
 					.map(author -> tpl.getT2().map(author::withDate).orElse(author))
 					.orElseGet(() -> new Author(username, tpl.getT2().orElse(now)));
 			final Author updated = new Author(username, tpl.getT3().orElse(now));
 			final Entry entry = entryBuilder.withCreated(created).withUpdated(updated)
 					.build();
-			this.entryService.save(entry);
+			this.entryService.save(entry, tenantId);
 			return entry;
 		}).map(entry -> buildEntryResponse(entry, builder, isUpdate.get()))
 				.orElseThrow(() -> new ResponseStatusException(BAD_REQUEST,
 						"Can't parse the markdown file"));
 	}
 
-	@PutMapping(path = "/entries/{entryId:\\d+}", consumes = MediaType.APPLICATION_JSON_VALUE)
+	@PutMapping(path = { "/entries/{entryId:\\d+}",
+			"/tenants/{tenantId}/entries/{entryId:\\d+}" }, consumes = MediaType.APPLICATION_JSON_VALUE)
 	@Operation(security = { @SecurityRequirement(name = "basic") })
 	@Transactional
 	public ResponseEntity<?> putEntryFromJson(@PathVariable("entryId") Long entryId,
+			@PathVariable(name = "tenantId", required = false) String tenantId,
 			@RequestBody EntryRequest request,
 			@AuthenticationPrincipal UserDetails userDetails,
 			UriComponentsBuilder builder) {
@@ -179,11 +198,14 @@ public class EntryRestController {
 		final String username = userDetails.getUsername();
 		final OffsetDateTime now = OffsetDateTime.ofInstant(this.clock.instant(),
 				ZoneId.of("UTC"));
-		final Author created = this.entryService.findOne(entryId, true).filter(e -> {
-			isUpdate.set(true);
-			return true;
-		}).map(Entry::getCreated).map(author -> request.createdOrNullAuthor()
-				.setNameIfAbsent(author.getName()).setDateIfAbsent(author.getDate()))
+		final Author created = this.entryService.findOne(entryId, tenantId, true)
+				.filter(e -> {
+					isUpdate.set(true);
+					return true;
+				}).map(Entry::getCreated)
+				.map(author -> request.createdOrNullAuthor()
+						.setNameIfAbsent(author.getName())
+						.setDateIfAbsent(author.getDate()))
 				.orElseGet(() -> request.createdOrNullAuthor().setNameIfAbsent(username)
 						.setDateIfAbsent(now));
 		final Author updated = request.updatedOrNullAuthor().setNameIfAbsent(username)
@@ -191,7 +213,7 @@ public class EntryRestController {
 		final Entry entry = new EntryBuilder().withEntryId(entryId)
 				.withContent(request.content()).withFrontMatter(request.frontMatter())
 				.withCreated(created).withUpdated(updated).build();
-		this.entryService.save(entry);
+		this.entryService.save(entry, tenantId);
 		return buildEntryResponse(entry, builder, isUpdate.get());
 	}
 
@@ -220,10 +242,12 @@ public class EntryRestController {
 				.toMarkdown();
 	}
 
-	@GetMapping(path = "/entries.zip", produces = "application/zip")
+	@GetMapping(path = { "/entries.zip",
+			"/tenants/{tenantId}/entries.zip" }, produces = "application/zip")
 	@Operation(security = { @SecurityRequirement(name = "basic") })
-	public ResponseEntity<?> exportEntries() {
-		final Path zip = this.entryService.exportEntriesAsZip();
+	public ResponseEntity<?> exportEntries(
+			@PathVariable(name = "tenantId", required = false) String tenantId) {
+		final Path zip = this.entryService.exportEntriesAsZip(tenantId);
 		try (final InputStream stream = Files.newInputStream(zip)) {
 			final byte[] content = StreamUtils.copyToByteArray(stream);
 			return ResponseEntity.ok().header(HttpHeaders.CONTENT_DISPOSITION,

@@ -15,3 +15,8 @@ WHERE 1 = 1
 /*[# th:if="${tag} != null"]*/
   AND /*[# mb:p="tag"]*/ 'Java' /*[/]*/ = ANY(e.tags)
 /*[/]*/
+/*[# th:if="${tenantId}"]*/
+  AND e.tenant_id = /*[# mb:p="tenantId"]*/ '_'
+/*[/]*/
+/*[/]*/
+/*[# th:unless="${tenantId}"][# th:utext="|  AND e.tenant_id = '_'|"][/][/]*/

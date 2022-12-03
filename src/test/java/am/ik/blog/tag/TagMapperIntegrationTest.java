@@ -32,9 +32,12 @@ class TagMapperIntegrationTest {
 
 	@Test
 	void findOrderByTagNameAsc() {
-		final List<TagNameAndCount> tags = this.tagMapper.findOrderByTagNameAsc();
+		final List<TagNameAndCount> tags = this.tagMapper.findOrderByTagNameAsc(null);
 		assertThat(tags).hasSize(3);
 		assertThat(tags).containsExactly(new TagNameAndCount("test1", 3),
 				new TagNameAndCount("test2", 2), new TagNameAndCount("test3", 2));
+		final List<TagNameAndCount> demoTags = this.tagMapper
+				.findOrderByTagNameAsc("demo");
+		assertThat(demoTags).isEmpty();
 	}
 }

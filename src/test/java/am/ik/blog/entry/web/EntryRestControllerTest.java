@@ -4,6 +4,7 @@ import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Consumer;
 
 import am.ik.blog.MockConfig;
 import am.ik.blog.config.SecurityConfig;
@@ -14,6 +15,7 @@ import am.ik.blog.entry.EntryMapper;
 import am.ik.blog.entry.FrontMatterBuilder;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,10 +29,10 @@ import org.springframework.test.web.reactive.server.WebTestClient;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
 
-@WebMvcTest
+@WebMvcTest(properties = {
+		"blog.tenant.users[0]=user|{noop}password|demo=GET,LIST|xyz=GET",
+		"blog.tenant.users[1]=foo|{noop}bar|demo=GET,LIST,EDIT,DELETE" })
 @Import({ SecurityConfig.class, MockConfig.class })
 class EntryRestControllerTest {
 	@Autowired
@@ -47,35 +49,71 @@ class EntryRestControllerTest {
 			.withFrontMatter(new FrontMatterBuilder().withTitle("Blog").build())
 			.withContent("Hello Blog!").build();
 
-	@Test
-	void getEntry_200() {
-		given(this.entryMapper.findOne(100L, false))
+	private Consumer<HttpHeaders> configureAuth(String tenantId, String username,
+			String password) {
+		return new Consumer<HttpHeaders>() {
+			@Override
+			public void accept(HttpHeaders httpHeaders) {
+				if (tenantId != null) {
+					httpHeaders.setBasicAuth(username, password);
+				}
+			}
+		};
+	}
+
+	@ParameterizedTest
+	@CsvSource({ ",,", "demo,user,password", "demo,foo,bar", "demo,admin,changeme" })
+	void getEntry_200(String tenantId, String username, String password) {
+		given(this.entryMapper.findOne(100L, tenantId, false))
 				.willReturn(Optional.of(this.entry100));
-		this.webTestClient.get().uri("/entries/100").exchange().expectStatus().isOk()
-				.expectBody().jsonPath("$.entryId").isEqualTo(100L).jsonPath("$.content")
-				.isEqualTo("Hello World!").jsonPath("$.frontMatter.title")
-				.isEqualTo("Hello");
+		this.webTestClient.get()
+				.uri((tenantId == null ? "" : "/tenants/" + tenantId) + "/entries/100")
+				.headers(configureAuth(tenantId, username, password)).exchange()
+				.expectStatus().isOk().expectBody().jsonPath("$.entryId").isEqualTo(100L)
+				.jsonPath("$.content").isEqualTo("Hello World!")
+				.jsonPath("$.frontMatter.title").isEqualTo("Hello");
 	}
 
-	@Test
-	void getEntry_404() {
-		given(this.entryMapper.findOne(100L, false)).willReturn(Optional.empty());
-		this.webTestClient.get().uri("/entries/100").exchange().expectStatus()
-				.isNotFound();
+	@ParameterizedTest
+	@CsvSource({ ",,", "demo,user,password", "demo,foo,bar", "demo,admin,changeme" })
+	void getEntry_404(String tenantId, String username, String password) {
+		given(this.entryMapper.findOne(100L, tenantId, false))
+				.willReturn(Optional.empty());
+		this.webTestClient.get()
+				.uri((tenantId == null ? "" : "/tenants/" + tenantId) + "/entries/100")
+				.headers(configureAuth(tenantId, username, password)).exchange()
+				.expectStatus().isNotFound();
 	}
 
-	@Test
-	void getEntries_200() {
-		given(this.entryMapper.findPage(any(), any()))
+	@ParameterizedTest
+	@CsvSource({ ",,", "demo,user,password", "demo,foo,bar", "demo,admin,changeme" })
+	void getEntries_200(String tenantId, String username, String password) {
+		given(this.entryMapper.findPage(any(), any(), any()))
 				.willReturn(new PageImpl<>(List.of(this.entry100, this.entry200)));
-		this.webTestClient.get().uri("/entries").exchange().expectStatus().isOk()
-				.expectBody().jsonPath("$.content.length()").isEqualTo(2)
-				.jsonPath("$.content[0].entryId").isEqualTo(100L)
+		this.webTestClient.get()
+				.uri((tenantId == null ? "" : "/tenants/" + tenantId) + "/entries")
+				.headers(configureAuth(tenantId, username, password)).exchange()
+				.expectStatus().isOk().expectBody().jsonPath("$.content.length()")
+				.isEqualTo(2).jsonPath("$.content[0].entryId").isEqualTo(100L)
 				.jsonPath("$.content[0].content").isEqualTo("Hello World!")
 				.jsonPath("$.content[0].frontMatter.title").isEqualTo("Hello")
 				.jsonPath("$.content[1].entryId").isEqualTo(200L)
 				.jsonPath("$.content[1].content").isEqualTo("Hello Blog!")
 				.jsonPath("$.content[1].frontMatter.title").isEqualTo("Blog");
+	}
+
+	@Test
+	void getEntries_401() {
+		this.webTestClient.get().uri("/tenants/xyz/entries")
+				.headers(httpHeaders -> httpHeaders.setBasicAuth("user", "pass"))
+				.exchange().expectStatus().isUnauthorized();
+	}
+
+	@Test
+	void getEntries_403() {
+		this.webTestClient.get().uri("/tenants/xyz/entries")
+				.headers(httpHeaders -> httpHeaders.setBasicAuth("user", "password"))
+				.exchange().expectStatus().isForbidden();
 	}
 
 	@ParameterizedTest
@@ -121,7 +159,7 @@ class EntryRestControllerTest {
 		final String[] vals = value.split(",", 2);
 		final String contentType = vals[0];
 		final String body = vals[1];
-		given(this.entryMapper.nextId()).willReturn(200L);
+		given(this.entryMapper.nextId(null)).willReturn(200L);
 		this.webTestClient.post().uri("/entries")
 				.header(HttpHeaders.CONTENT_TYPE, contentType)
 				.headers(httpHeaders -> httpHeaders.setBasicAuth("admin", "changeme"))
@@ -140,7 +178,6 @@ class EntryRestControllerTest {
 				.jsonPath("$.frontMatter.categories[0].name").isEqualTo("Dev")
 				.jsonPath("$.frontMatter.categories[1].name").isEqualTo("Blog")
 				.jsonPath("$.frontMatter.categories[2].name").isEqualTo("Test");
-		verify(this.entryMapper).save(any());
 	}
 
 	@ParameterizedTest
@@ -194,7 +231,7 @@ class EntryRestControllerTest {
 		final String[] vals = value.split(",", 2);
 		final String contentType = vals[0];
 		final String body = vals[1];
-		given(this.entryMapper.nextId()).willReturn(200L);
+		given(this.entryMapper.nextId(null)).willReturn(200L);
 		this.webTestClient.post().uri("/entries")
 				.header(HttpHeaders.CONTENT_TYPE, contentType)
 				.headers(httpHeaders -> httpHeaders.setBasicAuth("admin", "changeme"))
@@ -213,7 +250,6 @@ class EntryRestControllerTest {
 				.jsonPath("$.frontMatter.categories[0].name").isEqualTo("Dev")
 				.jsonPath("$.frontMatter.categories[1].name").isEqualTo("Blog")
 				.jsonPath("$.frontMatter.categories[2].name").isEqualTo("Test");
-		verify(this.entryMapper).save(any());
 	}
 
 	@ParameterizedTest
@@ -233,7 +269,7 @@ class EntryRestControllerTest {
 		final String[] vals = value.split(",", 2);
 		final String contentType = vals[0];
 		final String body = vals[1];
-		given(this.entryMapper.nextId()).willReturn(200L);
+		given(this.entryMapper.nextId(null)).willReturn(200L);
 		this.webTestClient.post().uri("/entries")
 				.header(HttpHeaders.CONTENT_TYPE, contentType)
 				.headers(httpHeaders -> httpHeaders.setBasicAuth("admin", "changeme"))
@@ -247,7 +283,6 @@ class EntryRestControllerTest {
 				.isEqualTo("\"content\" must not be blank")
 				.jsonPath("$.violations[1].defaultMessage").isEqualTo(
 						"The size of \"frontMatter.categories\" must be greater than or equal to 1. The given size is 0");
-		verify(this.entryMapper, never()).save(any());
 	}
 
 	@ParameterizedTest
@@ -342,7 +377,7 @@ class EntryRestControllerTest {
 		final String[] vals = value.split(",", 2);
 		final String contentType = vals[0];
 		final String body = vals[1];
-		given(this.entryMapper.findOne(100L, true)).willReturn(Optional.empty());
+		given(this.entryMapper.findOne(100L, null, true)).willReturn(Optional.empty());
 		this.webTestClient.put().uri("/entries/100")
 				.header(HttpHeaders.CONTENT_TYPE, contentType)
 				.headers(httpHeaders -> httpHeaders.setBasicAuth("admin", "changeme"))
@@ -361,7 +396,6 @@ class EntryRestControllerTest {
 				.jsonPath("$.frontMatter.categories[0].name").isEqualTo("Dev")
 				.jsonPath("$.frontMatter.categories[1].name").isEqualTo("Blog")
 				.jsonPath("$.frontMatter.categories[2].name").isEqualTo("Test");
-		verify(this.entryMapper).save(any());
 	}
 
 	@ParameterizedTest
@@ -415,7 +449,7 @@ class EntryRestControllerTest {
 		final String[] vals = value.split(",", 2);
 		final String contentType = vals[0];
 		final String body = vals[1];
-		given(this.entryMapper.findOne(100L, true)).willReturn(Optional.empty());
+		given(this.entryMapper.findOne(100L, null, true)).willReturn(Optional.empty());
 		this.webTestClient.put().uri("/entries/100")
 				.header(HttpHeaders.CONTENT_TYPE, contentType)
 				.headers(httpHeaders -> httpHeaders.setBasicAuth("admin", "changeme"))
@@ -434,7 +468,6 @@ class EntryRestControllerTest {
 				.jsonPath("$.frontMatter.categories[0].name").isEqualTo("Dev")
 				.jsonPath("$.frontMatter.categories[1].name").isEqualTo("Blog")
 				.jsonPath("$.frontMatter.categories[2].name").isEqualTo("Test");
-		verify(this.entryMapper).save(any());
 	}
 
 	@ParameterizedTest
@@ -482,7 +515,7 @@ class EntryRestControllerTest {
 		final String body = vals[1];
 		final OffsetDateTime createdDate = OffsetDateTime.of(2022, 3, 1, 1, 0, 0, 0,
 				ZoneOffset.UTC);
-		given(this.entryMapper.findOne(100L, true))
+		given(this.entryMapper.findOne(100L, null, true))
 				.willReturn(Optional.of(new EntryBuilder().withEntryId(100L)
 						.withCreated(new Author("test", createdDate))
 						.withUpdated(new Author("test", createdDate)).build()));
@@ -503,7 +536,6 @@ class EntryRestControllerTest {
 				.jsonPath("$.frontMatter.categories[0].name").isEqualTo("Dev")
 				.jsonPath("$.frontMatter.categories[1].name").isEqualTo("Blog")
 				.jsonPath("$.frontMatter.categories[2].name").isEqualTo("Test");
-		verify(this.entryMapper).save(any());
 	}
 
 	@ParameterizedTest
@@ -559,7 +591,7 @@ class EntryRestControllerTest {
 		final String body = vals[1];
 		final OffsetDateTime createdDate = OffsetDateTime.of(2022, 3, 1, 1, 0, 0, 0,
 				ZoneOffset.UTC);
-		given(this.entryMapper.findOne(100L, true))
+		given(this.entryMapper.findOne(100L, null, true))
 				.willReturn(Optional.of(new EntryBuilder().withEntryId(100L)
 						.withCreated(new Author("test", createdDate))
 						.withUpdated(new Author("test", createdDate)).build()));
@@ -580,7 +612,6 @@ class EntryRestControllerTest {
 				.jsonPath("$.frontMatter.categories[0].name").isEqualTo("Dev")
 				.jsonPath("$.frontMatter.categories[1].name").isEqualTo("Blog")
 				.jsonPath("$.frontMatter.categories[2].name").isEqualTo("Test");
-		verify(this.entryMapper).save(any());
 	}
 
 	@ParameterizedTest
@@ -600,7 +631,7 @@ class EntryRestControllerTest {
 		final String[] vals = value.split(",", 2);
 		final String contentType = vals[0];
 		final String body = vals[1];
-		given(this.entryMapper.findOne(100L, true)).willReturn(Optional.empty());
+		given(this.entryMapper.findOne(100L, null, true)).willReturn(Optional.empty());
 		this.webTestClient.put().uri("/entries/0")
 				.header(HttpHeaders.CONTENT_TYPE, contentType)
 				.headers(httpHeaders -> httpHeaders.setBasicAuth("admin", "changeme"))
@@ -616,7 +647,6 @@ class EntryRestControllerTest {
 				.isEqualTo("\"content\" must not be blank")
 				.jsonPath("$.violations[2].defaultMessage").isEqualTo(
 						"The size of \"frontMatter.categories\" must be greater than or equal to 1. The given size is 0");
-		verify(this.entryMapper, never()).save(any());
 	}
 
 	@ParameterizedTest
@@ -668,19 +698,31 @@ class EntryRestControllerTest {
 				.bodyValue(body).exchange().expectStatus().isUnauthorized();
 	}
 
-	@Test
-	void deleteEntry_204() {
-		given(this.entryMapper.delete(100L)).willReturn(1);
-		this.webTestClient.delete().uri("/entries/100")
-				.headers(httpHeaders -> httpHeaders.setBasicAuth("admin", "changeme"))
+	@ParameterizedTest
+	@CsvSource({ ",admin,changeme", "demo,foo,bar", "demo,admin,changeme" })
+	void deleteEntry_204(String tenantId, String username, String password) {
+		given(this.entryMapper.delete(100L, tenantId)).willReturn(1);
+		this.webTestClient.delete()
+				.uri((tenantId == null ? "" : "/tenants/" + tenantId) + "/entries/100")
+				.headers(httpHeaders -> httpHeaders.setBasicAuth(username, password))
 				.exchange().expectStatus().isNoContent();
-		verify(this.entryMapper).delete(100L);
 	}
 
-	@Test
-	void deleteEntry_401() {
-		this.webTestClient.delete().uri("/entries/100")
-				.headers(httpHeaders -> httpHeaders.setBasicAuth("invalid", "invalid"))
+	@ParameterizedTest
+	@CsvSource({ ",invalid,invalid", "abc,invalid,invalid" })
+	void deleteEntry_401(String tenantId, String username, String password) {
+		this.webTestClient.delete()
+				.uri((tenantId == null ? "" : "/tenants/" + tenantId) + "/entries/100")
+				.headers(httpHeaders -> httpHeaders.setBasicAuth(username, password))
 				.exchange().expectStatus().isUnauthorized();
+	}
+
+	@ParameterizedTest
+	@CsvSource({ ",user,password", "demo,user,password" })
+	void deleteEntry_403(String tenantId, String username, String password) {
+		this.webTestClient.delete()
+				.uri((tenantId == null ? "" : "/tenants/" + tenantId) + "/entries/100")
+				.headers(httpHeaders -> httpHeaders.setBasicAuth(username, password))
+				.exchange().expectStatus().isForbidden();
 	}
 }

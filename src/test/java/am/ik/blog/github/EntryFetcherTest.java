@@ -19,10 +19,13 @@ import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.support.WebClientAdapter;
 import org.springframework.web.service.invoker.HttpServiceProxyFactory;
 
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 import java.time.OffsetDateTime;
+import java.util.Map;
 import java.util.Random;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -33,90 +36,146 @@ public class EntryFetcherTest {
 
 	MockWebServer server = new MockWebServer();
 
+	MockWebServer anotherServer = new MockWebServer();
+
 	EntryFetcher entryFetcher;
 
 	int port;
 
+	int anotherPort;
+
 	GitHubClient gitHubClient;
-
-	String owner = "someone";
-
-	String repo = "my-blog";
 
 	String path = "content/00001.md";
 
-	String basePath = "/repos/" + owner + "/" + repo;
-
 	@BeforeEach
 	void setup() throws Exception {
-		this.port = new Random().nextInt(60000, 65535);
+		this.port = new Random().nextInt(60000, 65534);
+		this.anotherPort = this.port + 1;
 		this.server.start(this.port);
+		this.anotherServer.start(this.anotherPort);
+		this.gitHubClient = this.createClient(this.port);
+		final GitHubClient anotherGitHubClient = this.createClient(this.anotherPort);
+		this.entryFetcher = new EntryFetcher(this.gitHubClient,
+				Map.of("xyz", anotherGitHubClient));
+		try (Buffer contentResponse = new Buffer()
+				.readFrom(new ClassPathResource("github/sample-content-response.json")
+						.getInputStream());
+				Buffer commitsResponse = new Buffer().readFrom(
+						new ClassPathResource("github/sample-commits-response.json")
+								.getInputStream())) {
+			this.server.setDispatcher(new Dispatcher() {
+				@Override
+				public MockResponse dispatch(RecordedRequest request) {
+					String path = request.getPath();
+					if (path.startsWith("/repos/someone/my-blog/commits")) {
+						return new MockResponse() //
+								.setHeader(CONTENT_TYPE, APPLICATION_JSON_VALUE) //
+								.setBody(commitsResponse) //
+								.setResponseCode(200);
+					}
+					if (path.startsWith("/repos/someone/my-blog/contents")) {
+						return new MockResponse() //
+								.setHeader(CONTENT_TYPE, APPLICATION_JSON_VALUE) //
+								.setBody(contentResponse) //
+								.setResponseCode(200);
+					}
+					return new MockResponse() //
+							.setResponseCode(404);
+				}
+			});
+			this.anotherServer.setDispatcher(new Dispatcher() {
+				@Override
+				public MockResponse dispatch(RecordedRequest request) {
+					String path = request.getPath();
+					if (path.startsWith("/repos/foo/bar/commits")) {
+						return new MockResponse() //
+								.setHeader(CONTENT_TYPE, APPLICATION_JSON_VALUE) //
+								.setBody(commitsResponse) //
+								.setResponseCode(200);
+					}
+					if (path.startsWith("/repos/foo/bar/contents")) {
+						return new MockResponse() //
+								.setHeader(CONTENT_TYPE, APPLICATION_JSON_VALUE) //
+								.setBody(contentResponse) //
+								.setResponseCode(200);
+					}
+					return new MockResponse() //
+							.setResponseCode(404);
+				}
+			});
+		}
+	}
+
+	private GitHubClient createClient(int port) {
 		final WebClientAdapter adapter = WebClientAdapter
 				.forClient(WebClient.builder().baseUrl("http://localhost:" + port)
 						.defaultHeader(HttpHeaders.AUTHORIZATION, "token dummy").build());
 		final HttpServiceProxyFactory factory = HttpServiceProxyFactory.builder(adapter)
 				.build();
-		this.gitHubClient = factory.createClient(GitHubClient.class);
-		this.entryFetcher = new EntryFetcher(this.gitHubClient);
+		return factory.createClient(GitHubClient.class);
 	}
 
 	@AfterEach
 	void shutdown() throws Exception {
-		server.shutdown();
+		this.server.shutdown();
+		this.anotherServer.shutdown();
 	}
 
-	@Test
-	void fetch() throws Exception {
-		Buffer contentResponse = new Buffer()
+	@ParameterizedTest
+	@CsvSource({ ",someone,my-blog", "demo,someone,my-blog", "xyz,foo,bar" })
+	void fetch(String tenantId, String owner, String repo) throws Exception {
+		try (Buffer contentResponse = new Buffer()
 				.readFrom(new ClassPathResource("github/sample-content-response.json")
 						.getInputStream());
-		Buffer commitsResponse = new Buffer()
-				.readFrom(new ClassPathResource("github/sample-commits-response.json")
-						.getInputStream());
-
-		this.server.setDispatcher(new Dispatcher() {
-
-			@Override
-			public MockResponse dispatch(RecordedRequest request) {
-				String path = request.getPath();
-				if (path.startsWith(basePath + "/commits")) {
+				Buffer commitsResponse = new Buffer().readFrom(
+						new ClassPathResource("github/sample-commits-response.json")
+								.getInputStream())) {
+			final String basePath = "/repos/" + owner + "/" + repo;
+			this.server.setDispatcher(new Dispatcher() {
+				@Override
+				public MockResponse dispatch(RecordedRequest request) {
+					String path = request.getPath();
+					if (path.startsWith(basePath + "/commits")) {
+						return new MockResponse() //
+								.setHeader(CONTENT_TYPE, APPLICATION_JSON_VALUE) //
+								.setBody(commitsResponse) //
+								.setResponseCode(200);
+					}
+					if (path.startsWith(basePath + "/contents")) {
+						return new MockResponse() //
+								.setHeader(CONTENT_TYPE, APPLICATION_JSON_VALUE) //
+								.setBody(contentResponse) //
+								.setResponseCode(200);
+					}
 					return new MockResponse() //
-							.setHeader(CONTENT_TYPE, APPLICATION_JSON_VALUE) //
-							.setBody(commitsResponse) //
-							.setResponseCode(200);
+							.setResponseCode(404);
 				}
-				if (path.startsWith(basePath + "/contents")) {
-					return new MockResponse() //
-							.setHeader(CONTENT_TYPE, APPLICATION_JSON_VALUE) //
-							.setBody(contentResponse) //
-							.setResponseCode(200);
-				}
-				return new MockResponse() //
-						.setResponseCode(404);
-			}
-		});
-		Mono<Entry> entry = this.entryFetcher.fetch(owner, repo, path);
-		StepVerifier.create(entry) //
-				.assertNext(e -> {
-					assertThat(e).isNotNull();
-					assertThat(e.getEntryId()).isEqualTo(1L);
-					assertThat(e.getContent()).isEqualTo("This is my first blog post!");
-					assertThat(e.getCreated()).isNotNull();
-					assertThat(e.getCreated().getName()).isEqualTo("Toshiaki Maki");
-					assertThat(e.getCreated().getDate())
-							.isEqualTo(OffsetDateTime.parse("2015-12-28T17:16:23Z"));
-					assertThat(e.getUpdated()).isNotNull();
-					assertThat(e.getUpdated().getName()).isEqualTo("Toshiaki Maki");
-					assertThat(e.getUpdated().getDate())
-							.isEqualTo(OffsetDateTime.parse("2018-01-14T08:09:06Z"));
-					FrontMatter frontMatter = e.getFrontMatter();
-					assertThat(frontMatter).isNotNull();
-					assertThat(frontMatter.getTitle()).isEqualTo("First article");
-					assertThat(frontMatter.getCategories())
-							.containsExactly(new Category("Demo"), new Category("Hello"));
-					assertThat(frontMatter.getTags()).containsExactly(new Tag("Demo"));
-				}) //
-				.verifyComplete();
-		;
+			});
+			Mono<Entry> entry = this.entryFetcher.fetch(tenantId, owner, repo, path);
+			StepVerifier.create(entry) //
+					.assertNext(e -> {
+						assertThat(e).isNotNull();
+						assertThat(e.getEntryId()).isEqualTo(1L);
+						assertThat(e.getContent())
+								.isEqualTo("This is my first blog post!");
+						assertThat(e.getCreated()).isNotNull();
+						assertThat(e.getCreated().getName()).isEqualTo("Toshiaki Maki");
+						assertThat(e.getCreated().getDate())
+								.isEqualTo(OffsetDateTime.parse("2015-12-28T17:16:23Z"));
+						assertThat(e.getUpdated()).isNotNull();
+						assertThat(e.getUpdated().getName()).isEqualTo("Toshiaki Maki");
+						assertThat(e.getUpdated().getDate())
+								.isEqualTo(OffsetDateTime.parse("2018-01-14T08:09:06Z"));
+						FrontMatter frontMatter = e.getFrontMatter();
+						assertThat(frontMatter).isNotNull();
+						assertThat(frontMatter.getTitle()).isEqualTo("First article");
+						assertThat(frontMatter.getCategories()).containsExactly(
+								new Category("Demo"), new Category("Hello"));
+						assertThat(frontMatter.getTags())
+								.containsExactly(new Tag("Demo"));
+					}) //
+					.verifyComplete();
+		}
 	}
 }

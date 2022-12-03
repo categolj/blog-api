@@ -7,7 +7,8 @@ import am.ik.blog.entry.EntryMapper;
 import am.ik.blog.github.EntryFetcher;
 import am.ik.blog.github.Fixtures;
 import am.ik.blog.github.GitHubProps;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import reactor.core.publisher.Mono;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,7 +18,6 @@ import org.springframework.context.annotation.Import;
 import org.springframework.test.web.reactive.server.WebTestClient;
 
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.verify;
 
 @WebMvcTest(properties = { "spring.security.user.name=admin",
 		"spring.security.user.password=password", "blog.github.content-owner=foo",
@@ -33,24 +33,29 @@ class EntryImportControllerTest {
 	@MockBean
 	EntryMapper entryMapper;
 
-	@Test
-	void importEntries_200() {
+	@ParameterizedTest
+	@CsvSource({ ",", "demo," })
+	void importEntries_200(String tenantId) {
 		final Entry entry = Fixtures.entry(100L);
-		given(this.entryFetcher.fetch("foo", "my-blog", "content/00100.md"))
+		given(this.entryFetcher.fetch(tenantId, "foo", "my-blog", "content/00100.md"))
 				.willReturn(Mono.just(entry));
-		this.webTestClient.post().uri("/admin/import?from=100&to=100")
+		this.webTestClient.post()
+				.uri("%s/admin/import?from=100&to=100"
+						.formatted(tenantId == null ? "" : "/tenants/" + tenantId))
 				.headers(httpHeaders -> httpHeaders.setBasicAuth("admin", "password"))
 				.exchange().expectStatus().isOk().expectBody().jsonPath("$.length()")
 				.isEqualTo(1).jsonPath("[0]", "100 Hello");
-		verify(entryMapper).save(entry);
 	}
 
-	@Test
-	void importEntries_401() {
+	@ParameterizedTest
+	@CsvSource({ ",", "demo," })
+	void importEntries_401(String tenantId) {
 		final Entry entry = Fixtures.entry(100L);
-		given(this.entryFetcher.fetch("foo", "my-blog", "content/00100.md"))
+		given(this.entryFetcher.fetch(tenantId, "foo", "my-blog", "content/00100.md"))
 				.willReturn(Mono.just(entry));
-		this.webTestClient.post().uri("/admin/import?from=100&to=100").exchange()
-				.expectStatus().isUnauthorized();
+		this.webTestClient.post()
+				.uri("%s/admin/import?from=100&to=100"
+						.formatted(tenantId == null ? "" : "/tenants/" + tenantId))
+				.exchange().expectStatus().isUnauthorized();
 	}
 }

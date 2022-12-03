@@ -14,6 +14,7 @@ import reactor.util.function.Tuples;
 
 import java.nio.file.Paths;
 import java.time.OffsetDateTime;
+import java.util.Map;
 import java.util.Optional;
 
 @Component
@@ -21,14 +22,31 @@ public class EntryFetcher {
 
 	private final GitHubClient gitHubClient;
 
-	public EntryFetcher(GitHubClient gitHubClient) {
+	public final Map<String, GitHubClient> tenantsGitHubClient;
+
+	public EntryFetcher(GitHubClient gitHubClient,
+			Map<String, GitHubClient> tenantsGitHubClient) {
 		this.gitHubClient = gitHubClient;
+		this.tenantsGitHubClient = tenantsGitHubClient;
 	}
 
+	@Deprecated
 	public Mono<Entry> fetch(String owner, String repo, String path) {
+		return this.fetch(null, owner, repo, path);
+	}
+
+	public Mono<Entry> fetch(String tenantId, String owner, String repo, String path) {
+		GitHubClient gitHubClient;
+		if (tenantId == null) {
+			gitHubClient = this.gitHubClient;
+		}
+		else {
+			gitHubClient = this.tenantsGitHubClient.getOrDefault(tenantId,
+					this.gitHubClient);
+		}
 		Long entryId = Entry.parseId(Paths.get(path).getFileName().toString());
-		Mono<File> file = this.gitHubClient.getFile(owner, repo, path);
-		Flux<Commit> commits = this.gitHubClient.getCommits(owner, repo,
+		Mono<File> file = gitHubClient.getFile(owner, repo, path);
+		Flux<Commit> commits = gitHubClient.getCommits(owner, repo,
 				new CommitParameter().path(path).queryParams());
 		final Mono<Tuple3<EntryBuilder, Optional<OffsetDateTime>, Optional<OffsetDateTime>>> parsed = file
 				.flatMap(f -> this.parse(entryId, f));

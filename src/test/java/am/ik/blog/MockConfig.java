@@ -7,8 +7,6 @@ import java.time.ZoneOffset;
 
 import am.ik.blog.entry.EntryMapper;
 import am.ik.blog.entry.EntryService;
-import am.ik.blog.github.GitHubUserContentClient;
-import org.mockito.Mockito;
 
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
@@ -17,7 +15,7 @@ import org.springframework.context.annotation.Bean;
 public class MockConfig {
 	@Bean
 	public EntryService entryService(EntryMapper entryMapper) {
-		return new EntryService(entryMapper, Mockito.mock(GitHubUserContentClient.class));
+		return new EntryService(entryMapper);
 	}
 
 	@Bean

@@ -36,13 +36,15 @@ class SqlTest {
 
 				       '' AS content,
 				       COALESCE(e.categories, '{}') AS categories,
-				       COALESCE(e.tags, '{}') AS tags,
+				       COALESCE(e.tags, '{}')       AS tags,
 				       e.created_by,
 				       e.created_date,
 				       e.last_modified_by,
 				       e.last_modified_date
 				FROM entry AS e
 				WHERE e.entry_id = :entryId
+
+				  AND e.tenant_id = '_'
 				""".trim());
 	}
 
@@ -61,14 +63,44 @@ class SqlTest {
 
 
 				       COALESCE(e.categories, '{}') AS categories,
-				       COALESCE(e.tags, '{}') AS tags,
+				       COALESCE(e.tags, '{}')       AS tags,
 				       e.created_by,
 				       e.created_date,
 				       e.last_modified_by,
 				       e.last_modified_date
 				FROM entry AS e
 				WHERE e.entry_id = :entryId
-								""".trim());
+
+				  AND e.tenant_id = '_'
+				""".trim());
+	}
+
+	@Test
+	public void findOneIncludeContentWithTenantId() {
+		final MapSqlParameterSource params = new MapSqlParameterSource()
+				.addValue("entryId", 100).addValue("excludeContent", false)
+				.addValue("tenantId", "demo");
+		final String sql = sqlGenerator.generate(
+				FileLoader.loadAsString("am/ik/blog/entry/EntryMapper/findOne.sql"),
+				params.getValues(), params::addValue);
+		assertThat(sql.trim()).isEqualTo("""
+				SELECT e.entry_id,
+				       e.title,
+
+				       e.content,
+
+
+				       COALESCE(e.categories, '{}') AS categories,
+				       COALESCE(e.tags, '{}')       AS tags,
+				       e.created_by,
+				       e.created_date,
+				       e.last_modified_by,
+				       e.last_modified_date
+				FROM entry AS e
+				WHERE e.entry_id = :entryId
+
+				  AND e.tenant_id = :tenantId
+				""".trim());
 	}
 
 	@Test
@@ -141,8 +173,10 @@ class SqlTest {
 				params.getValues(), params::addValue);
 		assertThat(sql.trim()).isEqualTo("""
 				DELETE
-				FROM entry
-				WHERE entry_id = :entryId
+				FROM entry AS e
+				WHERE e.entry_id = :entryId
+
+				  AND e.tenant_id = '_'
 				""".trim());
 	}
 
@@ -152,10 +186,19 @@ class SqlTest {
 		final String sql = sqlGenerator.generate(
 				FileLoader.loadAsString("am/ik/blog/entry/EntryMapper/entryIds.sql"),
 				params.getValues(), params::addValue);
-		assertThat(sql.trim())
-				.isEqualTo("SELECT DISTINCT e.entry_id, e.last_modified_date\n"
-						+ "FROM entry AS e\n" + "WHERE 1 = 1\n" + "\n" + "\n" + "\n"
-						+ "\n" + "\n" + "ORDER BY e.last_modified_date DESC\n".trim());
+		assertThat(sql.trim()).isEqualTo("""
+				SELECT DISTINCT e.entry_id, e.last_modified_date
+				FROM entry AS e
+				WHERE 1 = 1
+
+
+
+
+
+
+				  AND e.tenant_id = '_'
+				ORDER BY e.last_modified_date DESC
+				""".trim());
 	}
 
 	@Test
@@ -166,19 +209,44 @@ class SqlTest {
 		final String sql = sqlGenerator.generate(
 				FileLoader.loadAsString("am/ik/blog/entry/EntryMapper/entryIds.sql"),
 				params.getValues(), params::addValue);
-		assertThat(sql.trim())
-				.isEqualTo("SELECT DISTINCT e.entry_id, e.last_modified_date\n"
-						+ "FROM entry AS e\n" + "WHERE 1 = 1\n" + "\n" + "\n"
-						+ "  AND :keywords[0] = ANY(e.keywords)\n"
-						+ "  AND :keywords[1] = ANY(e.keywords)\n" + "\n" + "\n" + "\n"
-						+ "\n" + "\n" + "\n" + "ORDER BY e.last_modified_date DESC");
+		assertThat(sql.trim()).isEqualTo("""
+				SELECT DISTINCT e.entry_id, e.last_modified_date
+				FROM entry AS e
+				WHERE 1 = 1
+
+
+				  AND :keywords[0] = ANY(e.keywords)
+				  AND :keywords[1] = ANY(e.keywords)
+
+
+
+
+
+
+
+				  AND e.tenant_id = '_'
+				ORDER BY e.last_modified_date DESC
+				""".trim());
 		final String sqlToUse = NamedParameterUtils.substituteNamedParameters(sql,
 				params);
-		assertThat(sqlToUse.trim()).isEqualTo(
-				"SELECT DISTINCT e.entry_id, e.last_modified_date\n" + "FROM entry AS e\n"
-						+ "WHERE 1 = 1\n" + "\n" + "\n" + "  AND ? = ANY(e.keywords)\n"
-						+ "  AND ? = ANY(e.keywords)\n" + "\n" + "\n" + "\n" + "\n" + "\n"
-						+ "\n" + "ORDER BY e.last_modified_date DESC".trim());
+		assertThat(sqlToUse.trim()).isEqualTo("""
+				SELECT DISTINCT e.entry_id, e.last_modified_date
+				FROM entry AS e
+				WHERE 1 = 1
+
+
+				  AND ? = ANY(e.keywords)
+				  AND ? = ANY(e.keywords)
+
+
+
+
+
+
+
+				  AND e.tenant_id = '_'
+				ORDER BY e.last_modified_date DESC
+				""".trim());
 		final ParsedSql parsedSql = NamedParameterUtils.parseSqlStatement(sql);
 		final List<SqlParameter> declaredParameters = NamedParameterUtils
 				.buildSqlParameterList(parsedSql, params);
@@ -200,11 +268,21 @@ class SqlTest {
 		final String sql = sqlGenerator.generate(
 				FileLoader.loadAsString("am/ik/blog/entry/EntryMapper/entryIds.sql"),
 				params.getValues(), params::addValue);
-		assertThat(sql.trim())
-				.isEqualTo("SELECT DISTINCT e.entry_id, e.last_modified_date\n"
-						+ "FROM entry AS e\n" + "WHERE 1 = 1\n" + "\n" + "\n" + "\n"
-						+ "\n" + "\n" + "  AND :tag = ANY(e.tags)\n" + "\n"
-						+ "ORDER BY e.last_modified_date DESC".trim());
+		assertThat(sql.trim()).isEqualTo("""
+				SELECT DISTINCT e.entry_id, e.last_modified_date
+				FROM entry AS e
+				WHERE 1 = 1
+
+
+
+
+
+				  AND :tag = ANY(e.tags)
+
+
+				  AND e.tenant_id = '_'
+				ORDER BY e.last_modified_date DESC
+				""".trim());
 	}
 
 	@Test
@@ -219,21 +297,46 @@ class SqlTest {
 		final String sql = sqlGenerator.generate(
 				FileLoader.loadAsString("am/ik/blog/entry/EntryMapper/entryIds.sql"),
 				params.getValues(), params::addValue);
-		assertThat(sql.trim())
-				.isEqualTo("SELECT DISTINCT e.entry_id, e.last_modified_date\n"
-						+ "FROM entry AS e\n" + "WHERE 1 = 1\n" + "\n" + "\n" + "\n"
-						+ "\n" + "\n" + "  AND e.categories[1] = :categories[0]\n"
-						+ "  AND e.categories[2] = :categories[1]\n"
-						+ "  AND e.categories[3] = :categories[2]\n" + "\n" + "\n" + "\n"
-						+ "ORDER BY e.last_modified_date DESC\n".trim());
+		assertThat(sql.trim()).isEqualTo("""
+				SELECT DISTINCT e.entry_id, e.last_modified_date
+				FROM entry AS e
+				WHERE 1 = 1
+
+
+
+
+
+				  AND e.categories[1] = :categories[0]
+				  AND e.categories[2] = :categories[1]
+				  AND e.categories[3] = :categories[2]
+
+
+
+
+				  AND e.tenant_id = '_'
+				ORDER BY e.last_modified_date DESC
+				""".trim());
 		final String sqlToUse = NamedParameterUtils.substituteNamedParameters(sql,
 				params);
-		assertThat(sqlToUse.trim()).isEqualTo(
-				"SELECT DISTINCT e.entry_id, e.last_modified_date\n" + "FROM entry AS e\n"
-						+ "WHERE 1 = 1\n" + "\n" + "\n" + "\n" + "\n" + "\n"
-						+ "  AND e.categories[1] = ?\n" + "  AND e.categories[2] = ?\n"
-						+ "  AND e.categories[3] = ?\n" + "\n" + "\n" + "\n"
-						+ "ORDER BY e.last_modified_date DESC".trim());
+		assertThat(sqlToUse.trim()).isEqualTo("""
+				SELECT DISTINCT e.entry_id, e.last_modified_date
+				FROM entry AS e
+				WHERE 1 = 1
+
+
+
+
+
+				  AND e.categories[1] = ?
+				  AND e.categories[2] = ?
+				  AND e.categories[3] = ?
+
+
+
+
+				  AND e.tenant_id = '_'
+				ORDER BY e.last_modified_date DESC
+				""".trim());
 		final ParsedSql parsedSql = NamedParameterUtils.parseSqlStatement(sql);
 		final List<SqlParameter> declaredParameters = NamedParameterUtils
 				.buildSqlParameterList(parsedSql, params);
@@ -249,6 +352,5 @@ class SqlTest {
 		assertThat(((SqlParameterValue) buildValueArray[2]).getName())
 				.isEqualTo("categories[2]");
 		assertThat(((SqlParameterValue) buildValueArray[2]).getValue()).isEqualTo("z");
-		;
 	}
 }

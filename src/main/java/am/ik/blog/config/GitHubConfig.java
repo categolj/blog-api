@@ -1,6 +1,9 @@
 package am.ik.blog.config;
 
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 import am.ik.blog.github.Committer;
 import am.ik.blog.github.GitCommit;
@@ -38,6 +41,22 @@ public class GitHubConfig {
 		final HttpServiceProxyFactory factory = HttpServiceProxyFactory.builder(adapter)
 				.build();
 		return factory.createClient(GitHubClient.class);
+	}
+
+	@Bean
+	public Map<String, GitHubClient> tenantsGitHubClient(GitHubProps props,
+			WebClient.Builder builder) {
+		return props.getTenants().entrySet().stream()
+				.collect(Collectors.toUnmodifiableMap(Entry::getKey, e -> {
+					final WebClientAdapter adapter = WebClientAdapter
+							.forClient(builder.baseUrl("https://api.github.com")
+									.defaultHeader(HttpHeaders.AUTHORIZATION,
+											"token " + e.getValue().getAccessToken())
+									.build());
+					final HttpServiceProxyFactory factory = HttpServiceProxyFactory
+							.builder(adapter).build();
+					return factory.createClient(GitHubClient.class);
+				}));
 	}
 
 	@Bean

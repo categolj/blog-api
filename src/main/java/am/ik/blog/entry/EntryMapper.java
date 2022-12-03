@@ -65,9 +65,11 @@ public class EntryMapper {
 	}
 
 	@Transactional(readOnly = true)
-	public Optional<Entry> findOne(Long entryId, boolean excludeContent) {
+	public Optional<Entry> findOne(Long entryId, String tenantId,
+			boolean excludeContent) {
 		final MapSqlParameterSource params = new MapSqlParameterSource()
-				.addValue("entryId", entryId).addValue("excludeContent", excludeContent);
+				.addValue("entryId", entryId).addValue("tenantId", tenantId)
+				.addValue("excludeContent", excludeContent);
 		final String sql = this.sqlGenerator.generate(
 				loadSqlAsString("am/ik/blog/entry/EntryMapper/findOne.sql"),
 				params.getValues(), params::addValue);
@@ -81,13 +83,15 @@ public class EntryMapper {
 	}
 
 	@Transactional(readOnly = true)
-	public List<Entry> findAll(SearchCriteria searchCriteria, Pageable pageable) {
-		final List<Long> ids = this.entryIds(searchCriteria, pageable);
+	public List<Entry> findAll(SearchCriteria searchCriteria, String tenantId,
+			Pageable pageable) {
+		final List<Long> ids = this.entryIds(searchCriteria, tenantId, pageable);
 		if (ids.isEmpty()) {
 			return List.of();
 		}
 		final MapSqlParameterSource params = entryIdsParameterSource(ids)
-				.addValue("excludeContent", searchCriteria.isExcludeContent());
+				.addValue("excludeContent", searchCriteria.isExcludeContent())
+				.addValue("tenantId", tenantId);
 		final String sql = this.sqlGenerator.generate(
 				loadSqlAsString("am/ik/blog/entry/EntryMapper/findAll.sql"),
 				params.getValues(), params::addValue);
@@ -95,15 +99,16 @@ public class EntryMapper {
 	}
 
 	@Transactional(readOnly = true)
-	public Page<Entry> findPage(SearchCriteria searchCriteria, Pageable pageable) {
-		final List<Entry> content = this.findAll(searchCriteria, pageable);
-		final long total = this.count(searchCriteria);
+	public Page<Entry> findPage(SearchCriteria searchCriteria, String tenantId,
+			Pageable pageable) {
+		final List<Entry> content = this.findAll(searchCriteria, tenantId, pageable);
+		final long total = this.count(searchCriteria, tenantId);
 		return new PageImpl<>(content, pageable, total);
 	}
 
-	public long count(SearchCriteria searchCriteria) {
+	public long count(SearchCriteria searchCriteria, String tenantId) {
 		final MapSqlParameterSource params = searchCriteria
-				.toParameterSource(this.keywordExtractor);
+				.toParameterSource(this.keywordExtractor).addValue("tenantId", tenantId);
 		final String sql = this.sqlGenerator.generate(
 				loadSqlAsString("am/ik/blog/entry/EntryMapper/count.sql"),
 				params.getValues(), params::addValue);
@@ -112,17 +117,21 @@ public class EntryMapper {
 		return Objects.<Long> requireNonNullElse(count, 0L);
 	}
 
-	public long nextId() {
-		final String sql = loadSqlAsString("am/ik/blog/entry/EntryMapper/nextId.sql");
+	public long nextId(String tenantId) {
+		final MapSqlParameterSource params = new MapSqlParameterSource()
+				.addValue("tenantId", tenantId);
+		final String sql = this.sqlGenerator.generate(
+				loadSqlAsString("am/ik/blog/entry/EntryMapper/nextId.sql"),
+				params.getValues(), params::addValue);
 		final Long nextId = this.jdbcTemplate.queryForObject(sql, Map.of(),
 				(rs, i) -> rs.getLong("next"));
-		return Objects.<Long> requireNonNullElse(nextId, -1L);
+		return Objects.<Long> requireNonNullElse(nextId, 1L);
 	}
 
 	@Transactional
-	public int delete(Long entryId) {
+	public int delete(Long entryId, String tenantId) {
 		final MapSqlParameterSource params = new MapSqlParameterSource()
-				.addValue("entryId", entryId);
+				.addValue("entryId", entryId).addValue("tenantId", tenantId);
 		final String sql = this.sqlGenerator.generate(
 				loadSqlAsString("am/ik/blog/entry/EntryMapper/deleteEntry.sql"),
 				params.getValues(), params::addValue);
@@ -130,7 +139,7 @@ public class EntryMapper {
 	}
 
 	@Transactional
-	public Map<String, Integer> save(Entry entry) {
+	public Map<String, Integer> save(Entry entry, String tenantId) {
 		Entry.validator.validate(entry)
 				.throwIfInvalid(ConstraintViolationsException::new);
 		final Map<String, Integer> result = new LinkedHashMap<>();
@@ -143,7 +152,7 @@ public class EntryMapper {
 		final List<String> keywords = this.keywordExtractor.extract(entry.getContent());
 		final MapSqlParameterSource params = new MapSqlParameterSource()
 				.addValue("entryId", entryId).addValue("title", frontMatter.getTitle())
-				.addValue("content", entry.getContent())
+				.addValue("tenantId", tenantId).addValue("content", entry.getContent())
 				.addValue("categories",
 						categories.stream().map(Category::name).collect(joining(",")))
 				.addValue("tags", tags.stream().map(Tag::name).collect(joining(",")))
@@ -161,9 +170,10 @@ public class EntryMapper {
 		return result;
 	}
 
-	private List<Long> entryIds(SearchCriteria searchCriteria, Pageable pageable) {
+	private List<Long> entryIds(SearchCriteria searchCriteria, String tenantId,
+			Pageable pageable) {
 		final MapSqlParameterSource params = searchCriteria
-				.toParameterSource(this.keywordExtractor);
+				.toParameterSource(this.keywordExtractor).addValue("tenantId", tenantId);
 		final String sql = this.sqlGenerator.generate(
 				loadSqlAsString("am/ik/blog/entry/EntryMapper/entryIds.sql"),
 				params.getValues(), params::addValue)

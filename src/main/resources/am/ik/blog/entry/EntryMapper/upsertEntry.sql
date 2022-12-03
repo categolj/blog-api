@@ -1,7 +1,9 @@
-INSERT INTO entry (entry_id, title, content, categories, tags, keywords, created_by, created_date,
+INSERT INTO entry (entry_id, tenant_id,title, content, categories, tags, keywords, created_by, created_date,
                    last_modified_by,
                    last_modified_date)
 VALUES (/*[# mb:p="entryId"]*/ 999 /*[/]*/,
+           /*[# th:if="${tenantId}"]*//*[# mb:p="tenantId"]*/ '_'/*[/]*//*[/]*/
+           /*[# th:unless="${tenantId}"][# th:utext="| '_'|"][/][/]*/,
            /*[# mb:p="title"]*/ 'Hello World!' /*[/]*/,
            /*[# mb:p="content"]*/ 'This is a test post.' /*[/]*/,
            STRING_TO_ARRAY(/*[# mb:p="categories"]*/ 'Java,Framework,Spring' /*[/]*/, ','),
@@ -12,6 +14,7 @@ VALUES (/*[# mb:p="entryId"]*/ 999 /*[/]*/,
            /*[# mb:p="lastModifiedBy"]*/'Toshiaki Maki' /*[/]*/,
            /*[# mb:p="lastModifiedDate"]*/'2017-03-31 00:00:00' /*[/]*/)
 ON CONFLICT ON CONSTRAINT entry_pkey DO UPDATE SET title              = /*[# mb:p="title"]*/ 'Hello World!' /*[/]*/,
+                                                   tenant_id          = /*[# th:if="${tenantId}"]*//*[# mb:p="tenantId"]*/ '_'/*[/]*//*[/]*//*[# th:unless="${tenantId}"][# th:utext="| '_'|"][/][/]*/,
                                                    content            = /*[# mb:p="content"]*/ 'This is a test post.' /*[/]*/,
                                                    categories         = STRING_TO_ARRAY(/*[# mb:p="categories"]*/ 'Java,Framework,Spring' /*[/]*/, ','),
                                                    tags               = STRING_TO_ARRAY(/*[# mb:p="tags"]*/ 'Java,Programming' /*[/]*/, ','),

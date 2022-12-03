@@ -1,5 +1,7 @@
 package am.ik.blog.github;
 
+import java.util.Map;
+
 import am.ik.yavi.builder.ValidatorBuilder;
 import am.ik.yavi.core.BiValidator;
 
@@ -20,6 +22,8 @@ public class GitHubProps implements org.springframework.validation.Validator {
 	private String contentOwner;
 
 	private String contentRepo;
+
+	private Map<String, GitHubProps> tenants = Map.of();
 
 	private final BiValidator<GitHubProps, Errors> validator = ValidatorBuilder
 			.<GitHubProps> of()
@@ -63,6 +67,14 @@ public class GitHubProps implements org.springframework.validation.Validator {
 
 	public void setContentRepo(String contentRepo) {
 		this.contentRepo = contentRepo;
+	}
+
+	public Map<String, GitHubProps> getTenants() {
+		return tenants;
+	}
+
+	public void setTenants(Map<String, GitHubProps> tenants) {
+		this.tenants = tenants;
 	}
 
 	@Override

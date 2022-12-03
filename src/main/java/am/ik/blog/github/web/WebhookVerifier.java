@@ -17,12 +17,16 @@ public class WebhookVerifier {
 
 	private static final String HMAC_SHA1 = "HmacSHA1";
 
-	public WebhookVerifier(String secret)
-			throws InvalidKeyException, NoSuchAlgorithmException {
-		// initialize HMAC with SHA1 algorithm and secret
-		SecretKeySpec signingKey = new SecretKeySpec(secret.getBytes(), HMAC_SHA1);
-		this.hmac = Mac.getInstance(HMAC_SHA1);
-		this.hmac.init(signingKey);
+	public WebhookVerifier(String secret) {
+		try {
+			// initialize HMAC with SHA1 algorithm and secret
+			SecretKeySpec signingKey = new SecretKeySpec(secret.getBytes(), HMAC_SHA1);
+			this.hmac = Mac.getInstance(HMAC_SHA1);
+			this.hmac.init(signingKey);
+		}
+		catch (NoSuchAlgorithmException | InvalidKeyException e) {
+			throw new IllegalArgumentException(e);
+		}
 	}
 
 	public void verify(String payload, String signature) {
