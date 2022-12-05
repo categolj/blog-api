@@ -9,7 +9,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class SanitizingFunctionImpl implements SanitizingFunction {
 
-	private final Set<String> keywords = Set.of("pass", "token", "secret", "key");
+	private final Set<String> keywords = Set.of("pass", "token", "secret", "key", "noop");
 
 	@Override
 	public SanitizableData apply(SanitizableData data) {
