@@ -50,7 +50,14 @@ public class WebhookController {
 		this.objectMapper = objectMapper;
 	}
 
-	@PostMapping(path = { "webhook", "tenants/{tenantId}/webhook" })
+	@PostMapping(path = "webhook")
+	public List<Map<String, Long>> webhook(
+			@RequestHeader(name = "X-Hub-Signature") String signature,
+			@RequestBody String payload) {
+		return this.webhook(signature, payload, null);
+	}
+
+	@PostMapping(path = "tenants/{tenantId}/webhook")
 	public List<Map<String, Long>> webhook(
 			@RequestHeader(name = "X-Hub-Signature") String signature,
 			@RequestBody String payload,

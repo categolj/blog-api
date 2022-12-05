@@ -62,8 +62,13 @@ public class EntryRestController {
 		this.clock = clock;
 	}
 
-	@GetMapping(path = { "/entries/{entryId:\\d+}",
-			"/tenants/{tenantId}/entries/{entryId:\\d+}" })
+	@GetMapping(path = "/entries/{entryId:\\d+}")
+	public Entry getEntry(@PathVariable("entryId") Long entryId,
+			@RequestParam(defaultValue = "false") boolean excludeContent) {
+		return this.getEntry(entryId, null, excludeContent);
+	}
+
+	@GetMapping(path = "/tenants/{tenantId}/entries/{entryId:\\d+}")
 	public Entry getEntry(@PathVariable("entryId") Long entryId,
 			@PathVariable(name = "tenantId", required = false) String tenantId,
 			@RequestParam(defaultValue = "false") boolean excludeContent) {
@@ -73,8 +78,14 @@ public class EntryRestController {
 				.format("The requested entry is not found (entryId = %d)", entryId)));
 	}
 
-	@GetMapping(path = { "/entries/{entryId:\\d+}.md",
-			"/tenants/{tenantId}/entries/{entryId:\\d+}.md" }, produces = MediaType.TEXT_MARKDOWN_VALUE)
+	@GetMapping(path = "/entries/{entryId:\\d+}.md", produces = MediaType.TEXT_MARKDOWN_VALUE)
+	public ResponseEntity<String> getEntryAsMarkdown(
+			@PathVariable("entryId") Long entryId,
+			@RequestParam(defaultValue = "false") boolean excludeContent) {
+		return this.getEntryAsMarkdown(entryId, null, excludeContent);
+	}
+
+	@GetMapping(path = "/tenants/{tenantId}/entries/{entryId:\\d+}.md", produces = MediaType.TEXT_MARKDOWN_VALUE)
 	public ResponseEntity<String> getEntryAsMarkdown(
 			@PathVariable("entryId") Long entryId,
 			@PathVariable(name = "tenantId", required = false) String tenantId,
@@ -86,8 +97,13 @@ public class EntryRestController {
 				.body(entry.toMarkdown());
 	}
 
-	@GetMapping(path = { "/entries",
-			"/tenants/{tenantId}/entries" }, produces = MediaType.APPLICATION_JSON_VALUE)
+	@GetMapping(path = "/entries", produces = MediaType.APPLICATION_JSON_VALUE)
+	public Page<Entry> getEntries(Pageable pageable,
+			@ModelAttribute EntrySearchRequest request) {
+		return this.getEntries(null, pageable, request);
+	}
+
+	@GetMapping(path = "/tenants/{tenantId}/entries", produces = MediaType.APPLICATION_JSON_VALUE)
 	public Page<Entry> getEntries(
 			@PathVariable(name = "tenantId", required = false) String tenantId,
 			Pageable pageable, @ModelAttribute EntrySearchRequest request) {
@@ -95,8 +111,13 @@ public class EntryRestController {
 		return this.entryService.findPage(searchCriteria, tenantId, pageable);
 	}
 
-	@DeleteMapping(path = { "/entries/{entryId:\\d+}",
-			"/tenants/{tenantId}/entries/{entryId:\\d+}" })
+	@DeleteMapping(path = "/entries/{entryId:\\d+}")
+	@Operation(security = { @SecurityRequirement(name = "basic") })
+	public ResponseEntity<Void> deleteEntry(@PathVariable("entryId") Long entryId) {
+		return this.deleteEntry(entryId, null);
+	}
+
+	@DeleteMapping(path = "/tenants/{tenantId}/entries/{entryId:\\d+}")
 	@Operation(security = { @SecurityRequirement(name = "basic") })
 	public ResponseEntity<Void> deleteEntry(@PathVariable("entryId") Long entryId,
 			@PathVariable(name = "tenantId", required = false) String tenantId) {
@@ -104,8 +125,16 @@ public class EntryRestController {
 		return ResponseEntity.noContent().build();
 	}
 
-	@PostMapping(path = { "/entries",
-			"/tenants/{tenantId}/entries" }, consumes = MediaType.TEXT_MARKDOWN_VALUE)
+	@PostMapping(path = "/entries", consumes = MediaType.TEXT_MARKDOWN_VALUE)
+	@Operation(security = { @SecurityRequirement(name = "basic") })
+	@Transactional
+	public ResponseEntity<?> postEntryFromMarkdown(@RequestBody String markdown,
+			@AuthenticationPrincipal UserDetails userDetails,
+			UriComponentsBuilder builder) {
+		return this.postEntryFromMarkdown(null, markdown, userDetails, builder);
+	}
+
+	@PostMapping(path = "/tenants/{tenantId}/entries", consumes = MediaType.TEXT_MARKDOWN_VALUE)
 	@Operation(security = { @SecurityRequirement(name = "basic") })
 	@Transactional
 	public ResponseEntity<?> postEntryFromMarkdown(
@@ -130,8 +159,16 @@ public class EntryRestController {
 						"Can't parse the markdown file"));
 	}
 
-	@PostMapping(path = { "/entries",
-			"/tenants/{tenantId}/entries" }, consumes = MediaType.APPLICATION_JSON_VALUE)
+	@PostMapping(path = "/entries", consumes = MediaType.APPLICATION_JSON_VALUE)
+	@Operation(security = { @SecurityRequirement(name = "basic") })
+	@Transactional
+	public ResponseEntity<?> postEntryFromJson(@RequestBody EntryRequest request,
+			@AuthenticationPrincipal UserDetails userDetails,
+			UriComponentsBuilder builder) {
+		return this.postEntryFromJson(request, null, userDetails, builder);
+	}
+
+	@PostMapping(path = "/tenants/{tenantId}/entries", consumes = MediaType.APPLICATION_JSON_VALUE)
 	@Operation(security = { @SecurityRequirement(name = "basic") })
 	@Transactional
 	public ResponseEntity<?> postEntryFromJson(@RequestBody EntryRequest request,
@@ -153,8 +190,17 @@ public class EntryRestController {
 		return buildEntryResponse(entry, builder, false);
 	}
 
-	@PutMapping(path = { "/entries/{entryId:\\d+}",
-			"/tenants/{tenantId}/entries/{entryId:\\d+}" }, consumes = MediaType.TEXT_MARKDOWN_VALUE)
+	@PutMapping(path = "/entries/{entryId:\\d+}", consumes = MediaType.TEXT_MARKDOWN_VALUE)
+	@Operation(security = { @SecurityRequirement(name = "basic") })
+	@Transactional
+	public ResponseEntity<?> putEntryFromMarkdown(@PathVariable("entryId") Long entryId,
+			@RequestBody String markdown,
+			@AuthenticationPrincipal UserDetails userDetails,
+			UriComponentsBuilder builder) {
+		return this.putEntryFromMarkdown(entryId, null, markdown, userDetails, builder);
+	}
+
+	@PutMapping(path = "/tenants/{tenantId}/entries/{entryId:\\d+}", consumes = MediaType.TEXT_MARKDOWN_VALUE)
 	@Operation(security = { @SecurityRequirement(name = "basic") })
 	@Transactional
 	public ResponseEntity<?> putEntryFromMarkdown(@PathVariable("entryId") Long entryId,
@@ -185,8 +231,17 @@ public class EntryRestController {
 						"Can't parse the markdown file"));
 	}
 
-	@PutMapping(path = { "/entries/{entryId:\\d+}",
-			"/tenants/{tenantId}/entries/{entryId:\\d+}" }, consumes = MediaType.APPLICATION_JSON_VALUE)
+	@PutMapping(path = "/entries/{entryId:\\d+}", consumes = MediaType.APPLICATION_JSON_VALUE)
+	@Operation(security = { @SecurityRequirement(name = "basic") })
+	@Transactional
+	public ResponseEntity<?> putEntryFromJson(@PathVariable("entryId") Long entryId,
+			@RequestBody EntryRequest request,
+			@AuthenticationPrincipal UserDetails userDetails,
+			UriComponentsBuilder builder) {
+		return this.putEntryFromJson(entryId, null, request, userDetails, builder);
+	}
+
+	@PutMapping(path = "/tenants/{tenantId}/entries/{entryId:\\d+}", consumes = MediaType.APPLICATION_JSON_VALUE)
 	@Operation(security = { @SecurityRequirement(name = "basic") })
 	@Transactional
 	public ResponseEntity<?> putEntryFromJson(@PathVariable("entryId") Long entryId,
@@ -242,8 +297,13 @@ public class EntryRestController {
 				.toMarkdown();
 	}
 
-	@GetMapping(path = { "/entries.zip",
-			"/tenants/{tenantId}/entries.zip" }, produces = "application/zip")
+	@GetMapping(path = "/entries.zip", produces = "application/zip")
+	@Operation(security = { @SecurityRequirement(name = "basic") })
+	public ResponseEntity<?> exportEntries() {
+		return this.exportEntries(null);
+	}
+
+	@GetMapping(path = "/tenants/{tenantId}/entries.zip", produces = "application/zip")
 	@Operation(security = { @SecurityRequirement(name = "basic") })
 	public ResponseEntity<?> exportEntries(
 			@PathVariable(name = "tenantId", required = false) String tenantId) {

@@ -4,7 +4,6 @@ import java.util.List;
 
 import am.ik.blog.category.Category;
 import am.ik.blog.category.CategoryMapper;
-import reactor.core.publisher.Mono;
 
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -18,7 +17,12 @@ public class CategoryRestController {
 		this.categoryMapper = categoryMapper;
 	}
 
-	@GetMapping(path = { "/categories", "/tenants/{tenantId}/categories" })
+	@GetMapping(path = "/categories")
+	public List<List<Category>> categories() {
+		return this.categories(null);
+	}
+
+	@GetMapping(path = "/tenants/{tenantId}/categories")
 	public List<List<Category>> categories(
 			@PathVariable(name = "tenantId", required = false) String tenantId) {
 		return this.categoryMapper.findAll(tenantId);

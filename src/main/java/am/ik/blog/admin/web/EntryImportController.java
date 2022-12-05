@@ -43,8 +43,16 @@ public class EntryImportController {
 		this.props = props;
 	}
 
-	@PostMapping(path = { "/admin/import",
-			"/tenants/{tenantId}/admin/import" }, produces = MediaType.APPLICATION_JSON_VALUE)
+	@PostMapping(path = "/admin/import", produces = MediaType.APPLICATION_JSON_VALUE)
+	@Transactional
+	@Operation(security = { @SecurityRequirement(name = "basic") })
+	public Optional<List<String>> importEntries(
+			@RequestParam(defaultValue = "0") int from,
+			@RequestParam(defaultValue = "0") int to) {
+		return this.importEntries(from, to, null);
+	}
+
+	@PostMapping(path = "/tenants/{tenantId}/admin/import", produces = MediaType.APPLICATION_JSON_VALUE)
 	@Transactional
 	@Operation(security = { @SecurityRequirement(name = "basic") })
 	public Optional<List<String>> importEntries(
