@@ -74,7 +74,6 @@ public class SecurityConfig {
 				.requestMatchers(PUT, "/entries/**").hasAuthority("entry:edit") //
 				.requestMatchers(DELETE, "/entries/**").hasAuthority("entry:delete") //
 				.requestMatchers(POST, "/tenants/{tenantId}/webhook").permitAll() //
-
 				.requestMatchers(GET, "/tenants/{tenantId}/entries.zip")
 				.access(exportForTenant) //
 				.requestMatchers(GET, "/tenants/{tenantId}/entries").access(listForTenant) //
