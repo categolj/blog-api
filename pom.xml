@@ -6,7 +6,7 @@
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>3.0.0</version>
+		<version>3.0.1</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>am.ik.blog</groupId>
@@ -21,7 +21,7 @@
 		<ecs-logging-java.version>1.5.0</ecs-logging-java.version>
 		<start-class>am.ik.blog.BlogApiApplication</start-class>
 		<resilience4j.version>1.7.1</resilience4j.version>
-		<spring-doc.version>2.0.0</spring-doc.version>
+		<spring-doc.version>2.0.2</spring-doc.version>
 		<mybatis-thymeleaf.version>1.0.4</mybatis-thymeleaf.version>
 		<jar-classifier></jar-classifier>
 	</properties>
