@@ -4,12 +4,16 @@ import java.util.Collection;
 import java.util.List;
 import java.util.stream.Stream;
 
+import am.ik.accesslogger.AccessLogger;
 import am.ik.blog.security.CompositeUserDetailsService;
 import am.ik.blog.security.Privilege;
 import am.ik.blog.tenant.TenantAuthorizationManager;
 import am.ik.blog.tenant.TenantUserDetailsService;
 import am.ik.blog.tenant.TenantUserProps;
 
+import org.springframework.boot.actuate.autoconfigure.web.exchanges.HttpExchangesProperties;
+import org.springframework.boot.actuate.web.exchanges.HttpExchangeRepository;
+import org.springframework.boot.actuate.web.exchanges.servlet.HttpExchangesFilter;
 import org.springframework.boot.autoconfigure.security.SecurityProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -39,17 +43,18 @@ import static org.springframework.http.HttpMethod.POST;
 import static org.springframework.http.HttpMethod.PUT;
 
 @Configuration(proxyBeanMethods = false)
-@EnableConfigurationProperties(TenantUserProps.class)
+@EnableConfigurationProperties({ TenantUserProps.class, HttpExchangesProperties.class })
 public class SecurityConfig {
-	private final UriFilter uriFilter;
 
-	public SecurityConfig(UriFilter uriFilter) {
-		this.uriFilter = uriFilter;
+	@Bean
+	public AccessLogger accessLogger() {
+		final UriFilter uriFilter = new UriFilter();
+		return new AccessLogger(httpExchange -> uriFilter.test(httpExchange.getRequest().getUri().toString()));
 	}
 
 	@Bean
 	public SecurityFilterChain securityFilterChain(HttpSecurity http,
-			CompositeUserDetailsService userDetailsService) throws Exception {
+			CompositeUserDetailsService userDetailsService, HttpExchangeRepository repository, HttpExchangesProperties properties) throws Exception {
 		final TenantAuthorizationManager listForTenant = new TenantAuthorizationManager(
 				"entry", Privilege.LIST);
 		final TenantAuthorizationManager exportForTenant = new TenantAuthorizationManager(
@@ -88,7 +93,7 @@ public class SecurityConfig {
 				.cors(Customizer.withDefaults())
 				.sessionManagement(
 						s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-				.addFilterAfter(new RequestLoggingFilter(uriFilter),
+				.addFilterAfter(new HttpExchangesFilter(repository, properties.getRecording().getInclude()),
 						SecurityContextHolderAwareRequestFilter.class)
 				.build();
 	}
