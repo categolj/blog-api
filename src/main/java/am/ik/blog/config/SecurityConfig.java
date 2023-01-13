@@ -49,7 +49,7 @@ public class SecurityConfig {
 	@Bean
 	public AccessLogger accessLogger() {
 		final UriFilter uriFilter = new UriFilter();
-		return new AccessLogger(httpExchange -> uriFilter.test(httpExchange.getRequest().getUri().toString()));
+		return new AccessLogger(httpExchange -> uriFilter.test(httpExchange.getRequest().getUri().getPath()));
 	}
 
 	@Bean
@@ -68,25 +68,25 @@ public class SecurityConfig {
 		final TenantAuthorizationManager deleteForTenant = new TenantAuthorizationManager(
 				"entry", Privilege.DELETE);
 		return http.authorizeHttpRequests(authorize -> authorize //
-				.requestMatchers("/admin/import").hasAuthority("entry:import") //
-				.requestMatchers("/entries.zip").hasAuthority("entry:export") //
-				.requestMatchers(POST, "/entries/**").hasAuthority("entry:edit") //
-				.requestMatchers(PATCH, "/entries/**").hasAuthority("entry:edit") //
-				.requestMatchers(PUT, "/entries/**").hasAuthority("entry:edit") //
-				.requestMatchers(DELETE, "/entries/**").hasAuthority("entry:delete") //
-				.requestMatchers(POST, "/tenants/{tenantId}/webhook").permitAll() //
-				.requestMatchers(GET, "/tenants/{tenantId}/entries.zip")
-				.access(exportForTenant) //
-				.requestMatchers(GET, "/tenants/{tenantId}/entries").access(listForTenant) //
-				.requestMatchers(GET, "/tenants/{tenantId}/entries/**")
-				.access(getForTenant) //
-				.requestMatchers(POST, "/tenants/{tenantId}/**").access(editForTenant) //
-				.requestMatchers(PATCH, "/tenants/{tenantId}/**").access(editForTenant) //
-				.requestMatchers(PUT, "/tenants/{tenantId}/**").access(editForTenant) //
-				.requestMatchers(DELETE, "/tenants/{tenantId}/**").access(deleteForTenant) //
-				.requestMatchers(POST, "/tenants/{tenantId}/admin/import")
-				.access(importForTenant) //
-				.anyRequest().permitAll()) //
+						.requestMatchers("/admin/import").hasAuthority("entry:import") //
+						.requestMatchers("/entries.zip").hasAuthority("entry:export") //
+						.requestMatchers(POST, "/entries/**").hasAuthority("entry:edit") //
+						.requestMatchers(PATCH, "/entries/**").hasAuthority("entry:edit") //
+						.requestMatchers(PUT, "/entries/**").hasAuthority("entry:edit") //
+						.requestMatchers(DELETE, "/entries/**").hasAuthority("entry:delete") //
+						.requestMatchers(POST, "/tenants/{tenantId}/webhook").permitAll() //
+						.requestMatchers(GET, "/tenants/{tenantId}/entries.zip")
+						.access(exportForTenant) //
+						.requestMatchers(GET, "/tenants/{tenantId}/entries").access(listForTenant) //
+						.requestMatchers(GET, "/tenants/{tenantId}/entries/**")
+						.access(getForTenant) //
+						.requestMatchers(POST, "/tenants/{tenantId}/**").access(editForTenant) //
+						.requestMatchers(PATCH, "/tenants/{tenantId}/**").access(editForTenant) //
+						.requestMatchers(PUT, "/tenants/{tenantId}/**").access(editForTenant) //
+						.requestMatchers(DELETE, "/tenants/{tenantId}/**").access(deleteForTenant) //
+						.requestMatchers(POST, "/tenants/{tenantId}/admin/import")
+						.access(importForTenant) //
+						.anyRequest().permitAll()) //
 				.httpBasic(Customizer.withDefaults())
 				.userDetailsService(userDetailsService)
 				.csrf(AbstractHttpConfigurer::disable) //
