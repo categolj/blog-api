@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
-    <include resource="org/springframework/boot/logging/logback/base.xml"/>
-    <!--<logger name="org.springframework" level="WARN"/>-->
-    <!--<logger name="am.ik.blog" level="WARN"/>-->
-    <!--<logger name="org.apache" level="WARN"/>-->
-    <!--<logger name="com.zaxxer" level="WARN"/>-->
-    <!--<logger name="com.netflix" level="WARN"/>-->
+	<statusListener class="ch.qos.logback.core.status.NopStatusListener"/>
+	<include resource="org/springframework/boot/logging/logback/base.xml"/>
+	<!--<logger name="org.springframework" level="WARN"/>-->
+	<!--<logger name="am.ik.blog" level="WARN"/>-->
+	<!--<logger name="org.apache" level="WARN"/>-->
+	<!--<logger name="com.zaxxer" level="WARN"/>-->
+	<!--<logger name="com.netflix" level="WARN"/>-->
 </configuration>
