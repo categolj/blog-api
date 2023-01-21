@@ -20,6 +20,7 @@ import org.springframework.test.web.reactive.server.WebTestClient;
 
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.testcontainers.junit.jupiter.Testcontainers;
 import reactor.core.publisher.Mono;
 
 import static org.mockito.BDDMockito.given;
@@ -28,6 +29,7 @@ import static org.mockito.BDDMockito.given;
 		"blog.github.access-token=foo", "blog.github.webhook-secret=bar",
 		"blog.github.tenants.xyz.webhook-secret=abc" })
 @TestConstructor(autowireMode = TestConstructor.AutowireMode.ALL)
+@Testcontainers(disabledWithoutDocker = true)
 public class WebhookControllerTest {
 
 	private final ObjectMapper objectMapper;
