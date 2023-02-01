@@ -16,7 +16,7 @@ import am.ik.blog.tag.Tag;
 import am.ik.yavi.core.ConstraintViolationsException;
 import org.mybatis.scripting.thymeleaf.SqlGenerator;
 
-import org.springframework.dao.EmptyResultDataAccessException;
+import org.springframework.dao.support.DataAccessUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -73,13 +73,7 @@ public class EntryMapper {
 		final String sql = this.sqlGenerator.generate(
 				loadSqlAsString("am/ik/blog/entry/EntryMapper/findOne.sql"),
 				params.getValues(), params::addValue);
-		try {
-			final Entry entry = this.jdbcTemplate.queryForObject(sql, params, rowMapper);
-			return Optional.ofNullable(entry);
-		}
-		catch (EmptyResultDataAccessException e) {
-			return Optional.empty();
-		}
+		return Optional.ofNullable(DataAccessUtils.uniqueResult(this.jdbcTemplate.query(sql, params, rowMapper)));
 	}
 
 	@Transactional(readOnly = true)
@@ -114,7 +108,7 @@ public class EntryMapper {
 				params.getValues(), params::addValue);
 		final Long count = this.jdbcTemplate.queryForObject(sql, params,
 				(rs, rowNum) -> rs.getLong("count"));
-		return Objects.<Long> requireNonNullElse(count, 0L);
+		return Objects.<Long>requireNonNullElse(count, 0L);
 	}
 
 	public long nextId(String tenantId) {
@@ -125,7 +119,7 @@ public class EntryMapper {
 				params.getValues(), params::addValue);
 		final Long nextId = this.jdbcTemplate.queryForObject(sql, Map.of(),
 				(rs, i) -> rs.getLong("next"));
-		return Objects.<Long> requireNonNullElse(nextId, 1L);
+		return Objects.<Long>requireNonNullElse(nextId, 1L);
 	}
 
 	@Transactional
@@ -178,7 +172,7 @@ public class EntryMapper {
 				loadSqlAsString("am/ik/blog/entry/EntryMapper/entryIds.sql"),
 				params.getValues(), params::addValue)
 				+ " LIMIT %d OFFSET %d".formatted(pageable.getPageSize(),
-						pageable.getOffset());
+				pageable.getOffset());
 		return this.jdbcTemplate.query(sql, params,
 				(rs, rowNum) -> rs.getLong("entry_id"));
 	}
