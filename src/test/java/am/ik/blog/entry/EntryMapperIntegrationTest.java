@@ -8,6 +8,7 @@ import java.util.Optional;
 import am.ik.blog.category.Category;
 import am.ik.blog.entry.search.SearchCriteria;
 import am.ik.blog.github.Fixtures;
+import am.ik.blog.pagination.OffsetPageRequest;
 import am.ik.blog.tag.Tag;
 import am.ik.blog.util.FileLoader;
 import org.junit.jupiter.api.BeforeEach;
@@ -17,7 +18,6 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.TestConstructor;
 import org.springframework.transaction.annotation.Transactional;
@@ -135,19 +135,19 @@ class EntryMapperIntegrationTest {
 
 		final List<Entry> search1 = this.entryMapper.findAll(
 				SearchCriteria.builder().keyword("Spring Boot").build(), tenantId,
-				PageRequest.of(0, 100));
+				new OffsetPageRequest(0, 100));
 		assertThat(search1).hasSize(1);
 		assertThat(search1.get(0).getEntryId()).isEqualTo(99993L);
 
 		final List<Entry> search2 = this.entryMapper.findAll(
 				SearchCriteria.builder().keyword("Spring Framework").build(), tenantId,
-				PageRequest.of(0, 100));
+				new OffsetPageRequest(0, 100));
 		assertThat(search2).hasSize(1);
 		assertThat(search2.get(0).getEntryId()).isEqualTo(99994L);
 
 		final List<Entry> search3 = this.entryMapper.findAll(
 				SearchCriteria.builder().keyword("Applications Platform").build(),
-				tenantId, PageRequest.of(0, 100));
+				tenantId, new OffsetPageRequest(0, 100));
 		assertThat(search3).hasSize(2);
 		assertThat(search3.get(0).getEntryId()).isEqualTo(99994L);
 		assertThat(search3.get(1).getEntryId()).isEqualTo(99993L);
@@ -186,12 +186,12 @@ class EntryMapperIntegrationTest {
 
 		final List<Entry> search1 = this.entryMapper.findAll(
 				SearchCriteria.builder().keyword("おじいさん おばあさん").build(), tenantId,
-				PageRequest.of(0, 100));
+				new OffsetPageRequest(0, 100));
 		assertThat(search1).hasSize(1);
 		assertThat(search1.get(0).getEntryId()).isEqualTo(99993L);
 		final List<Entry> search2 = this.entryMapper.findAll(
 				SearchCriteria.builder().keyword("おかあさん うば").build(), tenantId,
-				PageRequest.of(0, 100));
+				new OffsetPageRequest(0, 100));
 		assertThat(search2).hasSize(1);
 		assertThat(search2.get(0).getEntryId()).isEqualTo(99994L);
 	}

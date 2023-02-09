@@ -19,14 +19,14 @@ import am.ik.blog.entry.EntryBuilder;
 import am.ik.blog.entry.EntryService;
 import am.ik.blog.entry.FrontMatter;
 import am.ik.blog.entry.search.SearchCriteria;
+import am.ik.blog.pagination.OffsetPage;
+import am.ik.blog.pagination.OffsetPageRequest;
 import am.ik.blog.tag.Tag;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -98,17 +98,17 @@ public class EntryRestController {
 	}
 
 	@GetMapping(path = "/entries", produces = MediaType.APPLICATION_JSON_VALUE)
-	public Page<Entry> getEntries(Pageable pageable,
+	public OffsetPage<Entry> getEntries(OffsetPageRequest pageRequest,
 			@ModelAttribute EntrySearchRequest request) {
-		return this.getEntries(null, pageable, request);
+		return this.getEntries(null, pageRequest, request);
 	}
 
 	@GetMapping(path = "/tenants/{tenantId}/entries", produces = MediaType.APPLICATION_JSON_VALUE)
-	public Page<Entry> getEntries(
+	public OffsetPage<Entry> getEntries(
 			@PathVariable(name = "tenantId", required = false) String tenantId,
-			Pageable pageable, @ModelAttribute EntrySearchRequest request) {
+			OffsetPageRequest pageRequest, @ModelAttribute EntrySearchRequest request) {
 		final SearchCriteria searchCriteria = request.toCriteria();
-		return this.entryService.findPage(searchCriteria, tenantId, pageable);
+		return this.entryService.findPage(searchCriteria, tenantId, pageRequest);
 	}
 
 	@DeleteMapping(path = "/entries/{entryId:\\d+}")

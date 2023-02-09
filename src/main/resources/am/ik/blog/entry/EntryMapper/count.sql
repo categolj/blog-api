@@ -12,6 +12,11 @@ WHERE 1 = 1
 /*[# th:if="${lastModifiedBy} != null"]*/
   AND e.last_modified_by = /*[# mb:p="lastModifiedBy"]*/ 'Toshiaki Maki' /*[/]*/
 /*[/]*/
+/*[# th:if="${not #lists.isEmpty(categories)}"]*/
+/*[# th:each="category,stat : ${categories}"]*/
+  AND e.categories/*[# th:utext="${'[' + stat.count + ']'}"]*/ [1] /*[/]*/ = /*[# mb:p="categories[${stat.index}]"]*/ 'Java' /*[/]*/
+/*[/]*/
+/*[/]*/
 /*[# th:if="${tag} != null"]*/
   AND /*[# mb:p="tag"]*/ 'Java' /*[/]*/ = ANY(e.tags)
 /*[/]*/

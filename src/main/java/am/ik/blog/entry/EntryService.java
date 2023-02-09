@@ -14,14 +14,12 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 import am.ik.blog.entry.search.SearchCriteria;
-import am.ik.blog.github.GitHubUserContentClient;
+import am.ik.blog.pagination.OffsetPage;
+import am.ik.blog.pagination.OffsetPageRequest;
 import am.ik.yavi.core.ConstraintViolationsException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -39,9 +37,9 @@ public class EntryService {
 		return this.entryMapper.nextId(tenantId);
 	}
 
-	public Page<Entry> findPage(SearchCriteria criteria, String tenantId,
-			Pageable pageable) {
-		return this.entryMapper.findPage(criteria, tenantId, pageable);
+	public OffsetPage<Entry> findPage(SearchCriteria criteria, String tenantId,
+			OffsetPageRequest pageRequest) {
+		return this.entryMapper.findPage(criteria, tenantId, pageRequest);
 	}
 
 	public Optional<Entry> findOne(Long entryId, String tenantId,
@@ -57,7 +55,7 @@ public class EntryService {
 					zip, StandardOpenOption.CREATE, StandardOpenOption.WRITE))) {
 				final List<Entry> entries = this.entryMapper.findAll(
 						SearchCriteria.builder().includeContent().build(), tenantId,
-						PageRequest.of(0, 10_0000));
+						new OffsetPageRequest(0, 10_0000));
 				for (Entry entry : entries) {
 					final ZipEntry zipEntry = new ZipEntry(
 							"content/%s.md".formatted(entry.formatId()));
@@ -105,8 +103,8 @@ public class EntryService {
 	}
 
 	public List<Entry> findAll(SearchCriteria criteria, String tenantId,
-			Pageable pageable) {
-		return this.entryMapper.findAll(criteria, tenantId, pageable);
+			OffsetPageRequest pageRequest) {
+		return this.entryMapper.findAll(criteria, tenantId, pageRequest);
 	}
 
 	@Transactional

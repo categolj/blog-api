@@ -8,11 +8,13 @@ import java.util.function.Consumer;
 
 import am.ik.blog.MockConfig;
 import am.ik.blog.config.SecurityConfig;
+import am.ik.blog.config.WebConfig;
 import am.ik.blog.entry.Author;
 import am.ik.blog.entry.Entry;
 import am.ik.blog.entry.EntryBuilder;
 import am.ik.blog.entry.EntryMapper;
 import am.ik.blog.entry.FrontMatterBuilder;
+import am.ik.blog.pagination.OffsetPage;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
@@ -22,7 +24,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.reactive.server.WebTestClient;
@@ -33,7 +34,7 @@ import static org.mockito.BDDMockito.given;
 @WebMvcTest(properties = {
 		"blog.tenant.users[0]=user|{noop}password|demo=GET,LIST|xyz=GET",
 		"blog.tenant.users[1]=foo|{noop}bar|demo=GET,LIST,EDIT,DELETE" })
-@Import({ SecurityConfig.class, MockConfig.class })
+@Import({ SecurityConfig.class, WebConfig.class, MockConfig.class })
 class EntryRestControllerTest {
 	@Autowired
 	WebTestClient webTestClient;
@@ -88,8 +89,8 @@ class EntryRestControllerTest {
 	@ParameterizedTest
 	@CsvSource({ ",,", "demo,user,password", "demo,foo,bar", "demo,admin,changeme" })
 	void getEntries_200(String tenantId, String username, String password) {
-		given(this.entryMapper.findPage(any(), any(), any()))
-				.willReturn(new PageImpl<>(List.of(this.entry100, this.entry200)));
+		given(this.entryMapper.findPage(any(), any(), any())).willReturn(
+				new OffsetPage<>(List.of(this.entry100, this.entry200), 2, 0, 2));
 		this.webTestClient.get()
 				.uri((tenantId == null ? "" : "/tenants/" + tenantId) + "/entries")
 				.headers(configureAuth(tenantId, username, password)).exchange()

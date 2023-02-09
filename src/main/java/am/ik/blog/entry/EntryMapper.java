@@ -12,14 +12,13 @@ import java.util.Optional;
 import am.ik.blog.category.Category;
 import am.ik.blog.entry.keyword.KeywordExtractor;
 import am.ik.blog.entry.search.SearchCriteria;
+import am.ik.blog.pagination.OffsetPage;
+import am.ik.blog.pagination.OffsetPageRequest;
 import am.ik.blog.tag.Tag;
 import am.ik.yavi.core.ConstraintViolationsException;
 import org.mybatis.scripting.thymeleaf.SqlGenerator;
 
 import org.springframework.dao.support.DataAccessUtils;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.Pageable;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
@@ -73,13 +72,14 @@ public class EntryMapper {
 		final String sql = this.sqlGenerator.generate(
 				loadSqlAsString("am/ik/blog/entry/EntryMapper/findOne.sql"),
 				params.getValues(), params::addValue);
-		return Optional.ofNullable(DataAccessUtils.uniqueResult(this.jdbcTemplate.query(sql, params, rowMapper)));
+		return Optional.ofNullable(DataAccessUtils
+				.uniqueResult(this.jdbcTemplate.query(sql, params, rowMapper)));
 	}
 
 	@Transactional(readOnly = true)
 	public List<Entry> findAll(SearchCriteria searchCriteria, String tenantId,
-			Pageable pageable) {
-		final List<Long> ids = this.entryIds(searchCriteria, tenantId, pageable);
+			OffsetPageRequest pageRequest) {
+		final List<Long> ids = this.entryIds(searchCriteria, tenantId, pageRequest);
 		if (ids.isEmpty()) {
 			return List.of();
 		}
@@ -93,11 +93,12 @@ public class EntryMapper {
 	}
 
 	@Transactional(readOnly = true)
-	public Page<Entry> findPage(SearchCriteria searchCriteria, String tenantId,
-			Pageable pageable) {
-		final List<Entry> content = this.findAll(searchCriteria, tenantId, pageable);
+	public OffsetPage<Entry> findPage(SearchCriteria searchCriteria, String tenantId,
+			OffsetPageRequest pageRequest) {
+		final List<Entry> content = this.findAll(searchCriteria, tenantId, pageRequest);
 		final long total = this.count(searchCriteria, tenantId);
-		return new PageImpl<>(content, pageable, total);
+		return new OffsetPage<>(content, pageRequest.pageSize(), pageRequest.pageNumber(),
+				total);
 	}
 
 	public long count(SearchCriteria searchCriteria, String tenantId) {
@@ -108,7 +109,7 @@ public class EntryMapper {
 				params.getValues(), params::addValue);
 		final Long count = this.jdbcTemplate.queryForObject(sql, params,
 				(rs, rowNum) -> rs.getLong("count"));
-		return Objects.<Long>requireNonNullElse(count, 0L);
+		return Objects.<Long> requireNonNullElse(count, 0L);
 	}
 
 	public long nextId(String tenantId) {
@@ -119,7 +120,7 @@ public class EntryMapper {
 				params.getValues(), params::addValue);
 		final Long nextId = this.jdbcTemplate.queryForObject(sql, Map.of(),
 				(rs, i) -> rs.getLong("next"));
-		return Objects.<Long>requireNonNullElse(nextId, 1L);
+		return Objects.<Long> requireNonNullElse(nextId, 1L);
 	}
 
 	@Transactional
@@ -165,14 +166,14 @@ public class EntryMapper {
 	}
 
 	private List<Long> entryIds(SearchCriteria searchCriteria, String tenantId,
-			Pageable pageable) {
+			OffsetPageRequest pageRequest) {
 		final MapSqlParameterSource params = searchCriteria
 				.toParameterSource(this.keywordExtractor).addValue("tenantId", tenantId);
 		final String sql = this.sqlGenerator.generate(
 				loadSqlAsString("am/ik/blog/entry/EntryMapper/entryIds.sql"),
 				params.getValues(), params::addValue)
-				+ " LIMIT %d OFFSET %d".formatted(pageable.getPageSize(),
-				pageable.getOffset());
+				+ " LIMIT %d OFFSET %d".formatted(pageRequest.pageSize(),
+						pageRequest.offset());
 		return this.jdbcTemplate.query(sql, params,
 				(rs, rowNum) -> rs.getLong("entry_id"));
 	}
