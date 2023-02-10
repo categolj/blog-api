@@ -2,7 +2,7 @@ package am.ik.blog.config;
 
 import java.util.List;
 
-import am.ik.blog.pagination.web.OffsetPageRequestHandlerMethodArgumentResolver;
+import am.ik.pagination.web.OffsetPageRequestHandlerMethodArgumentResolver;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

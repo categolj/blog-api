@@ -14,7 +14,7 @@ import am.ik.blog.entry.Entry;
 import am.ik.blog.entry.EntryBuilder;
 import am.ik.blog.entry.EntryMapper;
 import am.ik.blog.entry.FrontMatterBuilder;
-import am.ik.blog.pagination.OffsetPage;
+import am.ik.pagination.OffsetPage;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;

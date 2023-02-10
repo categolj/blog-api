@@ -12,9 +12,9 @@ import java.util.Optional;
 import am.ik.blog.category.Category;
 import am.ik.blog.entry.keyword.KeywordExtractor;
 import am.ik.blog.entry.search.SearchCriteria;
-import am.ik.blog.pagination.OffsetPage;
-import am.ik.blog.pagination.OffsetPageRequest;
 import am.ik.blog.tag.Tag;
+import am.ik.pagination.OffsetPage;
+import am.ik.pagination.OffsetPageRequest;
 import am.ik.yavi.core.ConstraintViolationsException;
 import org.mybatis.scripting.thymeleaf.SqlGenerator;
 

@@ -14,8 +14,8 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 import am.ik.blog.entry.search.SearchCriteria;
-import am.ik.blog.pagination.OffsetPage;
-import am.ik.blog.pagination.OffsetPageRequest;
+import am.ik.pagination.OffsetPage;
+import am.ik.pagination.OffsetPageRequest;
 import am.ik.yavi.core.ConstraintViolationsException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
