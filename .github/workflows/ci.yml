@@ -43,7 +43,7 @@ jobs:
         set -e
         ./mvnw -Pnative clean native:compile -DskipTests
     - name: mvn deploy
-      # if: github.ref == 'refs/heads/deprecated'
+      if: github.ref == 'refs/heads/deprecated'
       env:
         SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
         SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
