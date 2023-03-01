@@ -2,15 +2,20 @@ package am.ik.blog.config;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Stream;
 
 import am.ik.accesslogger.AccessLogger;
+import am.ik.blog.config.SecurityConfig.RuntimeHints;
 import am.ik.blog.security.CompositeUserDetailsService;
 import am.ik.blog.security.Privilege;
 import am.ik.blog.tenant.TenantAuthorizationManager;
+import am.ik.blog.tenant.TenantUserDetails;
 import am.ik.blog.tenant.TenantUserDetailsService;
 import am.ik.blog.tenant.TenantUserProps;
 
+import org.springframework.aot.hint.ExecutableMode;
+import org.springframework.aot.hint.RuntimeHintsRegistrar;
 import org.springframework.boot.actuate.autoconfigure.web.exchanges.HttpExchangesProperties;
 import org.springframework.boot.actuate.web.exchanges.HttpExchangeRepository;
 import org.springframework.boot.actuate.web.exchanges.servlet.HttpExchangesFilter;
@@ -18,6 +23,7 @@ import org.springframework.boot.autoconfigure.security.SecurityProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.ImportRuntimeHints;
 import org.springframework.context.annotation.Primary;
 import org.springframework.core.annotation.Order;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -35,6 +41,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestFilter;
+import org.springframework.util.ReflectionUtils;
 
 import static org.springframework.http.HttpMethod.DELETE;
 import static org.springframework.http.HttpMethod.GET;
@@ -44,6 +51,7 @@ import static org.springframework.http.HttpMethod.PUT;
 
 @Configuration(proxyBeanMethods = false)
 @EnableConfigurationProperties({ TenantUserProps.class, HttpExchangesProperties.class })
+@ImportRuntimeHints(RuntimeHints.class)
 public class SecurityConfig {
 
 	@Bean
@@ -93,7 +101,9 @@ public class SecurityConfig {
 				.cors(Customizer.withDefaults())
 				.sessionManagement(
 						s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-				.addFilterAfter(new HttpExchangesFilter(repository, properties.getRecording().getInclude()),
+				.addFilterAfter(
+						new HttpExchangesFilter(repository,
+								properties.getRecording().getInclude()),
 						SecurityContextHolderAwareRequestFilter.class)
 				.build();
 	}
@@ -138,5 +148,17 @@ public class SecurityConfig {
 	@Order(2)
 	public TenantUserDetailsService tenantUserDetailsService(TenantUserProps props) {
 		return new TenantUserDetailsService(props);
+	}
+
+	public static class RuntimeHints implements RuntimeHintsRegistrar {
+
+		@Override
+		public void registerHints(org.springframework.aot.hint.RuntimeHints hints,
+				ClassLoader classLoader) {
+			hints.reflection().registerMethod(
+					Objects.requireNonNull(ReflectionUtils.findMethod(
+							TenantUserDetails.class, "valueOf", String.class)),
+					ExecutableMode.INVOKE);
+		}
 	}
 }

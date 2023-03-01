@@ -8,7 +8,11 @@ import org.mybatis.scripting.thymeleaf.SqlGenerator;
 import org.mybatis.scripting.thymeleaf.SqlGeneratorConfig;
 import org.mybatis.scripting.thymeleaf.expression.Likes;
 import org.thymeleaf.expression.Lists;
+import org.thymeleaf.expression.Numbers;
 import org.thymeleaf.expression.Strings;
+import org.thymeleaf.standard.expression.AdditionExpression;
+import org.thymeleaf.standard.expression.IStandardExpression;
+import org.thymeleaf.standard.expression.NotEqualsExpression;
 
 import org.springframework.aot.hint.ExecutableMode;
 import org.springframework.aot.hint.RuntimeHintsRegistrar;
@@ -34,18 +38,33 @@ public class MyBatisThymeleafConfig {
 		@Override
 		public void registerHints(org.springframework.aot.hint.RuntimeHints hints,
 				ClassLoader classLoader) {
-			hints.reflection()
-					.registerMethod(Objects.requireNonNull(ReflectionUtils
-							.findMethod(Lists.class, "isEmpty", List.class)),
-							ExecutableMode.INVOKE)
-					.registerMethod(
-							Objects.requireNonNull(ReflectionUtils.findMethod(
-									Strings.class, "toLowerCase", Object.class)),
-							ExecutableMode.INVOKE)
-					.registerMethod(
-							Objects.requireNonNull(ReflectionUtils.findMethod(Likes.class,
-									"escapeWildcard", String.class)),
-							ExecutableMode.INVOKE);
+			try {
+				hints.reflection()
+						.registerMethod(
+								Objects.requireNonNull(ReflectionUtils
+										.findMethod(Lists.class, "isEmpty", List.class)),
+								ExecutableMode.INVOKE)
+						.registerMethod(
+								Objects.requireNonNull(ReflectionUtils.findMethod(
+										Strings.class, "toLowerCase", Object.class)),
+								ExecutableMode.INVOKE)
+						.registerMethod(
+								Objects.requireNonNull(ReflectionUtils.findMethod(
+										Likes.class, "escapeWildcard", String.class)),
+								ExecutableMode.INVOKE)
+						.registerMethod(Objects.requireNonNull(ReflectionUtils.findMethod(
+								Numbers.class, "sequence", Integer.class, Integer.class)),
+								ExecutableMode.INVOKE)
+						.registerConstructor(NotEqualsExpression.class.getConstructor(
+								IStandardExpression.class, IStandardExpression.class),
+								ExecutableMode.INVOKE)
+						.registerConstructor(AdditionExpression.class.getConstructor(
+								IStandardExpression.class, IStandardExpression.class),
+								ExecutableMode.INVOKE);
+			}
+			catch (NoSuchMethodException e) {
+				throw new RuntimeException(e);
+			}
 			hints.resources().registerPattern("am/ik/blog/*");
 		}
 	}
