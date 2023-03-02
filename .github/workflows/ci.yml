@@ -41,7 +41,7 @@ jobs:
         _JAVA_OPTIONS: -Djava.net.preferIPv4Stack=true
       run: |
         set -e
-        ./mvnw -Pnative clean spring-boot:build-image -DskipTests -Dspring-boot.build-image.imageName=ghcr.io/categolj/blog-api
+        ./mvnw -V -Pnative clean spring-boot:build-image -DskipTests -Dspring-boot.build-image.imageName=ghcr.io/categolj/blog-api:native
     - name: docker push
       env:
         DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
@@ -53,7 +53,9 @@ jobs:
         cat <<EOF > ~/.docker/config.json
         {"auths":{"${DOCKER_REGISTRY}":{"username":"${DOCKER_USERNAME}","password":"${DOCKER_PASSWORD}"}}}
         EOF
-        docker push ghcr.io/categolj/blog-api
+        docker push ghcr.io/categolj/blog-api:native
+        docker tag ghcr.io/categolj/blog-api:native ghcr.io/categolj/blog-api:latest
+        docker push ghcr.io/categolj/blog-api:latest
     - name: mvn deploy
       if: github.ref == 'refs/heads/deprecated'
       env:
