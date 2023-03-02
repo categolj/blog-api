@@ -7,6 +7,7 @@ import am.ik.blog.config.MyBatisThymeleafConfig.RuntimeHints;
 import org.mybatis.scripting.thymeleaf.SqlGenerator;
 import org.mybatis.scripting.thymeleaf.SqlGeneratorConfig;
 import org.mybatis.scripting.thymeleaf.expression.Likes;
+import org.thymeleaf.engine.IterationStatusVar;
 import org.thymeleaf.expression.Lists;
 import org.thymeleaf.expression.Numbers;
 import org.thymeleaf.expression.Strings;
@@ -60,7 +61,16 @@ public class MyBatisThymeleafConfig {
 								ExecutableMode.INVOKE)
 						.registerConstructor(AdditionExpression.class.getConstructor(
 								IStandardExpression.class, IStandardExpression.class),
+								ExecutableMode.INVOKE)
+						.registerMethod(
+								Objects.requireNonNull(ReflectionUtils.findMethod(
+										IterationStatusVar.class, "getIndex")),
+								ExecutableMode.INVOKE)
+						.registerMethod(
+								Objects.requireNonNull(ReflectionUtils.findMethod(
+										IterationStatusVar.class, "getCount")),
 								ExecutableMode.INVOKE);
+				;
 			}
 			catch (NoSuchMethodException e) {
 				throw new RuntimeException(e);
