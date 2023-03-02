@@ -1,0 +1,37 @@
+[build]
+image = "ghcr.io/categolj/blog-api:native"
+
+[[services]]
+internal_port = 8080
+protocol = "tcp"
+
+[services.concurrency]
+hard_limit = 25
+soft_limit = 20
+
+[[services.ports]]
+handlers = ["http"]
+port = "80"
+
+[[services.ports]]
+handlers = ["tls", "http"]
+port = "443"
+
+[[services.http_checks]]
+port = 8080
+interval = 10000
+grace_period = "5s"
+method = "get"
+path = "/actuator/health/readiness"
+protocol = "http"
+timeout = 2000
+
+
+[metrics]
+port = 8080
+path = "/actuator/prometheus"
+
+[env]
+JAVA_TOOL_OPTIONS = "-Dfile.encoding=UTF-8"
+"spring.application.name" = "${FLY_APP_NAME}"
+"logging.level.io.opentelemetry.exporter.zipkin.ZipkinSpanExporter" = "ERROR"
