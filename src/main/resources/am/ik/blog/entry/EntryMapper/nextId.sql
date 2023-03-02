@@ -1,5 +1,5 @@
 SELECT MAX(entry_id) + 1 AS next
-FROM entry
+FROM entry AS e
 WHERE 1 = 1
 /*[# th:if="${tenantId}"]*/
   AND e.tenant_id = /*[# mb:p="tenantId"]*/ '_'
