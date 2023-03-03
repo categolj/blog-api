@@ -32,6 +32,5 @@ port = 8080
 path = "/actuator/prometheus"
 
 [env]
-JAVA_TOOL_OPTIONS = "-Dfile.encoding=UTF-8"
 "spring.application.name" = "${FLY_APP_NAME}"
 "logging.level.io.opentelemetry.exporter.zipkin.ZipkinSpanExporter" = "ERROR"
