@@ -1,0 +1,24 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: blog-api
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt"
+  labels:
+    app.kubernetes.io/part-of: blog-api
+spec:
+  tls:
+  - secretName: blog-api-tls
+    hosts:
+    - blog-api.example.com
+  rules:
+  - host: blog-api.example.com
+    http:
+      paths:
+      - pathType: Prefix
+        path: /
+        backend:
+          service:
+            name: blog-api
+            port:
+              number: 8080

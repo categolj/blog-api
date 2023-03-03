@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: blog-api
+  labels:
+    app.kubernetes.io/part-of: blog-api
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/part-of: blog-api
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/part-of: blog-api
+    spec:
+      containers:
+      - name: workload
+        image: ghcr.io/categolj/blog-api:native
+        env:
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              key: DATABASE_URL
+              name: blog-db
+        - name: logging.level.io.opentelemetry.exporter.zipkin.ZipkinSpanExporter
+          value: ERROR
+        ports:
+        - containerPort: 8080
+          protocol: TCP
+        securityContext:
+          runAsUser: 1000
+        livenessProbe:
+          httpGet:
+            path: /livez
+            port: 8080
+            scheme: HTTP
+        readinessProbe:
+          httpGet:
+            path: /readyz
+            port: 8080
+            scheme: HTTP
