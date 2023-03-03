@@ -106,7 +106,7 @@ Go to http://localhost:8080/swagger-ui/index.html for the Swagger UI
 
 TBD
 
-### How to deploy blog-api
+## How to deploy blog-api
 
 * [Kubernetes](./deploy/k8s)
 * [Tanzu Application Platform](./deploy/tap)
