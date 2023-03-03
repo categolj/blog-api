@@ -4,6 +4,8 @@ metadata:
   labels:
     app.kubernetes.io/part-of: blog-api
     apps.tanzu.vmware.com/workload-type: web
+    apps.tanzu.vmware.com/auto-configure-actuators: "false"
+    apis.apps.tanzu.vmware.com/register-api: "true"
   name: blog-api
 spec:
   image: ghcr.io/categolj/blog-api:native
@@ -15,3 +17,17 @@ spec:
         name: blog-db
   - name: logging.level.io.opentelemetry.exporter.zipkin.ZipkinSpanExporter
     value: ERROR
+  params:
+  - name: annotations
+    value:
+      prometheus.io/path: /actuator/prometheus
+      prometheus.io/port: "8080"
+      prometheus.io/scrape: "true"
+  - name: api_descriptor
+    value:
+      description: Blog Entry API
+      location:
+        path: /v3/api-docs
+      owner: making
+      type: openapi
+      system: blog
