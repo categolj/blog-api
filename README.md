@@ -105,7 +105,7 @@ Go to http://localhost:8080/swagger-ui/index.html for the Swagger UI
 ### Use an existing PostgreSQL instance
 
 Set `DATABASE_URL` according to your environment as follows.
-If you don't have an accessible PostgreSQL instance, please refer to [this documentation](../postgresql).
+If you don't have an accessible PostgreSQL instance, please refer to [this documentation](./deploy/postgresql).
 
 ```
 export DATABASE_URL=postgres://username:password@postgres.example.com/blog
