@@ -52,6 +52,7 @@ flyctl postgres attach -a ${BLOG_NAME}-api ${BLOG_NAME}-db
 ```
 
 ```
+wget https://github.com/categolj/blog-api/raw/main/deploy/fly/fly.toml
 flyctl deploy -a ${BLOG_NAME}-api
 ```
 
