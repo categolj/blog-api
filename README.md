@@ -102,11 +102,40 @@ Go to http://localhost:8080/swagger-ui/index.html for the Swagger UI
 
 (`/swagger-ui/4.15.5/index.html` for native image)
 
+### Use an existing PostgreSQL instance
+
+Set `DATABASE_URL` according to your environment as follows.
+If you don't have an accessible PostgreSQL instance, please refer to [this documentation](../postgresql).
+
+```
+export DATABASE_URL=postgres://username:password@postgres.example.com/blog
+java -jar target/blog-api-5.0.0-SNAPSHOT.jar
+```
+
+
+### How to build a docker image
+
+#### JVM
+
+```
+./mvnw -V spring-boot:build-image -DskipTests -Dspring-boot.build-image.imageName=IMAGE_NAME
+```
+
+You can use `ghcr.io/categolj/blog-api:jvm` as a pre-built image
+
+#### Native
+
+```
+./mvnw -V -Pnative spring-boot:build-image -DskipTests -Dspring-boot.build-image.imageName=IMAGE_NAME
+```
+
+You can use `ghcr.io/categolj/blog-api:native` as a pre-built image
+
 ### GitHub integration
 
 TBD
 
-## How to deploy blog-api
+## How to deploy blog-api to XXXX
 
 * [Kubernetes](./deploy/k8s)
 * [Tanzu Application Platform](./deploy/tap)
