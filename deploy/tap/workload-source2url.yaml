@@ -1,0 +1,27 @@
+apiVersion: carto.run/v1alpha1
+kind: Workload
+metadata:
+  labels:
+    app.kubernetes.io/part-of: blog-api
+    apps.tanzu.vmware.com/workload-type: web
+  name: blog-api
+spec:
+  source:
+    git:
+      url: https://github.com/categolj/blog-api
+      ref:
+        branch: main
+  build:
+    env:
+    - name: BP_JVM_VERSION
+      value: "17"
+    - name: BP_JATTACH_ENABLED
+      value: "true"
+  env:
+  - name: DATABASE_URL
+    valueFrom:
+      secretKeyRef:
+        key: DATABASE_URL
+        name: blog-db
+  - name: logging.level.io.opentelemetry.exporter.zipkin.ZipkinSpanExporter
+    value: ERROR

@@ -14,23 +14,34 @@ In multi cluster mode, this secret should be created in "Run" clusters.
 ### Image to URL (native)
 
 ```
-tanzu apps workload apply -f workload-native.yaml -n ${NAMESPACE} 
+tanzu apps workload apply -f https://github.com/categolj/blog-api/raw/main/deploy/tap/workload-native.yaml -n ${NAMESPACE}
 ```
 
 or 
 
 ```
-kubectl apply -f workload-native.yaml -n ${NAMESPACE} 
+kubectl apply -f https://github.com/categolj/blog-api/raw/main/deploy/tap/workload-native.yaml -n ${NAMESPACE}
 ```
 
 ### Image to URL (JVM)
 
 ```
-tanzu apps workload apply -f workload-jvm.yaml -n ${NAMESPACE} 
+tanzu apps workload apply -f https://github.com/categolj/blog-api/raw/main/deploy/tap/workload-jvm.yaml -n ${NAMESPACE}
 ```
 
 or
 
 ```
-kubectl apply -f workload-jvm.yaml -n ${NAMESPACE} 
+kubectl apply -f https://github.com/categolj/blog-api/raw/main/deploy/tap/workload-jvm.yaml -n ${NAMESPACE}
+```
+
+### Source to URL (JVM)
+
+```
+tanzu apps workload apply -f https://github.com/categolj/blog-api/raw/main/deploy/tap/workload-source2url.yaml -n ${NAMESPACE}
+```
+or
+
+```
+kubectl apply -f https://github.com/categolj/blog-api/raw/main/deploy/tap/workload-source2url.yaml -n ${NAMESPACE}
 ```
