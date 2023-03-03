@@ -106,13 +106,12 @@ Go to http://localhost:8080/swagger-ui/index.html for the Swagger UI
 
 TBD
 
-### Run on Kubernetes
+### How to deploy blog-api
 
-TBD
-
-### Run on Tanzu Application Platform
-
-TBD
+* [Kubernetes](./deploy/k8s)
+* [Tanzu Application Platform](./deploy/tap)
+* [Fly.io](./deploy/fly)
+* [IBM Cloud Code Engine](./deploy/codeengine)
 
 ## License
 

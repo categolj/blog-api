@@ -3,6 +3,9 @@
 
 ### Create a secret for PostgreSQL
 
+Set `DATABASE_URL` according to your environment as follows.
+If you don't have an accessible PostgreSQL instance, please refer to [this documentation](../postgresql).
+
 ```
 export NAMESPACE=...
 
