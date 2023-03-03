@@ -36,13 +36,16 @@ jobs:
       run: |
         set -e
         ./mvnw -V test
-    - name: native image
-      env:
-        _JAVA_OPTIONS: -Djava.net.preferIPv4Stack=true
+    - name: build image (JVM)
+      run: |
+        set -e
+        ./mvnw -V spring-boot:build-image -DskipTests -Dspring-boot.build-image.imageName=ghcr.io/categolj/blog-api:jvm
+    - name: build image (Native)
       run: |
         set -e
         ./mvnw -V -Pnative clean spring-boot:build-image -DskipTests -Dspring-boot.build-image.imageName=ghcr.io/categolj/blog-api:native
     - name: docker push
+      if: github.ref == 'refs/heads/main'
       env:
         DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
         DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
@@ -54,6 +57,7 @@ jobs:
         {"auths":{"${DOCKER_REGISTRY}":{"username":"${DOCKER_USERNAME}","password":"${DOCKER_PASSWORD}"}}}
         EOF
         docker push ghcr.io/categolj/blog-api:native
+        docker push ghcr.io/categolj/blog-api:jvm
         docker tag ghcr.io/categolj/blog-api:native ghcr.io/categolj/blog-api:latest
         docker push ghcr.io/categolj/blog-api:latest
     - name: mvn deploy
