@@ -1,0 +1,17 @@
+apiVersion: carto.run/v1alpha1
+kind: Workload
+metadata:
+  labels:
+    app.kubernetes.io/part-of: blog-api
+    apps.tanzu.vmware.com/workload-type: web
+  name: blog-api
+spec:
+  image: ghcr.io/categolj/blog-api:native
+  env:
+  - name: DATABASE_URL
+    valueFrom:
+      secretKeyRef:
+        key: DATABASE_URL
+        name: blog-db
+  - name: logging.level.io.opentelemetry.exporter.zipkin.ZipkinSpanExporter
+    value: ERROR
