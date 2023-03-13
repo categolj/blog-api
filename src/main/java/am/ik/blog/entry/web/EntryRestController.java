@@ -6,6 +6,7 @@ import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Clock;
+import java.time.Duration;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.util.List;
@@ -31,7 +32,9 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.springframework.http.CacheControl;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -46,6 +49,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.context.request.NativeWebRequest;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.util.UriComponentsBuilder;
 
@@ -66,9 +70,20 @@ public class EntryRestController {
 	}
 
 	@GetMapping(path = "/entries/{entryId:\\d+}")
-	public Entry getEntry(@PathVariable("entryId") Long entryId,
-			@RequestParam(defaultValue = "false") boolean excludeContent) {
-		return this.getEntry(entryId, null, excludeContent);
+	public ResponseEntity<Entry> getEntry(@PathVariable("entryId") Long entryId,
+			@RequestParam(defaultValue = "false") boolean excludeContent,
+			NativeWebRequest webRequest) {
+		final Entry entry = this.getEntry(entryId, null, excludeContent);
+		final long lastModifiedTimestamp = entry.getUpdated().getDate().toInstant()
+				.toEpochMilli();
+		if (webRequest.checkNotModified(lastModifiedTimestamp)) {
+			return ResponseEntity.status(HttpStatus.NOT_MODIFIED)
+					.cacheControl(CacheControl.maxAge(Duration.ofHours(1)).immutable())
+					.build();
+		}
+		return ResponseEntity.ok()
+				.cacheControl(CacheControl.maxAge(Duration.ofHours(1)).immutable())
+				.body(entry);
 	}
 
 	@GetMapping(path = "/tenants/{tenantId}/entries/{entryId:\\d+}")

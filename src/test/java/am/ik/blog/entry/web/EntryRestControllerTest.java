@@ -2,6 +2,7 @@ package am.ik.blog.entry.web;
 
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Consumer;
@@ -44,11 +45,15 @@ class EntryRestControllerTest {
 
 	Entry entry100 = new EntryBuilder().withEntryId(100L)
 			.withFrontMatter(new FrontMatterBuilder().withTitle("Hello").build())
-			.withContent("Hello World!").build();
+			.withContent("Hello World!")
+			.withCreated(new Author("demo", OffsetDateTime.now()))
+			.withUpdated(new Author("demo", OffsetDateTime.now())).build();
 
 	Entry entry200 = new EntryBuilder().withEntryId(200L)
 			.withFrontMatter(new FrontMatterBuilder().withTitle("Blog").build())
-			.withContent("Hello Blog!").build();
+			.withContent("Hello Blog!")
+			.withCreated(new Author("demo", OffsetDateTime.now()))
+			.withUpdated(new Author("demo", OffsetDateTime.now())).build();
 
 	private Consumer<HttpHeaders> configureAuth(String tenantId, String username,
 			String password) {
@@ -73,6 +78,21 @@ class EntryRestControllerTest {
 				.expectStatus().isOk().expectBody().jsonPath("$.entryId").isEqualTo(100L)
 				.jsonPath("$.content").isEqualTo("Hello World!")
 				.jsonPath("$.frontMatter.title").isEqualTo("Hello");
+	}
+
+	@ParameterizedTest
+	@CsvSource({ ",," })
+	void getEntry_304(String tenantId, String username, String password) {
+		given(this.entryMapper.findOne(100L, tenantId, false))
+				.willReturn(Optional.of(this.entry100));
+		this.webTestClient.get()
+				.uri((tenantId == null ? "" : "/tenants/" + tenantId) + "/entries/100")
+				.headers(configureAuth(tenantId, username, password))
+				.headers(httpHeaders -> httpHeaders.setIfModifiedSince(
+						this.entry100.getUpdated().getDate().toInstant()))
+				.exchange().expectStatus().isNotModified().expectHeader()
+				.lastModified(this.entry100.getUpdated().getDate().toInstant()
+						.truncatedTo(ChronoUnit.SECONDS).toEpochMilli());
 	}
 
 	@ParameterizedTest
