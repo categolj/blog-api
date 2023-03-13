@@ -21,6 +21,10 @@ public class NativeHints {
 						org.flywaydb.core.internal.logging.slf4j.Slf4jLogCreator.class
 								.getConstructor(),
 						ExecutableMode.INVOKE);
+				hints.reflection().registerConstructor(
+						org.apache.tomcat.util.modeler.modules.MbeansDescriptorsIntrospectionSource.class
+								.getConstructor(),
+						ExecutableMode.INVOKE);
 				// https://github.com/oracle/graal/issues/5626
 				hints.reflection().registerConstructor(
 						org.hibernate.validator.internal.util.logging.Log_$logger.class
