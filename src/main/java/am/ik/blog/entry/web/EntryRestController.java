@@ -78,11 +78,11 @@ public class EntryRestController {
 				.toEpochMilli();
 		if (webRequest.checkNotModified(lastModifiedTimestamp)) {
 			return ResponseEntity.status(HttpStatus.NOT_MODIFIED)
-					.cacheControl(CacheControl.maxAge(Duration.ofHours(1)).immutable())
+					.cacheControl(CacheControl.maxAge(Duration.ofHours(1)))
 					.build();
 		}
 		return ResponseEntity.ok()
-				.cacheControl(CacheControl.maxAge(Duration.ofHours(1)).immutable())
+				.cacheControl(CacheControl.maxAge(Duration.ofHours(1)))
 				.body(entry);
 	}
 
