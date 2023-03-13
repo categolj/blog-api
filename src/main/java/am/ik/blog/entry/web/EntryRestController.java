@@ -23,6 +23,10 @@ import am.ik.blog.tag.Tag;
 import am.ik.pagination.OffsetPage;
 import am.ik.pagination.OffsetPageRequest;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.Parameters;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.media.Schema.RequiredMode;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -98,15 +102,35 @@ public class EntryRestController {
 	}
 
 	@GetMapping(path = "/entries", produces = MediaType.APPLICATION_JSON_VALUE)
-	public OffsetPage<Entry> getEntries(OffsetPageRequest pageRequest,
-			@ModelAttribute EntrySearchRequest request) {
+	@Parameters({
+			@Parameter(name = "page", schema = @Schema(implementation = Integer.class, defaultValue = "0", requiredMode = RequiredMode.NOT_REQUIRED)),
+			@Parameter(name = "size", schema = @Schema(implementation = Integer.class, defaultValue = "20", requiredMode = RequiredMode.NOT_REQUIRED)),
+			@Parameter(name = "query", schema = @Schema(implementation = String.class, requiredMode = RequiredMode.NOT_REQUIRED)),
+			@Parameter(name = "tag", schema = @Schema(implementation = String.class, requiredMode = RequiredMode.NOT_REQUIRED)),
+			@Parameter(name = "categories", schema = @Schema(implementation = String.class, requiredMode = RequiredMode.NOT_REQUIRED)),
+			@Parameter(name = "createdBy", schema = @Schema(implementation = String.class, requiredMode = RequiredMode.NOT_REQUIRED)),
+			@Parameter(name = "updatedBy", schema = @Schema(implementation = String.class, requiredMode = RequiredMode.NOT_REQUIRED)),
+			@Parameter(name = "excludeContent", schema = @Schema(implementation = boolean.class, defaultValue = "true", requiredMode = RequiredMode.NOT_REQUIRED))
+	})
+	public OffsetPage<Entry> getEntries(@Parameter(hidden = true) OffsetPageRequest pageRequest,
+			@Parameter(hidden = true) @ModelAttribute EntrySearchRequest request) {
 		return this.getEntries(null, pageRequest, request);
 	}
 
 	@GetMapping(path = "/tenants/{tenantId}/entries", produces = MediaType.APPLICATION_JSON_VALUE)
+	@Parameters({
+			@Parameter(name = "page", schema = @Schema(implementation = Integer.class, defaultValue = "0", requiredMode = RequiredMode.NOT_REQUIRED)),
+			@Parameter(name = "size", schema = @Schema(implementation = Integer.class, defaultValue = "20", requiredMode = RequiredMode.NOT_REQUIRED)),
+			@Parameter(name = "query", schema = @Schema(implementation = String.class, requiredMode = RequiredMode.NOT_REQUIRED)),
+			@Parameter(name = "tag", schema = @Schema(implementation = String.class, requiredMode = RequiredMode.NOT_REQUIRED)),
+			@Parameter(name = "categories", schema = @Schema(implementation = String.class, requiredMode = RequiredMode.NOT_REQUIRED)),
+			@Parameter(name = "createdBy", schema = @Schema(implementation = String.class, requiredMode = RequiredMode.NOT_REQUIRED)),
+			@Parameter(name = "updatedBy", schema = @Schema(implementation = String.class, requiredMode = RequiredMode.NOT_REQUIRED)),
+			@Parameter(name = "excludeContent", schema = @Schema(implementation = boolean.class, requiredMode = RequiredMode.NOT_REQUIRED))
+	})
 	public OffsetPage<Entry> getEntries(
 			@PathVariable(name = "tenantId", required = false) String tenantId,
-			OffsetPageRequest pageRequest, @ModelAttribute EntrySearchRequest request) {
+			@Parameter(hidden = true) OffsetPageRequest pageRequest, @Parameter(hidden = true) @ModelAttribute EntrySearchRequest request) {
 		final SearchCriteria searchCriteria = request.toCriteria();
 		return this.entryService.findPage(searchCriteria, tenantId, pageRequest);
 	}
@@ -144,17 +168,17 @@ public class EntryRestController {
 			UriComponentsBuilder builder) {
 		final Long entryId = this.entryService.nextId(tenantId);
 		return EntryBuilder.parseBody(entryId, markdown.trim()).map(tpl -> {
-			final EntryBuilder entryBuilder = tpl.getT1();
-			final String username = userDetails.getUsername();
-			final OffsetDateTime now = OffsetDateTime.ofInstant(this.clock.instant(),
-					ZoneId.of("UTC"));
-			final Author created = new Author(username, tpl.getT2().orElse(now));
-			final Author updated = new Author(username, tpl.getT3().orElse(now));
-			final Entry entry = entryBuilder.withCreated(created).withUpdated(updated)
-					.build();
-			this.entryService.save(entry, tenantId);
-			return entry;
-		}).map(entry -> buildEntryResponse(entry, builder, false))
+					final EntryBuilder entryBuilder = tpl.getT1();
+					final String username = userDetails.getUsername();
+					final OffsetDateTime now = OffsetDateTime.ofInstant(this.clock.instant(),
+							ZoneId.of("UTC"));
+					final Author created = new Author(username, tpl.getT2().orElse(now));
+					final Author updated = new Author(username, tpl.getT3().orElse(now));
+					final Entry entry = entryBuilder.withCreated(created).withUpdated(updated)
+							.build();
+					this.entryService.save(entry, tenantId);
+					return entry;
+				}).map(entry -> buildEntryResponse(entry, builder, false))
 				.orElseThrow(() -> new ResponseStatusException(BAD_REQUEST,
 						"Can't parse the markdown file"));
 	}
@@ -210,23 +234,23 @@ public class EntryRestController {
 			UriComponentsBuilder builder) {
 		final AtomicBoolean isUpdate = new AtomicBoolean(false);
 		return EntryBuilder.parseBody(entryId, markdown.trim()).map(tpl -> {
-			final EntryBuilder entryBuilder = tpl.getT1();
-			final String username = userDetails.getUsername();
-			final OffsetDateTime now = OffsetDateTime.ofInstant(this.clock.instant(),
-					ZoneId.of("UTC"));
-			final Author created = this.entryService.findOne(entryId, tenantId, true)
-					.filter(e -> {
-						isUpdate.set(true);
-						return true;
-					}).map(Entry::getCreated)
-					.map(author -> tpl.getT2().map(author::withDate).orElse(author))
-					.orElseGet(() -> new Author(username, tpl.getT2().orElse(now)));
-			final Author updated = new Author(username, tpl.getT3().orElse(now));
-			final Entry entry = entryBuilder.withCreated(created).withUpdated(updated)
-					.build();
-			this.entryService.save(entry, tenantId);
-			return entry;
-		}).map(entry -> buildEntryResponse(entry, builder, isUpdate.get()))
+					final EntryBuilder entryBuilder = tpl.getT1();
+					final String username = userDetails.getUsername();
+					final OffsetDateTime now = OffsetDateTime.ofInstant(this.clock.instant(),
+							ZoneId.of("UTC"));
+					final Author created = this.entryService.findOne(entryId, tenantId, true)
+							.filter(e -> {
+								isUpdate.set(true);
+								return true;
+							}).map(Entry::getCreated)
+							.map(author -> tpl.getT2().map(author::withDate).orElse(author))
+							.orElseGet(() -> new Author(username, tpl.getT2().orElse(now)));
+					final Author updated = new Author(username, tpl.getT3().orElse(now));
+					final Entry entry = entryBuilder.withCreated(created).withUpdated(updated)
+							.build();
+					this.entryService.save(entry, tenantId);
+					return entry;
+				}).map(entry -> buildEntryResponse(entry, builder, isUpdate.get()))
 				.orElseThrow(() -> new ResponseStatusException(BAD_REQUEST,
 						"Can't parse the markdown file"));
 	}
@@ -277,18 +301,18 @@ public class EntryRestController {
 		return isUpdate ? ResponseEntity.ok(entry)
 				: ResponseEntity.created(
 						builder.path("/entries/{entryId:\\d+}").build(entry.getEntryId()))
-						.body(entry);
+				.body(entry);
 	}
 
 	@GetMapping(path = "/entries/template.md", produces = MediaType.TEXT_MARKDOWN_VALUE)
 	public String getTemplateMarkdown() {
 		return new EntryBuilder().withContent("""
-				Welcome
+						Welcome
 
-				**Hello world**, this is my first Categolj blog post.
+						**Hello world**, this is my first Categolj blog post.
 
-				I hope you like it!
-				""")
+						I hope you like it!
+						""")
 				.withFrontMatter(new FrontMatter("Welcome to CategolJ!",
 						List.of(new Category("Blog"), new Category("Posts"),
 								new Category("Templates")),

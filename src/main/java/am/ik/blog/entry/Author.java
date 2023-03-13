@@ -2,6 +2,7 @@ package am.ik.blog.entry;
 
 import am.ik.yavi.builder.ValidatorBuilder;
 import am.ik.yavi.core.Validator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
 import java.time.Instant;
@@ -41,6 +42,7 @@ public class Author {
 		return new Author(name, this.date);
 	}
 
+	@JsonIgnore
 	public Author setNameIfAbsent(String name) {
 		if (this.name != null) {
 			return this;
@@ -52,6 +54,7 @@ public class Author {
 		return new Author(this.name, date);
 	}
 
+	@JsonIgnore
 	public Author setDateIfAbsent(OffsetDateTime date) {
 		if (this.date != null) {
 			return this;
