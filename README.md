@@ -100,7 +100,7 @@ curl -s -u admin:changeme -XDELETE http://localhost:8080/entries/1
 
 Go to http://localhost:8080/swagger-ui/index.html for the Swagger UI
 
-(`/swagger-ui/4.15.5/index.html` for native image)
+(`/swagger-ui/4.18.1/index.html` for native image)
 
 ### Use an existing PostgreSQL instance
 
