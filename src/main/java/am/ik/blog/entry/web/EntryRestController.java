@@ -72,7 +72,8 @@ public class EntryRestController {
 	}
 
 	@GetMapping(path = "/entries/{entryId:\\d+}")
-	@Parameters({ @Parameter(name = HttpHeaders.IF_MODIFIED_SINCE, in = ParameterIn.HEADER, schema = @Schema(type = "string")) })
+	@Parameters({
+			@Parameter(name = HttpHeaders.IF_MODIFIED_SINCE, in = ParameterIn.HEADER, schema = @Schema(type = "string")) })
 	public ResponseEntity<Entry> getEntry(@PathVariable("entryId") Long entryId,
 			@RequestParam(defaultValue = "false") boolean excludeContent,
 			NativeWebRequest webRequest) {
@@ -81,11 +82,9 @@ public class EntryRestController {
 				.toEpochMilli();
 		if (webRequest.checkNotModified(lastModifiedTimestamp)) {
 			return ResponseEntity.status(HttpStatus.NOT_MODIFIED)
-					.cacheControl(CacheControl.maxAge(Duration.ofHours(1)))
-					.build();
+					.cacheControl(CacheControl.maxAge(Duration.ofHours(1))).build();
 		}
-		return ResponseEntity.ok()
-				.cacheControl(CacheControl.maxAge(Duration.ofHours(1)))
+		return ResponseEntity.ok().cacheControl(CacheControl.maxAge(Duration.ofHours(1)))
 				.body(entry);
 	}
 
@@ -129,8 +128,8 @@ public class EntryRestController {
 			@RequestParam(required = false) String updatedBy,
 			@RequestParam(defaultValue = "true") boolean excludeContent,
 			@Parameter(hidden = true) OffsetPageRequest pageRequest) {
-		return this.getEntriesForTenant(null, query, tag, categories, createdBy, updatedBy,
-				excludeContent, pageRequest);
+		return this.getEntriesForTenant(null, query, tag, categories, createdBy,
+				updatedBy, excludeContent, pageRequest);
 	}
 
 	@GetMapping(path = "/tenants/{tenantId}/entries", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -163,7 +162,8 @@ public class EntryRestController {
 
 	@DeleteMapping(path = "/tenants/{tenantId}/entries/{entryId:\\d+}")
 	@Operation(security = { @SecurityRequirement(name = "basic") })
-	public ResponseEntity<Void> deleteEntryForTenant(@PathVariable("entryId") Long entryId,
+	public ResponseEntity<Void> deleteEntryForTenant(
+			@PathVariable("entryId") Long entryId,
 			@PathVariable(name = "tenantId", required = false) String tenantId) {
 		this.entryService.delete(entryId, tenantId);
 		return ResponseEntity.noContent().build();
@@ -188,17 +188,17 @@ public class EntryRestController {
 			UriComponentsBuilder builder) {
 		final Long entryId = this.entryService.nextId(tenantId);
 		return EntryBuilder.parseBody(entryId, markdown.trim()).map(tpl -> {
-					final EntryBuilder entryBuilder = tpl.getT1();
-					final String username = userDetails.getUsername();
-					final OffsetDateTime now = OffsetDateTime.ofInstant(this.clock.instant(),
-							ZoneId.of("UTC"));
-					final Author created = new Author(username, tpl.getT2().orElse(now));
-					final Author updated = new Author(username, tpl.getT3().orElse(now));
-					final Entry entry = entryBuilder.withCreated(created).withUpdated(updated)
-							.build();
-					this.entryService.save(entry, tenantId);
-					return entry;
-				}).map(entry -> buildEntryResponse(entry, builder, false))
+			final EntryBuilder entryBuilder = tpl.getT1();
+			final String username = userDetails.getUsername();
+			final OffsetDateTime now = OffsetDateTime.ofInstant(this.clock.instant(),
+					ZoneId.of("UTC"));
+			final Author created = new Author(username, tpl.getT2().orElse(now));
+			final Author updated = new Author(username, tpl.getT3().orElse(now));
+			final Entry entry = entryBuilder.withCreated(created).withUpdated(updated)
+					.build();
+			this.entryService.save(entry, tenantId);
+			return entry;
+		}).map(entry -> buildEntryResponse(entry, builder, false))
 				.orElseThrow(() -> new ResponseStatusException(BAD_REQUEST,
 						"Can't parse the markdown file"));
 	}
@@ -241,36 +241,38 @@ public class EntryRestController {
 			@RequestBody String markdown,
 			@AuthenticationPrincipal UserDetails userDetails,
 			UriComponentsBuilder builder) {
-		return this.putEntryFromMarkdownForTenant(entryId, null, markdown, userDetails, builder);
+		return this.putEntryFromMarkdownForTenant(entryId, null, markdown, userDetails,
+				builder);
 	}
 
 	@PutMapping(path = "/tenants/{tenantId}/entries/{entryId:\\d+}", consumes = MediaType.TEXT_MARKDOWN_VALUE)
 	@Operation(security = { @SecurityRequirement(name = "basic") })
 	@Transactional
-	public ResponseEntity<?> putEntryFromMarkdownForTenant(@PathVariable("entryId") Long entryId,
+	public ResponseEntity<?> putEntryFromMarkdownForTenant(
+			@PathVariable("entryId") Long entryId,
 			@PathVariable(name = "tenantId", required = false) String tenantId,
 			@RequestBody String markdown,
 			@AuthenticationPrincipal UserDetails userDetails,
 			UriComponentsBuilder builder) {
 		final AtomicBoolean isUpdate = new AtomicBoolean(false);
 		return EntryBuilder.parseBody(entryId, markdown.trim()).map(tpl -> {
-					final EntryBuilder entryBuilder = tpl.getT1();
-					final String username = userDetails.getUsername();
-					final OffsetDateTime now = OffsetDateTime.ofInstant(this.clock.instant(),
-							ZoneId.of("UTC"));
-					final Author created = this.entryService.findOne(entryId, tenantId, true)
-							.filter(e -> {
-								isUpdate.set(true);
-								return true;
-							}).map(Entry::getCreated)
-							.map(author -> tpl.getT2().map(author::withDate).orElse(author))
-							.orElseGet(() -> new Author(username, tpl.getT2().orElse(now)));
-					final Author updated = new Author(username, tpl.getT3().orElse(now));
-					final Entry entry = entryBuilder.withCreated(created).withUpdated(updated)
-							.build();
-					this.entryService.save(entry, tenantId);
-					return entry;
-				}).map(entry -> buildEntryResponse(entry, builder, isUpdate.get()))
+			final EntryBuilder entryBuilder = tpl.getT1();
+			final String username = userDetails.getUsername();
+			final OffsetDateTime now = OffsetDateTime.ofInstant(this.clock.instant(),
+					ZoneId.of("UTC"));
+			final Author created = this.entryService.findOne(entryId, tenantId, true)
+					.filter(e -> {
+						isUpdate.set(true);
+						return true;
+					}).map(Entry::getCreated)
+					.map(author -> tpl.getT2().map(author::withDate).orElse(author))
+					.orElseGet(() -> new Author(username, tpl.getT2().orElse(now)));
+			final Author updated = new Author(username, tpl.getT3().orElse(now));
+			final Entry entry = entryBuilder.withCreated(created).withUpdated(updated)
+					.build();
+			this.entryService.save(entry, tenantId);
+			return entry;
+		}).map(entry -> buildEntryResponse(entry, builder, isUpdate.get()))
 				.orElseThrow(() -> new ResponseStatusException(BAD_REQUEST,
 						"Can't parse the markdown file"));
 	}
@@ -282,13 +284,15 @@ public class EntryRestController {
 			@RequestBody EntryRequest request,
 			@AuthenticationPrincipal UserDetails userDetails,
 			UriComponentsBuilder builder) {
-		return this.putEntryFromJsonForTenant(entryId, null, request, userDetails, builder);
+		return this.putEntryFromJsonForTenant(entryId, null, request, userDetails,
+				builder);
 	}
 
 	@PutMapping(path = "/tenants/{tenantId}/entries/{entryId:\\d+}", consumes = MediaType.APPLICATION_JSON_VALUE)
 	@Operation(security = { @SecurityRequirement(name = "basic") })
 	@Transactional
-	public ResponseEntity<?> putEntryFromJsonForTenant(@PathVariable("entryId") Long entryId,
+	public ResponseEntity<?> putEntryFromJsonForTenant(
+			@PathVariable("entryId") Long entryId,
 			@PathVariable(name = "tenantId", required = false) String tenantId,
 			@RequestBody EntryRequest request,
 			@AuthenticationPrincipal UserDetails userDetails,
@@ -321,18 +325,18 @@ public class EntryRestController {
 		return isUpdate ? ResponseEntity.ok(entry)
 				: ResponseEntity.created(
 						builder.path("/entries/{entryId:\\d+}").build(entry.getEntryId()))
-				.body(entry);
+						.body(entry);
 	}
 
 	@GetMapping(path = "/entries/template.md", produces = MediaType.TEXT_MARKDOWN_VALUE)
 	public String getTemplateMarkdown() {
 		return new EntryBuilder().withContent("""
-						Welcome
+				Welcome
 
-						**Hello world**, this is my first Categolj blog post.
+				**Hello world**, this is my first Categolj blog post.
 
-						I hope you like it!
-						""")
+				I hope you like it!
+				""")
 				.withFrontMatter(new FrontMatter("Welcome to CategolJ!",
 						List.of(new Category("Blog"), new Category("Posts"),
 								new Category("Templates")),
