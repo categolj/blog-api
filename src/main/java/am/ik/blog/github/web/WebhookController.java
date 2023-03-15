@@ -17,6 +17,7 @@ import am.ik.blog.github.EntryFetcher;
 import am.ik.blog.github.GitHubProps;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -27,6 +28,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
 @RestController
+@Tag(name = "webhook")
 public class WebhookController {
 	private final EntryFetcher entryFetcher;
 
@@ -54,11 +56,11 @@ public class WebhookController {
 	public List<Map<String, Long>> webhook(
 			@RequestHeader(name = "X-Hub-Signature") String signature,
 			@RequestBody String payload) {
-		return this.webhook(signature, payload, null);
+		return this.webhookForTenant(signature, payload, null);
 	}
 
 	@PostMapping(path = "tenants/{tenantId}/webhook")
-	public List<Map<String, Long>> webhook(
+	public List<Map<String, Long>> webhookForTenant(
 			@RequestHeader(name = "X-Hub-Signature") String signature,
 			@RequestBody String payload,
 			@PathVariable(name = "tenantId", required = false) String tenantId) {

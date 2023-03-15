@@ -11,6 +11,7 @@ import am.ik.blog.github.EntryFetcher;
 import am.ik.blog.github.GitHubProps;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Flux;
@@ -27,6 +28,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.reactive.function.client.WebClientResponseException.NotFound;
 
 @RestController
+@Tag(name = "admin")
 public class EntryImportController {
 	private final EntryFetcher entryFetcher;
 
@@ -49,13 +51,13 @@ public class EntryImportController {
 	public Optional<List<String>> importEntries(
 			@RequestParam(defaultValue = "0") int from,
 			@RequestParam(defaultValue = "0") int to) {
-		return this.importEntries(from, to, null);
+		return this.importEntriesForTenant(from, to, null);
 	}
 
 	@PostMapping(path = "/tenants/{tenantId}/admin/import", produces = MediaType.APPLICATION_JSON_VALUE)
 	@Transactional
 	@Operation(security = { @SecurityRequirement(name = "basic") })
-	public Optional<List<String>> importEntries(
+	public Optional<List<String>> importEntriesForTenant(
 			@RequestParam(defaultValue = "0") int from,
 			@RequestParam(defaultValue = "0") int to,
 			@PathVariable(name = "tenantId", required = false) String tenantId) {
