@@ -23,6 +23,7 @@
 		<resilience4j.version>1.7.1</resilience4j.version>
 		<spring-doc.version>2.0.4</spring-doc.version>
 		<mybatis-thymeleaf.version>1.0.4</mybatis-thymeleaf.version>
+		<snakeyaml.version>2.0</snakeyaml.version>
 		<jar-classifier></jar-classifier>
 	</properties>
 
