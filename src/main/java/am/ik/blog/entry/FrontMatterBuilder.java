@@ -58,7 +58,7 @@ public class FrontMatterBuilder {
 				.withTitle((String) map.getOrDefault("title", "no title"))
 				.withCategories(((List<String>) map.computeIfAbsent("categories",
 						key -> emptyList())).stream().map(Category::new)
-								.collect(toList()))
+						.collect(toList()))
 				.withTags(((List<String>) map.computeIfAbsent("tags", key -> emptyList()))
 						.stream().map(Tag::new).collect(toList()))
 				.build();
