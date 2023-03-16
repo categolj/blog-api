@@ -1,6 +1,14 @@
 package am.ik.blog.config;
 
+import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 import am.ik.blog.config.NativeHints.RuntimeHints;
+import am.ik.blog.entry.AuthorBuilder;
+import am.ik.blog.entry.EntryBuilder;
+import am.ik.blog.entry.FrontMatterBuilder;
 
 import org.springframework.aot.hint.ExecutableMode;
 import org.springframework.aot.hint.RuntimeHintsRegistrar;
@@ -17,6 +25,18 @@ public class NativeHints {
 		public void registerHints(org.springframework.aot.hint.RuntimeHints hints,
 				ClassLoader classLoader) {
 			try {
+				final List<Method> builderMethods = new ArrayList<>();
+				builderMethods
+						.addAll(Arrays.asList(EntryBuilder.class.getDeclaredMethods()));
+				builderMethods.addAll(
+						Arrays.asList(FrontMatterBuilder.class.getDeclaredMethods()));
+				builderMethods
+						.addAll(Arrays.asList(AuthorBuilder.class.getDeclaredMethods()));
+				builderMethods.stream()
+						.filter(m -> m.getName().equals("build")
+								|| m.getName().startsWith("with"))
+						.forEach(method -> hints.reflection().registerMethod(method,
+								ExecutableMode.INVOKE));
 				hints.reflection().registerConstructor(
 						org.flywaydb.core.internal.logging.slf4j.Slf4jLogCreator.class
 								.getConstructor(),
