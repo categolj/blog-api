@@ -1,5 +1,6 @@
 package am.ik.blog.problem;
 
+import am.ik.webhook.WebhookAuthenticationException;
 import am.ik.yavi.core.ConstraintViolationsException;
 import io.micrometer.tracing.Span;
 import io.micrometer.tracing.Tracer;
@@ -38,6 +39,15 @@ public class ProblemControllerAdvice {
 		final ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(
 				HttpStatus.BAD_REQUEST, "Constraint violations found!");
 		problemDetail.setProperty("violations", e.violations().details());
+		return setTraceId(problemDetail);
+	}
+
+	@ExceptionHandler(WebhookAuthenticationException.class)
+	@ResponseStatus(HttpStatus.FORBIDDEN)
+	public ProblemDetail handleWebhookAuthenticationException(
+			WebhookAuthenticationException e) {
+		final ProblemDetail problemDetail = ProblemDetail
+				.forStatusAndDetail(HttpStatus.FORBIDDEN, e.getMessage());
 		return setTraceId(problemDetail);
 	}
 

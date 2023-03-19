@@ -2,8 +2,6 @@ package am.ik.blog.github.web;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -15,6 +13,7 @@ import am.ik.blog.entry.Entry;
 import am.ik.blog.entry.EntryService;
 import am.ik.blog.github.EntryFetcher;
 import am.ik.blog.github.GitHubProps;
+import am.ik.webhook.WebhookVerifier;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -26,6 +25,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
+
+import static am.ik.webhook.WebhookHttpHeaders.X_HUB_SIGNATURE;
 
 @RestController
 @Tag(name = "webhook")
@@ -41,27 +42,26 @@ public class WebhookController {
 	private final ObjectMapper objectMapper;
 
 	public WebhookController(GitHubProps props, EntryFetcher entryFetcher,
-			EntryService entryService, ObjectMapper objectMapper)
-			throws NoSuchAlgorithmException, InvalidKeyException {
+			EntryService entryService, ObjectMapper objectMapper) {
 		this.entryFetcher = entryFetcher;
 		this.entryService = entryService;
-		this.webhookVerifier = new WebhookVerifier(props.getWebhookSecret());
-		this.tenantsWebhookVerifier = props.getTenants().entrySet().stream()
-				.collect(Collectors.toUnmodifiableMap(Map.Entry::getKey,
-						e -> new WebhookVerifier(e.getValue().getWebhookSecret())));
+		this.webhookVerifier = WebhookVerifier.gitHubSha1(props.getWebhookSecret());
+		this.tenantsWebhookVerifier = props.getTenants().entrySet().stream().collect(
+				Collectors.toUnmodifiableMap(Map.Entry::getKey, e -> WebhookVerifier
+						.gitHubSha1(e.getValue().getWebhookSecret())));
 		this.objectMapper = objectMapper;
 	}
 
 	@PostMapping(path = "webhook")
 	public List<Map<String, Long>> webhook(
-			@RequestHeader(name = "X-Hub-Signature") String signature,
+			@RequestHeader(name = X_HUB_SIGNATURE) String signature,
 			@RequestBody String payload) {
 		return this.webhookForTenant(signature, payload, null);
 	}
 
 	@PostMapping(path = "tenants/{tenantId}/webhook")
 	public List<Map<String, Long>> webhookForTenant(
-			@RequestHeader(name = "X-Hub-Signature") String signature,
+			@RequestHeader(name = X_HUB_SIGNATURE) String signature,
 			@RequestBody String payload,
 			@PathVariable(name = "tenantId", required = false) String tenantId) {
 		if (tenantId == null) {

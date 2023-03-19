@@ -2,13 +2,18 @@ package am.ik.blog.github.web;
 
 import java.util.Map;
 
-import am.ik.blog.github.EntryFetcher;
-import am.ik.blog.github.Fixtures;
 import am.ik.blog.entry.Entry;
 import am.ik.blog.entry.EntryMapper;
+import am.ik.blog.github.EntryFetcher;
+import am.ik.blog.github.Fixtures;
+import am.ik.webhook.WebhookVerifier;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
+import org.testcontainers.junit.jupiter.Testcontainers;
+import reactor.core.publisher.Mono;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -18,11 +23,7 @@ import org.springframework.http.client.reactive.JdkClientHttpConnector;
 import org.springframework.test.context.TestConstructor;
 import org.springframework.test.web.reactive.server.WebTestClient;
 
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.CsvSource;
-import org.testcontainers.junit.jupiter.Testcontainers;
-import reactor.core.publisher.Mono;
-
+import static am.ik.webhook.WebhookHttpHeaders.X_HUB_SIGNATURE;
 import static org.mockito.BDDMockito.given;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, properties = {
@@ -65,13 +66,13 @@ public class WebhookControllerTest {
 		commit.putArray("modified");
 		commit.putArray("removed");
 
-		WebhookVerifier verifier = new WebhookVerifier(secret);
+		WebhookVerifier verifier = WebhookVerifier.gitHubSha1(secret);
 		this.webClient.post() //
 				.uri("%s/webhook"
 						.formatted(tenantId == null ? "" : "/tenants/" + tenantId)) //
 				.bodyValue(body) //
 				.accept(MediaType.APPLICATION_JSON) //
-				.header("X-Hub-Signature", verifier.signature(body.toString())) //
+				.header(X_HUB_SIGNATURE, verifier.sign(body.toString())) //
 				.exchange() //
 				.expectStatus() //
 				.isOk() //
@@ -97,13 +98,13 @@ public class WebhookControllerTest {
 		commit.putArray("modified").add("content/00100.md");
 		commit.putArray("removed");
 
-		WebhookVerifier verifier = new WebhookVerifier(secret);
+		WebhookVerifier verifier = WebhookVerifier.gitHubSha1(secret);
 		this.webClient.post() //
 				.uri("%s/webhook"
 						.formatted(tenantId == null ? "" : "/tenants/" + tenantId)) //
 				.bodyValue(body) //
 				.accept(MediaType.APPLICATION_JSON) //
-				.header("X-Hub-Signature", verifier.signature(body.toString())) //
+				.header(X_HUB_SIGNATURE, verifier.sign(body.toString())) //
 				.exchange() //
 				.expectStatus() //
 				.isOk() //
@@ -130,13 +131,13 @@ public class WebhookControllerTest {
 		commit.putArray("modified");
 		commit.putArray("removed").add("content/00100.md");
 
-		WebhookVerifier verifier = new WebhookVerifier(secret);
+		WebhookVerifier verifier = WebhookVerifier.gitHubSha1(secret);
 		this.webClient.post() //
 				.uri("%s/webhook"
 						.formatted(tenantId == null ? "" : "/tenants/" + tenantId)) //
 				.bodyValue(body) //
 				.accept(MediaType.APPLICATION_JSON) //
-				.header("X-Hub-Signature", verifier.signature(body.toString())) //
+				.header(X_HUB_SIGNATURE, verifier.sign(body.toString())) //
 				.exchange() //
 				.expectStatus() //
 				.isOk() //
@@ -161,13 +162,13 @@ public class WebhookControllerTest {
 		commit.putArray("modified");
 		commit.putArray("removed").add("content/00100.md");
 
-		WebhookVerifier verifier = new WebhookVerifier(secret);
+		WebhookVerifier verifier = WebhookVerifier.gitHubSha1(secret);
 		this.webClient.post() //
 				.uri("%s/webhook"
 						.formatted(tenantId == null ? "" : "/tenants/" + tenantId)) //
 				.bodyValue(body) //
 				.accept(MediaType.APPLICATION_JSON) //
-				.header("X-Hub-Signature", verifier.signature(body.toString())) //
+				.header(X_HUB_SIGNATURE, verifier.sign(body.toString())) //
 				.exchange() //
 				.expectStatus() //
 				.isForbidden() //
