@@ -23,7 +23,7 @@ import org.springframework.http.client.reactive.JdkClientHttpConnector;
 import org.springframework.test.context.TestConstructor;
 import org.springframework.test.web.reactive.server.WebTestClient;
 
-import static am.ik.webhook.WebhookHttpHeaders.X_HUB_SIGNATURE;
+import static am.ik.webhook.WebhookHttpHeaders.X_HUB_SIGNATURE_256;
 import static org.mockito.BDDMockito.given;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, properties = {
@@ -66,13 +66,13 @@ public class WebhookControllerTest {
 		commit.putArray("modified");
 		commit.putArray("removed");
 
-		WebhookVerifier verifier = WebhookVerifier.gitHubSha1(secret);
+		WebhookVerifier verifier = WebhookVerifier.gitHubSha256(secret);
 		this.webClient.post() //
 				.uri("%s/webhook"
 						.formatted(tenantId == null ? "" : "/tenants/" + tenantId)) //
 				.bodyValue(body) //
 				.accept(MediaType.APPLICATION_JSON) //
-				.header(X_HUB_SIGNATURE, verifier.sign(body.toString())) //
+				.header(X_HUB_SIGNATURE_256, verifier.sign(body.toString())) //
 				.exchange() //
 				.expectStatus() //
 				.isOk() //
@@ -98,13 +98,13 @@ public class WebhookControllerTest {
 		commit.putArray("modified").add("content/00100.md");
 		commit.putArray("removed");
 
-		WebhookVerifier verifier = WebhookVerifier.gitHubSha1(secret);
+		WebhookVerifier verifier = WebhookVerifier.gitHubSha256(secret);
 		this.webClient.post() //
 				.uri("%s/webhook"
 						.formatted(tenantId == null ? "" : "/tenants/" + tenantId)) //
 				.bodyValue(body) //
 				.accept(MediaType.APPLICATION_JSON) //
-				.header(X_HUB_SIGNATURE, verifier.sign(body.toString())) //
+				.header(X_HUB_SIGNATURE_256, verifier.sign(body.toString())) //
 				.exchange() //
 				.expectStatus() //
 				.isOk() //
@@ -131,13 +131,13 @@ public class WebhookControllerTest {
 		commit.putArray("modified");
 		commit.putArray("removed").add("content/00100.md");
 
-		WebhookVerifier verifier = WebhookVerifier.gitHubSha1(secret);
+		WebhookVerifier verifier = WebhookVerifier.gitHubSha256(secret);
 		this.webClient.post() //
 				.uri("%s/webhook"
 						.formatted(tenantId == null ? "" : "/tenants/" + tenantId)) //
 				.bodyValue(body) //
 				.accept(MediaType.APPLICATION_JSON) //
-				.header(X_HUB_SIGNATURE, verifier.sign(body.toString())) //
+				.header(X_HUB_SIGNATURE_256, verifier.sign(body.toString())) //
 				.exchange() //
 				.expectStatus() //
 				.isOk() //
@@ -162,18 +162,18 @@ public class WebhookControllerTest {
 		commit.putArray("modified");
 		commit.putArray("removed").add("content/00100.md");
 
-		WebhookVerifier verifier = WebhookVerifier.gitHubSha1(secret);
+		WebhookVerifier verifier = WebhookVerifier.gitHubSha256(secret);
 		this.webClient.post() //
 				.uri("%s/webhook"
 						.formatted(tenantId == null ? "" : "/tenants/" + tenantId)) //
 				.bodyValue(body) //
 				.accept(MediaType.APPLICATION_JSON) //
-				.header(X_HUB_SIGNATURE, verifier.sign(body.toString())) //
+				.header(X_HUB_SIGNATURE_256, verifier.sign(body.toString())) //
 				.exchange() //
 				.expectStatus() //
 				.isForbidden() //
 				.expectBody()//
 				.jsonPath("$.detail").isEqualTo(
-						"Could not verify signature: 'sha1=b21805d592724f387d6e03be7b42c10a90ee109f'");
+						"Could not verify signature: 'sha256=0befdaf80b8ee4dd1863d8e8ee665a7400e7c69d761d0fa2086e747a2b877503'");
 	}
 }

@@ -26,7 +26,7 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
-import static am.ik.webhook.WebhookHttpHeaders.X_HUB_SIGNATURE;
+import static am.ik.webhook.WebhookHttpHeaders.X_HUB_SIGNATURE_256;
 
 @RestController
 @Tag(name = "webhook")
@@ -45,23 +45,23 @@ public class WebhookController {
 			EntryService entryService, ObjectMapper objectMapper) {
 		this.entryFetcher = entryFetcher;
 		this.entryService = entryService;
-		this.webhookVerifier = WebhookVerifier.gitHubSha1(props.getWebhookSecret());
+		this.webhookVerifier = WebhookVerifier.gitHubSha256(props.getWebhookSecret());
 		this.tenantsWebhookVerifier = props.getTenants().entrySet().stream().collect(
 				Collectors.toUnmodifiableMap(Map.Entry::getKey, e -> WebhookVerifier
-						.gitHubSha1(e.getValue().getWebhookSecret())));
+						.gitHubSha256(e.getValue().getWebhookSecret())));
 		this.objectMapper = objectMapper;
 	}
 
 	@PostMapping(path = "webhook")
 	public List<Map<String, Long>> webhook(
-			@RequestHeader(name = X_HUB_SIGNATURE) String signature,
+			@RequestHeader(name = X_HUB_SIGNATURE_256) String signature,
 			@RequestBody String payload) {
 		return this.webhookForTenant(signature, payload, null);
 	}
 
 	@PostMapping(path = "tenants/{tenantId}/webhook")
 	public List<Map<String, Long>> webhookForTenant(
-			@RequestHeader(name = X_HUB_SIGNATURE) String signature,
+			@RequestHeader(name = X_HUB_SIGNATURE_256) String signature,
 			@RequestBody String payload,
 			@PathVariable(name = "tenantId", required = false) String tenantId) {
 		if (tenantId == null) {
