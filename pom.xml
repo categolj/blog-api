@@ -46,7 +46,7 @@
 		<dependency>
 			<groupId>am.ik.webhook</groupId>
 			<artifactId>webhook-verifier</artifactId>
-			<version>0.1.1</version>
+			<version>0.1.2</version>
 		</dependency>
 		<dependency>
 			<groupId>am.ik.util</groupId>
