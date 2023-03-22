@@ -5,7 +5,6 @@ import java.io.UncheckedIOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
@@ -14,6 +13,7 @@ import am.ik.blog.entry.EntryService;
 import am.ik.blog.github.EntryFetcher;
 import am.ik.blog.github.GitHubProps;
 import am.ik.webhook.WebhookVerifier;
+import am.ik.webhook.annotation.WebhookPayload;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -27,6 +27,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
 import static am.ik.webhook.WebhookHttpHeaders.X_HUB_SIGNATURE_256;
+import static java.util.stream.Collectors.toUnmodifiableMap;
 
 @RestController
 @Tag(name = "webhook")
@@ -46,17 +47,15 @@ public class WebhookController {
 		this.entryFetcher = entryFetcher;
 		this.entryService = entryService;
 		this.webhookVerifier = WebhookVerifier.gitHubSha256(props.getWebhookSecret());
-		this.tenantsWebhookVerifier = props.getTenants().entrySet().stream().collect(
-				Collectors.toUnmodifiableMap(Map.Entry::getKey, e -> WebhookVerifier
+		this.tenantsWebhookVerifier = props.getTenants().entrySet().stream()
+				.collect(toUnmodifiableMap(Map.Entry::getKey, e -> WebhookVerifier
 						.gitHubSha256(e.getValue().getWebhookSecret())));
 		this.objectMapper = objectMapper;
 	}
 
 	@PostMapping(path = "webhook")
-	public List<Map<String, Long>> webhook(
-			@RequestHeader(name = X_HUB_SIGNATURE_256) String signature,
-			@RequestBody String payload) {
-		return this.webhookForTenant(signature, payload, null);
+	public List<Map<String, Long>> webhook(@WebhookPayload @RequestBody String payload) {
+		return this.processWebhook(payload, null);
 	}
 
 	@PostMapping(path = "tenants/{tenantId}/webhook")
@@ -64,14 +63,13 @@ public class WebhookController {
 			@RequestHeader(name = X_HUB_SIGNATURE_256) String signature,
 			@RequestBody String payload,
 			@PathVariable(name = "tenantId", required = false) String tenantId) {
-		if (tenantId == null) {
-			this.webhookVerifier.verify(payload, signature);
-		}
-		else {
-			final WebhookVerifier verifier = this.tenantsWebhookVerifier
-					.getOrDefault(tenantId, this.webhookVerifier);
-			verifier.verify(payload, signature);
-		}
+		final WebhookVerifier verifier = this.tenantsWebhookVerifier
+				.getOrDefault(tenantId, this.webhookVerifier);
+		verifier.verify(payload, signature);
+		return this.processWebhook(payload, tenantId);
+	}
+
+	List<Map<String, Long>> processWebhook(String payload, String tenantId) {
 		final JsonNode node = this.node(payload);
 		final String[] repository = node.get("repository").get("full_name").asText()
 				.split("/");

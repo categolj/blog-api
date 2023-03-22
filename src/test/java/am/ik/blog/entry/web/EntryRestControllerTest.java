@@ -15,6 +15,7 @@ import am.ik.blog.entry.Entry;
 import am.ik.blog.entry.EntryBuilder;
 import am.ik.blog.entry.EntryMapper;
 import am.ik.blog.entry.FrontMatterBuilder;
+import am.ik.blog.github.GitHubProps;
 import am.ik.pagination.OffsetPage;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -35,7 +36,7 @@ import static org.mockito.BDDMockito.given;
 @WebMvcTest(properties = {
 		"blog.tenant.users[0]=user|{noop}password|demo=GET,LIST|xyz=GET",
 		"blog.tenant.users[1]=foo|{noop}bar|demo=GET,LIST,EDIT,DELETE" })
-@Import({ SecurityConfig.class, WebConfig.class, MockConfig.class })
+@Import({ SecurityConfig.class, WebConfig.class, MockConfig.class, GitHubProps.class })
 class EntryRestControllerTest {
 	@Autowired
 	WebTestClient webTestClient;

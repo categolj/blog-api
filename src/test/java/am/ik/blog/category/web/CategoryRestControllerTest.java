@@ -5,7 +5,7 @@ import java.util.List;
 import am.ik.blog.category.Category;
 import am.ik.blog.category.CategoryMapper;
 import am.ik.blog.config.SecurityConfig;
-import org.junit.jupiter.api.Test;
+import am.ik.blog.github.GitHubProps;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 
@@ -18,7 +18,7 @@ import org.springframework.test.web.reactive.server.WebTestClient;
 import static org.mockito.BDDMockito.given;
 
 @WebMvcTest
-@Import(SecurityConfig.class)
+@Import({SecurityConfig.class, GitHubProps.class})
 class CategoryRestControllerTest {
 	@Autowired
 	WebTestClient webTestClient;

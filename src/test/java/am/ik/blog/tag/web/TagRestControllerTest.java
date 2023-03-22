@@ -3,6 +3,7 @@ package am.ik.blog.tag.web;
 import java.util.List;
 
 import am.ik.blog.config.SecurityConfig;
+import am.ik.blog.github.GitHubProps;
 import am.ik.blog.tag.TagMapper;
 import am.ik.blog.tag.TagNameAndCount;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -17,7 +18,7 @@ import org.springframework.test.web.reactive.server.WebTestClient;
 import static org.mockito.BDDMockito.given;
 
 @WebMvcTest
-@Import(SecurityConfig.class)
+@Import({SecurityConfig.class, GitHubProps.class})
 class TagRestControllerTest {
 	@Autowired
 	WebTestClient webTestClient;
