@@ -4,16 +4,19 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 
 import am.ik.blog.config.NativeHints.RuntimeHints;
 import am.ik.blog.entry.AuthorBuilder;
 import am.ik.blog.entry.EntryBuilder;
 import am.ik.blog.entry.FrontMatterBuilder;
+import am.ik.blog.tenant.TenantUserProps;
 
 import org.springframework.aot.hint.ExecutableMode;
 import org.springframework.aot.hint.RuntimeHintsRegistrar;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.ImportRuntimeHints;
+import org.springframework.util.ReflectionUtils;
 
 @Configuration(proxyBeanMethods = false)
 @ImportRuntimeHints(RuntimeHints.class)
@@ -52,6 +55,10 @@ public class NativeHints {
 						ExecutableMode.INVOKE).registerField(
 								org.hibernate.validator.internal.util.logging.Messages_$bundle.class
 										.getField("INSTANCE"));
+				hints.reflection().registerMethod(
+						Objects.requireNonNull(ReflectionUtils
+								.findMethod(TenantUserProps.class, "users")),
+						ExecutableMode.INVOKE);
 			}
 			catch (Exception e) {
 				throw new RuntimeException(e);
