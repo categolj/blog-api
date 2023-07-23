@@ -2,6 +2,8 @@ version: "2"
 services:
   postgresql:
     image: bitnami/postgresql:14
+    labels:
+      org.springframework.boot.service-connection: postgres
     ports:
     - 5432:5432
     environment:

@@ -32,6 +32,8 @@ Run the app
 java -jar target/blog-api-5.0.0-SNAPSHOT.jar 
 ```
 
+> or `./mvnw spring-boot:run` makes automatically docker compose up 
+
 Download a blog entry template
 
 ```
