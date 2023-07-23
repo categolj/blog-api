@@ -1,13 +1,12 @@
 package am.ik.blog.github;
 
-import java.util.Map;
-
 import am.ik.yavi.builder.ValidatorBuilder;
-import am.ik.yavi.core.BiValidator;
-
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.Errors;
+
+import java.util.Map;
+import java.util.function.BiConsumer;
 
 import static am.ik.yavi.constraint.charsequence.codepoints.AsciiCodePoints.ASCII_PRINTABLE_CHARS;
 
@@ -25,7 +24,7 @@ public class GitHubProps implements org.springframework.validation.Validator {
 
 	private Map<String, GitHubProps> tenants = Map.of();
 
-	private final BiValidator<GitHubProps, Errors> validator = ValidatorBuilder
+	private final BiConsumer<GitHubProps, Errors> validator = ValidatorBuilder
 			.<GitHubProps> of()
 			.constraint(GitHubProps::getAccessToken, "accessToken",
 					c -> c.codePoints(ASCII_PRINTABLE_CHARS).asWhiteList())
@@ -35,7 +34,8 @@ public class GitHubProps implements org.springframework.validation.Validator {
 					c -> c.codePoints(ASCII_PRINTABLE_CHARS).asWhiteList())
 			.constraint(GitHubProps::getContentRepo, "contentRepo",
 					c -> c.codePoints(ASCII_PRINTABLE_CHARS).asWhiteList())
-			.build(Errors::rejectValue);
+			.build() //
+			.toBiConsumer(Errors::rejectValue);
 
 	public String getAccessToken() {
 		return accessToken;
