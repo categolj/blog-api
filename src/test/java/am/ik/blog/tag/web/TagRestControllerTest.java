@@ -18,7 +18,7 @@ import org.springframework.test.web.reactive.server.WebTestClient;
 import static org.mockito.BDDMockito.given;
 
 @WebMvcTest
-@Import({SecurityConfig.class, GitHubProps.class})
+@Import({ SecurityConfig.class, GitHubProps.class })
 class TagRestControllerTest {
 	@Autowired
 	WebTestClient webTestClient;

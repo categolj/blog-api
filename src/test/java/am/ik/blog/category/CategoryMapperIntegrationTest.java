@@ -6,6 +6,9 @@ import am.ik.blog.util.FileLoader;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
+import org.testcontainers.containers.PostgreSQLContainer;
+import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,6 +28,11 @@ class CategoryMapperIntegrationTest {
 
 	@Autowired
 	JdbcTemplate jdbcTemplate;
+
+	@Container
+	@ServiceConnection
+	static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>(
+			"postgres:14-alpine");
 
 	@BeforeEach
 	public void reset() {
