@@ -6,7 +6,6 @@ import io.micrometer.tracing.Span;
 import io.micrometer.tracing.Tracer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
@@ -15,14 +14,19 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.Optional;
+
 @RestControllerAdvice
 public class ProblemControllerAdvice {
 	private final Logger log = LoggerFactory.getLogger(ProblemControllerAdvice.class);
 
 	private final Tracer tracer;
 
-	public ProblemControllerAdvice(Tracer tracer) {
-		this.tracer = tracer;
+	public ProblemControllerAdvice(Optional<Tracer> tracer) {
+		this.tracer = tracer.orElseGet(() -> {
+			log.warn("Tracer is not found. NOOP trace is used instead.");
+			return Tracer.NOOP; /* for test */
+		});
 	}
 
 	@ExceptionHandler(ResponseStatusException.class)

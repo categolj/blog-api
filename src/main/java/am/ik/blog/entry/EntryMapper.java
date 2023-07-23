@@ -72,8 +72,8 @@ public class EntryMapper {
 		final String sql = this.sqlGenerator.generate(
 				loadSqlAsString("am/ik/blog/entry/EntryMapper/findOne.sql"),
 				params.getValues(), params::addValue);
-		return Optional.ofNullable(DataAccessUtils
-				.uniqueResult(this.jdbcTemplate.query(sql, params, rowMapper)));
+		return DataAccessUtils
+				.optionalResult(this.jdbcTemplate.query(sql, params, rowMapper));
 	}
 
 	@Transactional(readOnly = true)

@@ -6,7 +6,7 @@
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>3.1.2</version>
+		<version>3.2.0-M1</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>am.ik.blog</groupId>
@@ -21,7 +21,6 @@
 		<start-class>am.ik.blog.BlogApiApplication</start-class>
 		<spring-doc.version>2.1.0</spring-doc.version>
 		<mybatis-thymeleaf.version>1.0.4</mybatis-thymeleaf.version>
-		<snakeyaml.version>2.0</snakeyaml.version>
 		<jar-classifier></jar-classifier>
 	</properties>
 
