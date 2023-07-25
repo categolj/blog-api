@@ -6,9 +6,9 @@ import java.util.List;
 import java.util.Map;
 
 import am.ik.blog.security.Privilege;
-import reactor.util.function.Tuple2;
-import reactor.util.function.Tuples;
 
+import am.ik.blog.util.Tuple2;
+import am.ik.blog.util.Tuples;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 

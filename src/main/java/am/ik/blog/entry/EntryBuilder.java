@@ -1,9 +1,9 @@
 package am.ik.blog.entry;
 
+import am.ik.blog.util.Tuple3;
+import am.ik.blog.util.Tuples;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import org.springframework.core.io.Resource;
-import reactor.util.function.Tuple3;
-import reactor.util.function.Tuples;
 
 import java.io.BufferedReader;
 import java.io.IOException;

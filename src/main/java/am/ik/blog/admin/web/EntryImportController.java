@@ -9,15 +9,14 @@ import am.ik.blog.entry.Entry;
 import am.ik.blog.entry.EntryService;
 import am.ik.blog.github.EntryFetcher;
 import am.ik.blog.github.GitHubProps;
+import am.ik.blog.util.Tuple2;
+import am.ik.blog.util.Tuples;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
-import reactor.util.function.Tuple2;
-import reactor.util.function.Tuples;
+import org.springframework.web.client.HttpClientErrorException;
 
 import org.springframework.http.MediaType;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,7 +24,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.reactive.function.client.WebClientResponseException.NotFound;
 
 @RestController
 @Tag(name = "admin")
@@ -48,8 +46,7 @@ public class EntryImportController {
 	@PostMapping(path = "/admin/import", produces = MediaType.APPLICATION_JSON_VALUE)
 	@Transactional
 	@Operation(security = { @SecurityRequirement(name = "basic") })
-	public Optional<List<String>> importEntries(
-			@RequestParam(defaultValue = "0") int from,
+	public List<String> importEntries(@RequestParam(defaultValue = "0") int from,
 			@RequestParam(defaultValue = "0") int to) {
 		return this.importEntriesForTenant(from, to, null);
 	}
@@ -57,27 +54,24 @@ public class EntryImportController {
 	@PostMapping(path = "/tenants/{tenantId}/admin/import", produces = MediaType.APPLICATION_JSON_VALUE)
 	@Transactional
 	@Operation(security = { @SecurityRequirement(name = "basic") })
-	public Optional<List<String>> importEntriesForTenant(
-			@RequestParam(defaultValue = "0") int from,
+	public List<String> importEntriesForTenant(@RequestParam(defaultValue = "0") int from,
 			@RequestParam(defaultValue = "0") int to,
 			@PathVariable(name = "tenantId", required = false) String tenantId) {
 		final Tuple2<String, String> ownerAndRepo = this.getOwnerAndRepo(tenantId);
 		log.info("Importing entries from https://github.com/{}/{} ({}-{})",
 				ownerAndRepo.getT1(), ownerAndRepo.getT2(), from, to);
-		final Optional<List<Entry>> fetched = Flux
-				.fromStream(IntStream.rangeClosed(from, to).boxed())
-				.flatMap(i -> this.entryFetcher
-						.fetch(tenantId, ownerAndRepo.getT1(), ownerAndRepo.getT2(),
-								String.format("content/%05d.md", i))
-						.onErrorResume(e -> (e instanceof NotFound) ? Mono.empty()
-								: Mono.error(e)),
-						8)
-				.collectList()
-				// blocking intentionally so that trace id is properly propagated
-				.blockOptional();
-		return fetched.map(entries -> entries.stream()
+		return IntStream.rangeClosed(from, to).boxed().map(entryId -> {
+			try {
+				return this.entryFetcher.fetch(tenantId, ownerAndRepo.getT1(),
+						ownerAndRepo.getT2(), String.format("content/%05d.md", entryId));
+			}
+			catch (HttpClientErrorException e) {
+				log.warn(e.getMessage(), e);
+				return Optional.<Entry> empty();
+			}
+		}).filter(Optional::isPresent).map(Optional::get)
 				.peek(entry -> this.entryService.save(entry, tenantId))
-				.map(e -> e.getEntryId() + " " + e.getFrontMatter().getTitle()).toList());
+				.map(e -> e.getEntryId() + " " + e.getFrontMatter().getTitle()).toList();
 	}
 
 	private Tuple2<String, String> getOwnerAndRepo(String tenantId) {

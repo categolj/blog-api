@@ -9,13 +9,14 @@ import am.ik.blog.github.Fixtures;
 import am.ik.blog.github.GitHubProps;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
-import reactor.core.publisher.Mono;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.web.reactive.server.WebTestClient;
+
+import java.util.Optional;
 
 import static org.mockito.BDDMockito.given;
 
@@ -38,7 +39,7 @@ class EntryImportControllerTest {
 	void importEntries_200(String tenantId) {
 		final Entry entry = Fixtures.entry(100L);
 		given(this.entryFetcher.fetch(tenantId, "foo", "my-blog", "content/00100.md"))
-				.willReturn(Mono.just(entry));
+				.willReturn(Optional.of(entry));
 		this.webTestClient.post()
 				.uri("%s/admin/import?from=100&to=100"
 						.formatted(tenantId == null ? "" : "/tenants/" + tenantId))
@@ -52,7 +53,7 @@ class EntryImportControllerTest {
 	void importEntries_401(String tenantId) {
 		final Entry entry = Fixtures.entry(100L);
 		given(this.entryFetcher.fetch(tenantId, "foo", "my-blog", "content/00100.md"))
-				.willReturn(Mono.just(entry));
+				.willReturn(Optional.of(entry));
 		this.webTestClient.post()
 				.uri("%s/admin/import?from=100&to=100"
 						.formatted(tenantId == null ? "" : "/tenants/" + tenantId))

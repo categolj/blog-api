@@ -1,6 +1,7 @@
 package am.ik.blog.github.web;
 
 import java.util.Map;
+import java.util.Optional;
 
 import am.ik.blog.entry.Entry;
 import am.ik.blog.entry.EntryMapper;
@@ -63,7 +64,7 @@ public class WebhookControllerTest {
 	void webhookAdded(String tenantId, String secret) throws Exception {
 		Entry entry = Fixtures.entry(100L);
 		given(entryFetcher.fetch(tenantId, "example", "blog.example.com",
-				"content/00100.md")).willReturn(Mono.just(entry));
+				"content/00100.md")).willReturn(Optional.of(entry));
 		given(entryRepository.save(entry, tenantId)).willReturn(Map.of());
 
 		ObjectNode body = this.objectMapper.createObjectNode();
@@ -95,7 +96,7 @@ public class WebhookControllerTest {
 	void webhookModified(String tenantId, String secret) throws Exception {
 		Entry entry = Fixtures.entry(100L);
 		given(entryFetcher.fetch(tenantId, "example", "blog.example.com",
-				"content/00100.md")).willReturn(Mono.just(entry));
+				"content/00100.md")).willReturn(Optional.of(entry));
 		given(entryRepository.save(entry, tenantId)).willReturn(Map.of());
 
 		ObjectNode body = this.objectMapper.createObjectNode();
@@ -127,7 +128,7 @@ public class WebhookControllerTest {
 	void webhookRemoved(String tenantId, String secret) throws Exception {
 		Entry entry = Fixtures.entry(100L);
 		given(entryFetcher.fetch(tenantId, "example", "blog.example.com",
-				"content/00100.md")).willReturn(Mono.just(entry));
+				"content/00100.md")).willReturn(Optional.of(entry));
 		Long entryId = entry.getEntryId();
 		given(entryRepository.delete(entryId, tenantId)).willReturn(1);
 
@@ -160,7 +161,7 @@ public class WebhookControllerTest {
 	void webhookForbidden(String tenantId, String secret) throws Exception {
 		Entry entry = Fixtures.entry(100L);
 		given(entryFetcher.fetch(tenantId, "example", "blog.example.com",
-				"content/00100.md")).willReturn(Mono.just(entry));
+				"content/00100.md")).willReturn(Optional.of(entry));
 
 		ObjectNode body = this.objectMapper.createObjectNode();
 		body.putObject("repository").put("full_name", "example/blog.example.com");

@@ -5,6 +5,7 @@ import java.io.UncheckedIOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
@@ -83,23 +84,23 @@ public class WebhookController {
 		final List<Map<String, Long>> result = new ArrayList<>();
 		commits.forEach(commit -> {
 			Stream.of("added", "modified").forEach(key -> {
-				this.paths(commit.get(key))
-						.forEach(path -> this.entryFetcher
-								.fetch(tenantId, owner, repo, path)
-								.doOnNext(e -> result.add(Map.of(key, e.getEntryId())))
-								// blocking intentionally so that trace id is properly
-								// propagated
-								.blockOptional()
-								.ifPresent(entry -> entryService.save(entry, tenantId)));
+				this.paths(commit.get(key)).forEach(path -> {
+					Optional<Entry> fetch = this.entryFetcher.fetch(tenantId, owner, repo,
+							path);
+					fetch.ifPresent(entry -> {
+						result.add(Map.of(key, entry.getEntryId()));
+						entryService.save(entry, tenantId);
+					});
+				});
 			});
-			this.paths(commit.get("removed"))
-					.forEach(path -> this.entryFetcher.fetch(tenantId, owner, repo, path)
-							.map(Entry::getEntryId)
-							.doOnNext(id -> result.add(Map.of("removed", id)))
-							// blocking intentionally so that trace id is properly
-							// propagated
-							.blockOptional().ifPresent(
-									entryId -> entryService.delete(entryId, tenantId)));
+			this.paths(commit.get("removed")).forEach(path -> {
+				Optional<Long> fetch = this.entryFetcher
+						.fetch(tenantId, owner, repo, path).map(Entry::getEntryId);
+				fetch.ifPresent(entryId -> {
+					result.add(Map.of("removed", entryId));
+					entryService.delete(entryId, tenantId);
+				});
+			});
 		});
 		return result;
 	}
