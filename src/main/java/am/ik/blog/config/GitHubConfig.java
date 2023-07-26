@@ -1,44 +1,52 @@
 package am.ik.blog.config;
 
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Objects;
-import java.util.stream.Collectors;
-
-import am.ik.blog.github.Committer;
-import am.ik.blog.github.GitCommit;
-import am.ik.blog.github.GitCommitter;
-import am.ik.blog.github.GitHubClient;
-import am.ik.blog.github.GitHubProps;
-import am.ik.blog.github.GitHubUserContentClient;
-import am.ik.blog.github.Parent;
-import am.ik.blog.github.Tree;
+import am.ik.blog.github.*;
 import am.ik.blog.github.web.WebhookController;
+import am.ik.spring.http.client.RetryableClientHttpRequestInterceptor;
 import com.fasterxml.jackson.databind.JsonNode;
-
 import org.springframework.aot.hint.ExecutableMode;
 import org.springframework.aot.hint.RuntimeHintsRegistrar;
 import org.springframework.boot.web.client.RestTemplateBuilder;
+import org.springframework.boot.web.client.RestTemplateCustomizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.ImportRuntimeHints;
 import org.springframework.http.HttpHeaders;
 import org.springframework.util.ReflectionUtils;
+import org.springframework.util.backoff.ExponentialBackOff;
+import org.springframework.web.client.RestTemplate;
 import org.springframework.web.client.support.RestTemplateAdapter;
 import org.springframework.web.service.invoker.HttpServiceProxyFactory;
+
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 @Configuration(proxyBeanMethods = false)
 @ImportRuntimeHints(GitHubConfig.RuntimeHints.class)
 public class GitHubConfig {
+	@Bean
+	public RestTemplateCustomizer restTemplateCustomizer(GitHubProps props) {
+		final ExponentialBackOff backOff = new ExponentialBackOff(
+				props.getRetryInterval().toMillis(), 2);
+		backOff.setMaxElapsedTime(props.getRetryMaxElapsedTime().toMillis());
+		return restTemplate -> restTemplate.setInterceptors(
+				List.of(new RetryableClientHttpRequestInterceptor(backOff)));
+	}
 
 	@Bean
 	public GitHubClient gitHubClient(GitHubProps props,
 			RestTemplateBuilder restTemplateBuilder) {
-		final RestTemplateAdapter adapter = RestTemplateAdapter
-				.create(restTemplateBuilder.rootUri("https://api.github.com")
-						.defaultHeader(HttpHeaders.AUTHORIZATION,
-								"token %s".formatted(props.getAccessToken()))
-						.build());
+		final RestTemplate restTemplate = restTemplateBuilder //
+				.rootUri("https://api.github.com") //
+				.setConnectTimeout(props.getConnectTimeout()) //
+				.setReadTimeout(props.getReadTimeout()) //
+				.defaultHeader(HttpHeaders.AUTHORIZATION,
+						"token %s".formatted(props.getAccessToken())) //
+				.build();
+		final RestTemplateAdapter adapter = RestTemplateAdapter.create(restTemplate);
 		final HttpServiceProxyFactory factory = HttpServiceProxyFactory
 				.builderFor(adapter).build();
 		return factory.createClient(GitHubClient.class);
@@ -49,12 +57,16 @@ public class GitHubConfig {
 			RestTemplateBuilder restTemplateBuilder) {
 		return props.getTenants().entrySet().stream()
 				.collect(Collectors.toUnmodifiableMap(Entry::getKey, e -> {
+					final GitHubProps tenantProps = e.getValue();
+					final RestTemplate restTemplate = restTemplateBuilder //
+							.rootUri("https://api.github.com") //
+							.setConnectTimeout(tenantProps.getConnectTimeout()) //
+							.setReadTimeout(tenantProps.getReadTimeout()) //
+							.defaultHeader(HttpHeaders.AUTHORIZATION,
+									"token %s".formatted(tenantProps.getAccessToken())) //
+							.build();
 					final RestTemplateAdapter adapter = RestTemplateAdapter
-							.create(restTemplateBuilder.rootUri("https://api.github.com")
-									.defaultHeader(HttpHeaders.AUTHORIZATION,
-											"token %s".formatted(
-													e.getValue().getAccessToken()))
-									.build());
+							.create(restTemplate);
 					final HttpServiceProxyFactory factory = HttpServiceProxyFactory
 							.builderFor(adapter).build();
 					return factory.createClient(GitHubClient.class);
@@ -64,11 +76,14 @@ public class GitHubConfig {
 	@Bean
 	public GitHubUserContentClient gitHubUserContentClient(GitHubProps props,
 			RestTemplateBuilder restTemplateBuilder) {
-		final RestTemplateAdapter adapter = RestTemplateAdapter
-				.create(restTemplateBuilder.rootUri("https://raw.githubusercontent.com")
-						.defaultHeader(HttpHeaders.AUTHORIZATION,
-								"token %s".formatted(props.getAccessToken()))
-						.build());
+		final RestTemplate restTemplate = restTemplateBuilder //
+				.rootUri("https://raw.githubusercontent.com") //
+				.setConnectTimeout(props.getConnectTimeout()) //
+				.setReadTimeout(props.getReadTimeout()) //
+				.defaultHeader(HttpHeaders.AUTHORIZATION,
+						"token %s".formatted(props.getAccessToken())) //
+				.build();
+		final RestTemplateAdapter adapter = RestTemplateAdapter.create(restTemplate);
 		final HttpServiceProxyFactory factory = HttpServiceProxyFactory
 				.builderFor(adapter).build();
 		return factory.createClient(GitHubUserContentClient.class);

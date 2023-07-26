@@ -5,6 +5,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.Errors;
 
+import java.time.Duration;
 import java.util.Map;
 import java.util.function.BiConsumer;
 
@@ -24,6 +25,14 @@ public class GitHubProps implements org.springframework.validation.Validator {
 
 	private Map<String, GitHubProps> tenants = Map.of();
 
+	private Duration retryInterval = Duration.ofMillis(500);
+
+	private Duration retryMaxElapsedTime = Duration.ofSeconds(4);
+
+	private Duration connectTimeout = Duration.ofSeconds(5);
+
+	private Duration readTimeout = Duration.ofSeconds(5);
+
 	private final BiConsumer<GitHubProps, Errors> validator = ValidatorBuilder
 			.<GitHubProps> of()
 			.constraint(GitHubProps::getAccessToken, "accessToken",
@@ -34,6 +43,17 @@ public class GitHubProps implements org.springframework.validation.Validator {
 					c -> c.codePoints(ASCII_PRINTABLE_CHARS).asWhiteList())
 			.constraint(GitHubProps::getContentRepo, "contentRepo",
 					c -> c.codePoints(ASCII_PRINTABLE_CHARS).asWhiteList())
+			.constraint(GitHubProps::getTenants, "tenants", c -> c.notNull())
+			.constraintOnObject(GitHubProps::getRetryInterval, "retryInterval",
+					c -> c.notNull())
+			.constraintOnObject(GitHubProps::getRetryMaxElapsedTime,
+					"retryMaxElapsedTime", c -> c.notNull())
+			.constraintOnObject(GitHubProps::getReadTimeout, "readTimeout",
+					c -> c.notNull())
+			.constraintOnObject(GitHubProps::getConnectTimeout, "connectTimeout",
+					c -> c.notNull())
+			.constraintOnObject(GitHubProps::getConnectTimeout, "connectTimeout",
+					c -> c.notNull())
 			.build() //
 			.toBiConsumer(Errors::rejectValue);
 
@@ -75,6 +95,38 @@ public class GitHubProps implements org.springframework.validation.Validator {
 
 	public void setTenants(Map<String, GitHubProps> tenants) {
 		this.tenants = tenants;
+	}
+
+	public Duration getRetryInterval() {
+		return retryInterval;
+	}
+
+	public void setRetryInterval(Duration retryInterval) {
+		this.retryInterval = retryInterval;
+	}
+
+	public Duration getRetryMaxElapsedTime() {
+		return retryMaxElapsedTime;
+	}
+
+	public void setRetryMaxElapsedTime(Duration retryMaxElapsedTime) {
+		this.retryMaxElapsedTime = retryMaxElapsedTime;
+	}
+
+	public Duration getConnectTimeout() {
+		return connectTimeout;
+	}
+
+	public void setConnectTimeout(Duration connectTimeout) {
+		this.connectTimeout = connectTimeout;
+	}
+
+	public Duration getReadTimeout() {
+		return readTimeout;
+	}
+
+	public void setReadTimeout(Duration readTimeout) {
+		this.readTimeout = readTimeout;
 	}
 
 	@Override
