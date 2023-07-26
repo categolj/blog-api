@@ -1,24 +1,23 @@
 package am.ik.blog.tag;
 
-import java.util.List;
-
-import am.ik.blog.util.FileLoader;
 import org.mybatis.scripting.thymeleaf.SqlGenerator;
-
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
+import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
+
+import java.util.List;
 
 import static am.ik.blog.util.FileLoader.loadSqlAsString;
 
 @Repository
 public class TagMapper {
-	private final NamedParameterJdbcTemplate jdbcTemplate;
+	private final JdbcClient jdbcClient;
 
 	private final SqlGenerator sqlGenerator;
 
 	public TagMapper(NamedParameterJdbcTemplate jdbcTemplate, SqlGenerator sqlGenerator) {
-		this.jdbcTemplate = jdbcTemplate;
+		this.jdbcClient = JdbcClient.create(jdbcTemplate);
 		this.sqlGenerator = sqlGenerator;
 	}
 
@@ -28,8 +27,10 @@ public class TagMapper {
 		final String sql = this.sqlGenerator.generate(
 				loadSqlAsString("am/ik/blog/tag/TagMapper/findOrderByTagNameAsc.sql"),
 				params.getValues(), params::addValue);
-		return this.jdbcTemplate.query(sql, params,
-				(rs, rowNum) -> new TagNameAndCount(rs.getString("tag_name"),
-						rs.getInt("count")));
+		return this.jdbcClient.sql(sql) //
+				.paramSource(params) //
+				.query((rs, rowNum) -> new TagNameAndCount(rs.getString("tag_name"),
+						rs.getInt("count")))
+				.list();
 	}
 }

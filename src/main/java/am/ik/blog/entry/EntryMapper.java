@@ -1,14 +1,5 @@
 package am.ik.blog.entry;
 
-import java.sql.Timestamp;
-import java.time.ZoneOffset;
-import java.util.Arrays;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-
 import am.ik.blog.category.Category;
 import am.ik.blog.entry.keyword.KeywordExtractor;
 import am.ik.blog.entry.search.SearchCriteria;
@@ -17,20 +8,23 @@ import am.ik.pagination.OffsetPage;
 import am.ik.pagination.OffsetPageRequest;
 import am.ik.yavi.core.ConstraintViolationsException;
 import org.mybatis.scripting.thymeleaf.SqlGenerator;
-
-import org.springframework.dao.support.DataAccessUtils;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
+import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.sql.Timestamp;
+import java.time.ZoneOffset;
+import java.util.*;
 
 import static am.ik.blog.util.FileLoader.loadSqlAsString;
 import static java.util.stream.Collectors.joining;
 
 @Repository
 public class EntryMapper {
-	private final NamedParameterJdbcTemplate jdbcTemplate;
+	private final JdbcClient jdbcClient;
 
 	private final SqlGenerator sqlGenerator;
 
@@ -58,7 +52,7 @@ public class EntryMapper {
 
 	public EntryMapper(NamedParameterJdbcTemplate jdbcTemplate, SqlGenerator sqlGenerator,
 			KeywordExtractor keywordExtractor) {
-		this.jdbcTemplate = jdbcTemplate;
+		this.jdbcClient = JdbcClient.create(jdbcTemplate);
 		this.sqlGenerator = sqlGenerator;
 		this.keywordExtractor = keywordExtractor;
 	}
@@ -72,8 +66,7 @@ public class EntryMapper {
 		final String sql = this.sqlGenerator.generate(
 				loadSqlAsString("am/ik/blog/entry/EntryMapper/findOne.sql"),
 				params.getValues(), params::addValue);
-		return DataAccessUtils
-				.optionalResult(this.jdbcTemplate.query(sql, params, rowMapper));
+		return this.jdbcClient.sql(sql).paramSource(params).query(rowMapper).optional();
 	}
 
 	@Transactional(readOnly = true)
@@ -89,7 +82,7 @@ public class EntryMapper {
 		final String sql = this.sqlGenerator.generate(
 				loadSqlAsString("am/ik/blog/entry/EntryMapper/findAll.sql"),
 				params.getValues(), params::addValue);
-		return this.jdbcTemplate.query(sql, params, rowMapper);
+		return this.jdbcClient.sql(sql).paramSource(params).query(rowMapper).list();
 	}
 
 	@Transactional(readOnly = true)
@@ -107,8 +100,10 @@ public class EntryMapper {
 		final String sql = this.sqlGenerator.generate(
 				loadSqlAsString("am/ik/blog/entry/EntryMapper/count.sql"),
 				params.getValues(), params::addValue);
-		final Long count = this.jdbcTemplate.queryForObject(sql, params,
-				(rs, rowNum) -> rs.getLong("count"));
+		final Long count = this.jdbcClient.sql(sql) //
+				.paramSource(params) //
+				.query((rs, rowNum) -> rs.getLong("count")) //
+				.single();
 		return Objects.<Long> requireNonNullElse(count, 0L);
 	}
 
@@ -118,8 +113,8 @@ public class EntryMapper {
 		final String sql = this.sqlGenerator.generate(
 				loadSqlAsString("am/ik/blog/entry/EntryMapper/nextId.sql"),
 				params.getValues(), params::addValue);
-		final Long nextId = this.jdbcTemplate.queryForObject(sql, Map.of(),
-				(rs, i) -> rs.getLong("next"));
+		final Long nextId = this.jdbcClient.sql(sql) //
+				.query((rs, i) -> rs.getLong("next")).single();
 		return Objects.<Long> requireNonNullElse(nextId, 1L);
 	}
 
@@ -130,7 +125,7 @@ public class EntryMapper {
 		final String sql = this.sqlGenerator.generate(
 				loadSqlAsString("am/ik/blog/entry/EntryMapper/deleteEntry.sql"),
 				params.getValues(), params::addValue);
-		return this.jdbcTemplate.update(sql, params);
+		return this.jdbcClient.sql(sql).paramSource(params).update();
 	}
 
 	@Transactional
@@ -160,7 +155,9 @@ public class EntryMapper {
 		final String upsertEntrySql = this.sqlGenerator.generate(
 				loadSqlAsString("am/ik/blog/entry/EntryMapper/upsertEntry.sql"),
 				params.getValues(), params::addValue);
-		final int upsertEntryCount = this.jdbcTemplate.update(upsertEntrySql, params);
+		final int upsertEntryCount = this.jdbcClient.sql(upsertEntrySql) //
+				.paramSource(params) //
+				.update();
 		result.put("upsertEntry", upsertEntryCount);
 		return result;
 	}
@@ -174,8 +171,10 @@ public class EntryMapper {
 				params.getValues(), params::addValue)
 				+ " LIMIT %d OFFSET %d".formatted(pageRequest.pageSize(),
 						pageRequest.offset());
-		return this.jdbcTemplate.query(sql, params,
-				(rs, rowNum) -> rs.getLong("entry_id"));
+		return this.jdbcClient.sql(sql) //
+				.paramSource(params) //
+				.query((rs, rowNum) -> rs.getLong("entry_id")) //
+				.list();
 	}
 
 	private static MapSqlParameterSource entryIdsParameterSource(List<Long> ids) {
