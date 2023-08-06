@@ -3,7 +3,7 @@ FROM entry AS e
 WHERE 1 = 1
 /*[# th:if="${keywordsCount > 0}"]*/
 /*[# th:each="i : ${#numbers.sequence(0, keywordsCount - 1)}"]*/
-  AND /*[# mb:p="keywords[${i}]"]*/ 'Java' /*[/]*/ = ANY(e.keywords)
+  AND e.keywords @> ARRAY[ /*[# mb:p="keywords[${i}]"]*/ 'JAVA' /*[/]*/ ]::character varying[]
 /*[/]*/
 /*[/]*/
 /*[# th:if="${createdBy} != null"]*/
@@ -18,7 +18,7 @@ WHERE 1 = 1
 /*[/]*/
 /*[/]*/
 /*[# th:if="${tag} != null"]*/
-  AND /*[# mb:p="tag"]*/ 'Java' /*[/]*/ = ANY(e.tags)
+  AND e.tags @> ARRAY[ /*[# mb:p="tag"]*/ 'Java' /*[/]*/ ]::character varying[]
 /*[/]*/
 /*[# th:if="${tenantId}"]*/
   AND e.tenant_id = /*[# mb:p="tenantId"]*/ '_'

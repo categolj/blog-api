@@ -219,8 +219,8 @@ class SqlTest {
 				WHERE 1 = 1
 
 
-				  AND :keywords[0] = ANY(e.keywords)
-				  AND :keywords[1] = ANY(e.keywords)
+				  AND e.keywords @> ARRAY[ :keywords[0] ]::character varying[]
+				  AND e.keywords @> ARRAY[ :keywords[1] ]::character varying[]
 
 
 
@@ -239,8 +239,8 @@ class SqlTest {
 				WHERE 1 = 1
 
 
-				  AND ? = ANY(e.keywords)
-				  AND ? = ANY(e.keywords)
+				  AND e.keywords @> ARRAY[ ? ]::character varying[]
+				  AND e.keywords @> ARRAY[ ? ]::character varying[]
 
 
 
@@ -281,7 +281,7 @@ class SqlTest {
 
 
 
-				  AND :tag = ANY(e.tags)
+				  AND e.tags @> ARRAY[ :tag ]::character varying[]
 
 
 				  AND e.tenant_id = '_'
