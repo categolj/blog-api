@@ -9,9 +9,10 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class KuromojiIpadicKeywordExtractor implements KeywordExtractor {
+	final Tokenizer tokenizer = new Tokenizer();
+
 	@Override
 	public List<String> extract(String text) {
-		final Tokenizer tokenizer = new Tokenizer();
 		return tokenizer.tokenize(text).stream().filter(token -> {
 			final String surface = token.getSurface();
 			final String partOfSpeechLevel1 = token.getPartOfSpeechLevel1();
