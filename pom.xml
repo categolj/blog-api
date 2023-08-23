@@ -16,12 +16,12 @@
 	<description>Blog API</description>
 
 	<properties>
-		<java.version>17</java.version>
+		<java.version>20</java.version>
 		<ecs-logging-java.version>1.5.0</ecs-logging-java.version>
 		<start-class>am.ik.blog.BlogApiApplication</start-class>
 		<spring-doc.version>2.2.0</spring-doc.version>
 		<mybatis-thymeleaf.version>1.0.4</mybatis-thymeleaf.version>
-		<spring-framework.version>6.1.0-SNAPSHOT</spring-framework.version>
+		<spring-framework.version>6.1.0-M4</spring-framework.version>
 		<jar-classifier></jar-classifier>
 	</properties>
 
