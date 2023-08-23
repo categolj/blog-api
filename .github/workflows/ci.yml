@@ -35,7 +35,7 @@ jobs:
         _JAVA_OPTIONS: -Djava.net.preferIPv4Stack=true
       run: |
         set -e
-        ./mvnw -V test
+        ./mvnw -V --no-transfer-progress test
     - name: build image (JVM)
       run: |
         set -e
