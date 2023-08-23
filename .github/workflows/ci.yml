@@ -39,11 +39,11 @@ jobs:
     - name: build image (JVM)
       run: |
         set -e
-        ./mvnw -V spring-boot:build-image -DskipTests -Dspring-boot.build-image.imageName=ghcr.io/categolj/blog-api:jvm
+        ./mvnw -V --no-transfer-progress spring-boot:build-image -DskipTests -Dspring-boot.build-image.imageName=ghcr.io/categolj/blog-api:jvm
     - name: build image (Native)
       run: |
         set -e
-        ./mvnw -V -Pnative clean spring-boot:build-image -DskipTests -Dspring-boot.build-image.imageName=ghcr.io/categolj/blog-api:native
+        ./mvnw -V --no-transfer-progress -Pnative clean spring-boot:build-image -DskipTests -Dspring-boot.build-image.imageName=ghcr.io/categolj/blog-api:native
     - name: docker push
       if: github.ref == 'refs/heads/main'
       env:
