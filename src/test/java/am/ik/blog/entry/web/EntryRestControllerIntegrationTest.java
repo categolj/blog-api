@@ -21,6 +21,8 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.TestConstructor;
 import org.springframework.test.web.reactive.server.WebTestClient;
 
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.List;
 import java.util.StringJoiner;
 
@@ -77,6 +79,22 @@ class EntryRestControllerIntegrationTest {
 					assertEntry99998(entryPage.getContent().get(1))
 							.assertThatContentIsNotSet();
 					assertEntry99997(entryPage.getContent().get(2))
+							.assertThatContentIsNotSet();
+				});
+	}
+
+	@Test
+	void responsePageByCursor() {
+		this.webTestClient.get()
+				.uri("/entries?cursor=" + OffsetDateTime
+						.of(2017, 4, 1, 1, 0, 0, 0, ZoneOffset.ofHours(9)).toInstant())
+				.exchange().expectBody(EntryPage.class).consumeWith(result -> {
+					final EntryPage entryPage = result.getResponseBody();
+					assertThat(entryPage).isNotNull();
+					assertThat(entryPage.getContent()).hasSize(2);
+					assertEntry99998(entryPage.getContent().get(0))
+							.assertThatContentIsNotSet();
+					assertEntry99997(entryPage.getContent().get(1))
 							.assertThatContentIsNotSet();
 				});
 	}

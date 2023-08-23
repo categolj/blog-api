@@ -7,6 +7,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.FileTime;
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -14,6 +15,8 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 import am.ik.blog.entry.search.SearchCriteria;
+import am.ik.pagination.CursorPage;
+import am.ik.pagination.CursorPageRequest;
 import am.ik.pagination.OffsetPage;
 import am.ik.pagination.OffsetPageRequest;
 import am.ik.yavi.core.ConstraintViolationsException;
@@ -35,6 +38,11 @@ public class EntryService {
 
 	public Long nextId(String tenantId) {
 		return this.entryMapper.nextId(tenantId);
+	}
+
+	public CursorPage<Entry, Instant> findPage(SearchCriteria criteria, String tenantId,
+			CursorPageRequest<Instant> pageRequest) {
+		return this.entryMapper.findPage(criteria, tenantId, pageRequest);
 	}
 
 	public OffsetPage<Entry> findPage(SearchCriteria criteria, String tenantId,

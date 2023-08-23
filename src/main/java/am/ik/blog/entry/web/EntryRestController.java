@@ -7,6 +7,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Clock;
 import java.time.Duration;
+import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.util.List;
@@ -21,6 +22,8 @@ import am.ik.blog.entry.EntryService;
 import am.ik.blog.entry.FrontMatter;
 import am.ik.blog.entry.search.SearchCriteria;
 import am.ik.blog.tag.Tag;
+import am.ik.pagination.CursorPage;
+import am.ik.pagination.CursorPageRequest;
 import am.ik.pagination.OffsetPage;
 import am.ik.pagination.OffsetPageRequest;
 import io.swagger.v3.oas.annotations.Operation;
@@ -145,6 +148,44 @@ public class EntryRestController {
 			@RequestParam(required = false) String updatedBy,
 			@RequestParam(defaultValue = "true") boolean excludeContent,
 			@Parameter(hidden = true) OffsetPageRequest pageRequest) {
+		final SearchCriteria searchCriteria = SearchCriteria.builder().keyword(query)
+				.tag((tag == null) ? null : new Tag(tag))
+				.categories((categories == null) ? List.of()
+						: categories.stream().map(Category::new).toList())
+				.createdBy(createdBy).lastModifiedBy(updatedBy)
+				.excludeContent(excludeContent).build();
+		return this.entryService.findPage(searchCriteria, tenantId, pageRequest);
+	}
+
+	@GetMapping(path = "/entries", params = "cursor", produces = MediaType.APPLICATION_JSON_VALUE)
+	@Parameters({
+			@Parameter(name = "cursor", schema = @Schema(implementation = Instant.class, requiredMode = RequiredMode.NOT_REQUIRED)),
+			@Parameter(name = "size", schema = @Schema(implementation = Integer.class, defaultValue = "20", requiredMode = RequiredMode.NOT_REQUIRED)) })
+	public CursorPage<Entry, Instant> getEntriesByCursor(
+			@RequestParam(required = false) String query,
+			@RequestParam(required = false) String tag,
+			@RequestParam(required = false) List<String> categories,
+			@RequestParam(required = false) String createdBy,
+			@RequestParam(required = false) String updatedBy,
+			@RequestParam(defaultValue = "true") boolean excludeContent,
+			@Parameter(hidden = true) CursorPageRequest<Instant> pageRequest) {
+		return this.getEntriesForTenantByCursor(null, query, tag, categories, createdBy,
+				updatedBy, excludeContent, pageRequest);
+	}
+
+	@GetMapping(path = "/tenants/{tenantId}/entries", params = "cursor", produces = MediaType.APPLICATION_JSON_VALUE)
+	@Parameters({
+			@Parameter(name = "cursor", schema = @Schema(implementation = Instant.class, requiredMode = RequiredMode.NOT_REQUIRED)),
+			@Parameter(name = "size", schema = @Schema(implementation = Integer.class, defaultValue = "20", requiredMode = RequiredMode.NOT_REQUIRED)) })
+	public CursorPage<Entry, Instant> getEntriesForTenantByCursor(
+			@PathVariable(name = "tenantId", required = false) String tenantId,
+			@RequestParam(required = false) String query,
+			@RequestParam(required = false) String tag,
+			@RequestParam(required = false) List<String> categories,
+			@RequestParam(required = false) String createdBy,
+			@RequestParam(required = false) String updatedBy,
+			@RequestParam(defaultValue = "true") boolean excludeContent,
+			@Parameter(hidden = true) CursorPageRequest<Instant> pageRequest) {
 		final SearchCriteria searchCriteria = SearchCriteria.builder().keyword(query)
 				.tag((tag == null) ? null : new Tag(tag))
 				.categories((categories == null) ? List.of()

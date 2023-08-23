@@ -1,27 +1,17 @@
 package am.ik.blog.entry.web;
 
-import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
-import java.time.temporal.ChronoUnit;
-import java.util.List;
-import java.util.Optional;
-import java.util.function.Consumer;
-
 import am.ik.blog.MockConfig;
 import am.ik.blog.config.SecurityConfig;
 import am.ik.blog.config.WebConfig;
-import am.ik.blog.entry.Author;
-import am.ik.blog.entry.Entry;
-import am.ik.blog.entry.EntryBuilder;
-import am.ik.blog.entry.EntryMapper;
-import am.ik.blog.entry.FrontMatterBuilder;
+import am.ik.blog.entry.*;
 import am.ik.blog.github.GitHubProps;
 import am.ik.pagination.OffsetPage;
+import am.ik.pagination.OffsetPageRequest;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
-
+import org.mockito.ArgumentMatchers;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -29,6 +19,13 @@ import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.reactive.server.WebTestClient;
+
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
+import java.time.temporal.ChronoUnit;
+import java.util.List;
+import java.util.Optional;
+import java.util.function.Consumer;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
@@ -110,8 +107,9 @@ class EntryRestControllerTest {
 	@ParameterizedTest
 	@CsvSource({ ",,", "demo,user,password", "demo,foo,bar", "demo,admin,changeme" })
 	void getEntries_200(String tenantId, String username, String password) {
-		given(this.entryMapper.findPage(any(), any(), any())).willReturn(
-				new OffsetPage<>(List.of(this.entry100, this.entry200), 2, 0, 2));
+		given(this.entryMapper.findPage(any(), any(),
+				ArgumentMatchers.<OffsetPageRequest> any())).willReturn(
+						new OffsetPage<>(List.of(this.entry100, this.entry200), 2, 0, 2));
 		this.webTestClient.get()
 				.uri((tenantId == null ? "" : "/tenants/" + tenantId) + "/entries")
 				.headers(configureAuth(tenantId, username, password)).exchange()

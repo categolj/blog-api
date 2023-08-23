@@ -4,6 +4,8 @@ import am.ik.blog.category.Category;
 import am.ik.blog.entry.keyword.KeywordExtractor;
 import am.ik.blog.entry.search.SearchCriteria;
 import am.ik.blog.tag.Tag;
+import am.ik.pagination.CursorPage;
+import am.ik.pagination.CursorPageRequest;
 import am.ik.pagination.OffsetPage;
 import am.ik.pagination.OffsetPageRequest;
 import am.ik.yavi.core.ConstraintViolationsException;
@@ -16,6 +18,7 @@ import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.sql.Timestamp;
+import java.time.Instant;
 import java.time.ZoneOffset;
 import java.util.*;
 
@@ -92,6 +95,28 @@ public class EntryMapper {
 		final long total = this.count(searchCriteria, tenantId);
 		return new OffsetPage<>(content, pageRequest.pageSize(), pageRequest.pageNumber(),
 				total);
+	}
+
+	@Transactional(readOnly = true)
+	public CursorPage<Entry, Instant> findPage(SearchCriteria searchCriteria,
+			String tenantId, CursorPageRequest<Instant> pageRequest) {
+		final Optional<Instant> cursor = pageRequest.cursorOptional();
+		final int pageSizePlus1 = pageRequest.pageSize() + 1;
+		final MapSqlParameterSource params = searchCriteria
+				.toParameterSource(this.keywordExtractor).addValue("tenantId", tenantId)
+				.addValue("cursor", cursor.map(Timestamp::from).orElse(null));
+		final String sql = "%s LIMIT %d".formatted(this.sqlGenerator.generate(
+				loadSqlAsString("am/ik/blog/entry/EntryMapper/findAllCursorNext.sql"),
+				params.getValues(), params::addValue), pageSizePlus1);
+		final List<Entry> contentPlus1 = this.jdbcClient.sql(sql).paramSource(params)
+				.query(this.rowMapper).list();
+		final boolean hasPrevious = cursor.isPresent();
+		final boolean hasNext = contentPlus1.size() == pageSizePlus1;
+		final List<Entry> content = hasNext
+				? contentPlus1.subList(0, pageRequest.pageSize())
+				: contentPlus1;
+		return new CursorPage<>(content, pageRequest.pageSize(),
+				entry -> entry.getUpdated().getDate().toInstant(), hasPrevious, hasNext);
 	}
 
 	public long count(SearchCriteria searchCriteria, String tenantId) {
