@@ -85,10 +85,8 @@ class EntryRestControllerIntegrationTest {
 
 	@Test
 	void responsePageByCursor() {
-		this.webTestClient.get()
-				.uri("/entries?cursor=" + OffsetDateTime
-						.of(2017, 4, 1, 1, 0, 0, 0, ZoneOffset.ofHours(9)).toInstant())
-				.exchange().expectBody(EntryPage.class).consumeWith(result -> {
+		this.webTestClient.get().uri("/entries?cursor=2017-04-01T02:00:00Z").exchange()
+				.expectBody(EntryPage.class).consumeWith(result -> {
 					final EntryPage entryPage = result.getResponseBody();
 					assertThat(entryPage).isNotNull();
 					assertThat(entryPage.getContent()).hasSize(2);
