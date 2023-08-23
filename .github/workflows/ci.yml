@@ -22,7 +22,7 @@ jobs:
     - uses: graalvm/setup-graalvm@v1
       with:
         version: '22.3.0'
-        java-version: '17'
+        java-version: '20'
         components: 'native-image'
     - uses: actions/cache@v1
       with:
