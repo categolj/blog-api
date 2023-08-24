@@ -59,8 +59,8 @@ jobs:
         EOF
         docker push ghcr.io/categolj/blog-api:native
         docker push ghcr.io/categolj/blog-api:jvm
-        docker tag ghcr.io/categolj/blog-api:native ghcr.io/categolj/blog-api:latest
-        docker push ghcr.io/categolj/blog-api:latest
+        #! docker tag ghcr.io/categolj/blog-api:native ghcr.io/categolj/blog-api:latest
+        #! docker push ghcr.io/categolj/blog-api:latest
     - name: mvn deploy
       if: github.ref == 'refs/heads/deprecated'
       env:
