@@ -41,6 +41,7 @@ jobs:
         set -e
         ./mvnw -V --no-transfer-progress spring-boot:build-image -DskipTests -Dspring-boot.build-image.imageName=ghcr.io/categolj/blog-api:jvm
     - name: build image (Native)
+      if: github.ref == 'refs/heads/deprecated'
       run: |
         set -e
         ./mvnw -V --no-transfer-progress -Pnative clean spring-boot:build-image -DskipTests -Dspring-boot.build-image.imageName=ghcr.io/categolj/blog-api:native
