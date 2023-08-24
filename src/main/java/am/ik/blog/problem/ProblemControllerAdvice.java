@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import java.util.Optional;
 
@@ -62,6 +63,14 @@ public class ProblemControllerAdvice {
 				HttpStatus.SERVICE_UNAVAILABLE,
 				"There is a problem with database access.");
 		log.error("There is a problem with database access.", e);
+		return setTraceId(problemDetail);
+	}
+
+	@ExceptionHandler(NoResourceFoundException.class)
+	@ResponseStatus(HttpStatus.NOT_FOUND)
+	public ProblemDetail handleNoResourceFoundException(NoResourceFoundException e) {
+		final ProblemDetail problemDetail = ProblemDetail
+				.forStatusAndDetail(HttpStatus.NOT_FOUND, e.getMessage());
 		return setTraceId(problemDetail);
 	}
 
