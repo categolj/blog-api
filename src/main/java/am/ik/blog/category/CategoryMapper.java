@@ -2,7 +2,6 @@ package am.ik.blog.category;
 
 import org.mybatis.scripting.thymeleaf.SqlGenerator;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
-import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 
@@ -18,9 +17,8 @@ public class CategoryMapper {
 
 	private final SqlGenerator sqlGenerator;
 
-	public CategoryMapper(NamedParameterJdbcTemplate jdbcTemplate,
-			SqlGenerator sqlGenerator) {
-		this.jdbcClient = JdbcClient.create(jdbcTemplate);
+	public CategoryMapper(JdbcClient jdbcClient, SqlGenerator sqlGenerator) {
+		this.jdbcClient = jdbcClient;
 		this.sqlGenerator = sqlGenerator;
 	}
 

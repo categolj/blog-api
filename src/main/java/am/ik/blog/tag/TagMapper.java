@@ -16,8 +16,8 @@ public class TagMapper {
 
 	private final SqlGenerator sqlGenerator;
 
-	public TagMapper(NamedParameterJdbcTemplate jdbcTemplate, SqlGenerator sqlGenerator) {
-		this.jdbcClient = JdbcClient.create(jdbcTemplate);
+	public TagMapper(JdbcClient jdbcClient, SqlGenerator sqlGenerator) {
+		this.jdbcClient = jdbcClient;
 		this.sqlGenerator = sqlGenerator;
 	}
 

@@ -12,7 +12,6 @@ import am.ik.yavi.core.ConstraintViolationsException;
 import org.mybatis.scripting.thymeleaf.SqlGenerator;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
-import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
@@ -53,9 +52,9 @@ public class EntryMapper {
 				.build();
 	};
 
-	public EntryMapper(NamedParameterJdbcTemplate jdbcTemplate, SqlGenerator sqlGenerator,
+	public EntryMapper(JdbcClient jdbcClient, SqlGenerator sqlGenerator,
 			KeywordExtractor keywordExtractor) {
-		this.jdbcClient = JdbcClient.create(jdbcTemplate);
+		this.jdbcClient = jdbcClient;
 		this.sqlGenerator = sqlGenerator;
 		this.keywordExtractor = keywordExtractor;
 	}
