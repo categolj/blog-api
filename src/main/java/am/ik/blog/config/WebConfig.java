@@ -1,8 +1,10 @@
 package am.ik.blog.config;
 
+import java.time.Instant;
 import java.util.List;
 
 import am.ik.blog.github.GitHubProps;
+import am.ik.pagination.web.CursorPageRequestHandlerMethodArgumentResolver;
 import am.ik.pagination.web.OffsetPageRequestHandlerMethodArgumentResolver;
 import am.ik.webhook.spring.WebhookVerifierRequestBodyAdvice;
 
@@ -44,6 +46,6 @@ public class WebConfig implements WebMvcConfigurer {
 	@Override
 	public void addArgumentResolvers(List<HandlerMethodArgumentResolver> resolvers) {
 		resolvers.add(new OffsetPageRequestHandlerMethodArgumentResolver());
-		resolvers.add(new CursorPageRequestHandlerMethodArgumentResolver());
+		resolvers.add(new CursorPageRequestHandlerMethodArgumentResolver<>(Instant::parse));
 	}
 }
