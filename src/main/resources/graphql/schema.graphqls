@@ -1,14 +1,39 @@
 type Query {
     getEntry(entryId: ID): Entry
     getEntryForTenant(entryId: ID, tenantId: String): Entry
+    getEntries(first: Int, after: String!): EntryConnection
 }
 
 type Entry {
     entryId: ID
     content: String
     frontMatter: FrontMatter
+    created: Author
+    updated: Author
 }
 
 type FrontMatter {
     title: String
+}
+
+type Author {
+    name: String
+    date: String
+}
+
+type PageInfo {
+    startCursor: String!
+    endCursor: String!
+    hasNextPage: Boolean
+    hadPreviousPage: Boolean
+}
+
+type EntryEdge {
+    node: Entry
+    cursor: String
+}
+
+type EntryConnection {
+    edges: [EntryEdge]
+    pageInfo: PageInfo
 }
