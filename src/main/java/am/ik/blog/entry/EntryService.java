@@ -15,6 +15,8 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 import am.ik.blog.entry.search.SearchCriteria;
+import am.ik.blog.security.AccessControl;
+import am.ik.blog.security.Privilege;
 import am.ik.pagination.CursorPage;
 import am.ik.pagination.CursorPageRequest;
 import am.ik.pagination.OffsetPage;
@@ -42,25 +44,29 @@ public class EntryService {
 		return this.entryMapper.nextId(tenantId);
 	}
 
-	@PreAuthorize("entry=LIST")
+	@PreAuthorize("")
+	@AccessControl(resource = "entry", requiredPrivileges = Privilege.LIST)
 	public CursorPage<Entry, Instant> findPage(SearchCriteria criteria,
 			@P("tenantId") String tenantId, CursorPageRequest<Instant> pageRequest) {
 		return this.entryMapper.findPage(criteria, tenantId, pageRequest);
 	}
 
-	@PreAuthorize("entry=LIST")
+	@PreAuthorize("")
+	@AccessControl(resource = "entry", requiredPrivileges = Privilege.LIST)
 	public OffsetPage<Entry> findPage(SearchCriteria criteria,
 			@P("tenantId") String tenantId, OffsetPageRequest pageRequest) {
 		return this.entryMapper.findPage(criteria, tenantId, pageRequest);
 	}
 
-	@PreAuthorize("entry=GET")
+	@PreAuthorize("")
+	@AccessControl(resource = "entry", requiredPrivileges = Privilege.GET)
 	public Optional<Entry> findOne(Long entryId, @P("tenantId") String tenantId,
 			boolean excludeContent) {
 		return this.entryMapper.findOne(entryId, tenantId, excludeContent);
 	}
 
-	@PreAuthorize("entry=EXPORT")
+	@PreAuthorize("")
+	@AccessControl(resource = "entry", requiredPrivileges = Privilege.EXPORT)
 	public Path exportEntriesAsZip(@P("tenantId") String tenantId) {
 		try {
 			final Path zip = Files.createTempFile("entries", ".zip");
@@ -116,13 +122,15 @@ public class EntryService {
 		}
 	}
 
-	@PreAuthorize("entry=LIST")
+	@PreAuthorize("")
+	@AccessControl(resource = "entry", requiredPrivileges = Privilege.LIST)
 	public List<Entry> findAll(SearchCriteria criteria, @P("tenantId") String tenantId,
 			OffsetPageRequest pageRequest) {
 		return this.entryMapper.findAll(criteria, tenantId, pageRequest);
 	}
 
-	@PreAuthorize("entry=EDIT")
+	@PreAuthorize("")
+	@AccessControl(resource = "entry", requiredPrivileges = Privilege.EDIT)
 	@Transactional
 	public Map<String, Integer> save(Entry entry, @P("tenantId") String tenantId) {
 		log.info("Saving tenantId={}, entry={}", tenantId, entry);
@@ -133,7 +141,8 @@ public class EntryService {
 		return this.entryMapper.save(entry, tenantId);
 	}
 
-	@PreAuthorize("entry=DELETE")
+	@PreAuthorize("")
+	@AccessControl(resource = "entry", requiredPrivileges = Privilege.DELETE)
 	@Transactional
 	public int delete(Long entryId, @P("tenantId") String tenantId) {
 		return this.entryMapper.delete(entryId, tenantId);

@@ -1,18 +1,15 @@
 package am.ik.blog.tenant;
 
 import java.lang.reflect.Parameter;
-import java.util.Arrays;
 import java.util.Set;
 
+import am.ik.blog.security.AccessControl;
 import am.ik.blog.security.Privilege;
 import am.ik.blog.util.Tuple2;
 import am.ik.blog.util.Tuples;
 import org.aopalliance.intercept.MethodInvocation;
 
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.parameters.P;
-
-import static java.util.stream.Collectors.toUnmodifiableSet;
 
 public class MethodInvocationTenantAuthorizationManager
 		extends AbstractTenantAuthorizationManager<MethodInvocation> {
@@ -57,14 +54,11 @@ public class MethodInvocationTenantAuthorizationManager
 	@Override
 	protected Tuple2<String, Set<Privilege>> resourceAndPrivileges(
 			MethodInvocation context) {
-		final PreAuthorize preAuthorize = context.getMethod()
-				.getAnnotation(PreAuthorize.class);
-		if (preAuthorize != null && preAuthorize.value().contains("=")) {
-			final String[] strings = preAuthorize.value().split("=", 2);
-			final String resource = strings[0];
-			final String[] privileges = strings[1].split(",");
-			return Tuples.of(resource, Arrays.stream(privileges).map(Privilege::valueOf)
-					.collect(toUnmodifiableSet()));
+		final AccessControl accessControl = context.getMethod()
+				.getAnnotation(AccessControl.class);
+		if (accessControl != null) {
+			return Tuples.of(accessControl.resource(),
+					Set.of(accessControl.requiredPrivileges()));
 		}
 		return null;
 	}
