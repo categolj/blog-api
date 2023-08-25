@@ -25,7 +25,6 @@ import am.ik.yavi.core.ConstraintViolationsException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.parameters.P;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -44,28 +43,24 @@ public class EntryService {
 		return this.entryMapper.nextId(tenantId);
 	}
 
-	@PreAuthorize("")
 	@AccessControl(resource = "entry", requiredPrivileges = Privilege.LIST)
 	public CursorPage<Entry, Instant> findPage(SearchCriteria criteria,
 			@P("tenantId") String tenantId, CursorPageRequest<Instant> pageRequest) {
 		return this.entryMapper.findPage(criteria, tenantId, pageRequest);
 	}
 
-	@PreAuthorize("")
 	@AccessControl(resource = "entry", requiredPrivileges = Privilege.LIST)
 	public OffsetPage<Entry> findPage(SearchCriteria criteria,
 			@P("tenantId") String tenantId, OffsetPageRequest pageRequest) {
 		return this.entryMapper.findPage(criteria, tenantId, pageRequest);
 	}
 
-	@PreAuthorize("")
 	@AccessControl(resource = "entry", requiredPrivileges = Privilege.GET)
 	public Optional<Entry> findOne(Long entryId, @P("tenantId") String tenantId,
 			boolean excludeContent) {
 		return this.entryMapper.findOne(entryId, tenantId, excludeContent);
 	}
 
-	@PreAuthorize("")
 	@AccessControl(resource = "entry", requiredPrivileges = Privilege.EXPORT)
 	public Path exportEntriesAsZip(@P("tenantId") String tenantId) {
 		try {
@@ -122,14 +117,12 @@ public class EntryService {
 		}
 	}
 
-	@PreAuthorize("")
 	@AccessControl(resource = "entry", requiredPrivileges = Privilege.LIST)
 	public List<Entry> findAll(SearchCriteria criteria, @P("tenantId") String tenantId,
 			OffsetPageRequest pageRequest) {
 		return this.entryMapper.findAll(criteria, tenantId, pageRequest);
 	}
 
-	@PreAuthorize("")
 	@AccessControl(resource = "entry", requiredPrivileges = Privilege.EDIT)
 	@Transactional
 	public Map<String, Integer> save(Entry entry, @P("tenantId") String tenantId) {
@@ -141,7 +134,6 @@ public class EntryService {
 		return this.entryMapper.save(entry, tenantId);
 	}
 
-	@PreAuthorize("")
 	@AccessControl(resource = "entry", requiredPrivileges = Privilege.DELETE)
 	@Transactional
 	public int delete(Long entryId, @P("tenantId") String tenantId) {
