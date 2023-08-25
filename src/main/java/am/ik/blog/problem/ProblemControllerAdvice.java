@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -71,6 +72,14 @@ public class ProblemControllerAdvice {
 	public ProblemDetail handleNoResourceFoundException(NoResourceFoundException e) {
 		final ProblemDetail problemDetail = ProblemDetail
 				.forStatusAndDetail(HttpStatus.NOT_FOUND, e.getMessage());
+		return setTraceId(problemDetail);
+	}
+
+	@ExceptionHandler(AccessDeniedException.class)
+	@ResponseStatus(HttpStatus.FORBIDDEN)
+	public ProblemDetail handleAccessDeniedException(AccessDeniedException e) {
+		final ProblemDetail problemDetail = ProblemDetail
+				.forStatusAndDetail(HttpStatus.FORBIDDEN, e.getMessage());
 		return setTraceId(problemDetail);
 	}
 

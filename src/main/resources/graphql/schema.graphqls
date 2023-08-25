@@ -1,0 +1,14 @@
+type Query {
+    getEntry(entryId: ID): Entry
+    getEntryForTenant(entryId: ID, tenantId: String): Entry
+}
+
+type Entry {
+    entryId: ID
+    content: String
+    frontMatter: FrontMatter
+}
+
+type FrontMatter {
+    title: String
+}
