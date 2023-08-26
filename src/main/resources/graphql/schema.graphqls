@@ -1,7 +1,6 @@
 type Query {
-    getEntry(entryId: ID!): Entry
-    getEntryForTenant(entryId: ID!, tenantId: String!): Entry
-    getEntries(first: Int, after: String): EntryConnection
+    getEntry(entryId: ID!, tenantId: String): Entry
+    getEntries(first: Int!, after: String, tenantId: String, query: String, tag: String, categories: [String], createdBy: String, updatedBy: String): EntryConnection
 }
 
 type Entry {
@@ -14,6 +13,16 @@ type Entry {
 
 type FrontMatter {
     title: String
+    categories: [Category]
+    tags: [Tag]
+}
+
+type Category {
+    name: String
+}
+
+type Tag {
+    name: String
 }
 
 type Author {

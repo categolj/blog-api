@@ -104,6 +104,14 @@ public class SearchCriteria {
 		return params;
 	}
 
+	@Override
+	public String toString() {
+		return "SearchCriteria{" + "excludeContent=" + excludeContent + ", createdBy='"
+				+ createdBy + '\'' + ", lastModifiedBy='" + lastModifiedBy + '\''
+				+ ", tag=" + tag + ", categories=" + categories + ", keyword='" + keyword
+				+ '\'' + '}';
+	}
+
 	public static class SearchCriteriaBuilder {
 
 		private List<Category> categories;
