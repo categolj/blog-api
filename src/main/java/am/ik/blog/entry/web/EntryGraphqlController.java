@@ -49,22 +49,12 @@ public class EntryGraphqlController {
 						: categories.stream().map(Category::new).toList())
 				.createdBy(createdBy).lastModifiedBy(updatedBy)
 				.excludeContent(excludeContent).build();
-
 		final CursorPage<Entry, Instant> page = this.entryService.findPage(searchCriteria,
 				tenantId, pageRequest);
-
 		final List<EntryEdge> edges = page.content().stream().map(EntryEdge::new)
 				.toList();
-		PageInfo pageInfo;
-		if (edges.isEmpty()) {
-			pageInfo = new PageInfo(null, null, page.hasNext(), page.hasPrevious());
-		}
-		else {
-			pageInfo = new PageInfo(edges.get(0).cursor(),
-					edges.get(edges.size() - 1).cursor(), page.hasNext(),
-					page.hasPrevious());
-		}
-		return new EntryConnection(edges, pageInfo);
+		return new EntryConnection(edges,
+				new PageInfo(edges, page.hasNext(), page.hasPrevious()));
 	}
 
 	public record EntryEdge(Entry node) {
@@ -75,8 +65,13 @@ public class EntryGraphqlController {
 	}
 
 	public record PageInfo(String startCursor, String endCursor, boolean hasNextPage,
-			boolean hadPreviousPage) {
-
+						   boolean hadPreviousPage) {
+		public PageInfo(List<EntryEdge> edges, boolean hasNextPage, boolean hadPreviousPage) {
+			this(edges.isEmpty() ? null : edges.get(0).cursor(),
+					edges.isEmpty() ? null : edges.get(edges.size() - 1).cursor(),
+					hasNextPage,
+					hadPreviousPage);
+		}
 	}
 
 	public record EntryConnection(List<EntryEdge> edges, PageInfo pageInfo) {
