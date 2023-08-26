@@ -139,6 +139,12 @@ public class SearchCriteria {
 			return this;
 		}
 
+		public SearchCriteriaBuilder stringCategories(List<String> categories) {
+			this.categories = (categories == null) ? List.of()
+					: categories.stream().map(Category::new).toList();
+			return this;
+		}
+
 		public SearchCriteriaBuilder createdBy(String createdBy) {
 			this.createdBy = createdBy;
 			return this;
@@ -169,6 +175,11 @@ public class SearchCriteria {
 
 		public SearchCriteriaBuilder tag(Tag tag) {
 			this.tag = tag;
+			return this;
+		}
+
+		public SearchCriteriaBuilder tag(String tag) {
+			this.tag = (tag == null) ? null : new Tag(tag);
 			return this;
 		}
 	}

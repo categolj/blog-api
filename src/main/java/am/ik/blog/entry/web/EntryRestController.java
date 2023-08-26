@@ -149,11 +149,8 @@ public class EntryRestController {
 			@RequestParam(defaultValue = "true") boolean excludeContent,
 			@Parameter(hidden = true) OffsetPageRequest pageRequest) {
 		final SearchCriteria searchCriteria = SearchCriteria.builder().keyword(query)
-				.tag((tag == null) ? null : new Tag(tag))
-				.categories((categories == null) ? List.of()
-						: categories.stream().map(Category::new).toList())
-				.createdBy(createdBy).lastModifiedBy(updatedBy)
-				.excludeContent(excludeContent).build();
+				.tag(tag).stringCategories(categories).createdBy(createdBy)
+				.lastModifiedBy(updatedBy).excludeContent(excludeContent).build();
 		return this.entryService.findPage(searchCriteria, tenantId, pageRequest);
 	}
 
@@ -187,11 +184,8 @@ public class EntryRestController {
 			@RequestParam(defaultValue = "true") boolean excludeContent,
 			@Parameter(hidden = true) CursorPageRequest<Instant> pageRequest) {
 		final SearchCriteria searchCriteria = SearchCriteria.builder().keyword(query)
-				.tag((tag == null) ? null : new Tag(tag))
-				.categories((categories == null) ? List.of()
-						: categories.stream().map(Category::new).toList())
-				.createdBy(createdBy).lastModifiedBy(updatedBy)
-				.excludeContent(excludeContent).build();
+				.tag(tag).stringCategories(categories).createdBy(createdBy)
+				.lastModifiedBy(updatedBy).excludeContent(excludeContent).build();
 		return this.entryService.findPage(searchCriteria, tenantId, pageRequest);
 	}
 

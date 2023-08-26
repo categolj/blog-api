@@ -44,11 +44,8 @@ public class EntryGraphqlController {
 				CursorPageRequest.Navigation.NEXT);
 		final boolean excludeContent = !selectionSet.contains("edges/node/content");
 		final SearchCriteria searchCriteria = SearchCriteria.builder().keyword(query)
-				.tag((tag == null) ? null : new Tag(tag))
-				.categories((categories == null) ? List.of()
-						: categories.stream().map(Category::new).toList())
-				.createdBy(createdBy).lastModifiedBy(updatedBy)
-				.excludeContent(excludeContent).build();
+				.tag(tag).stringCategories(categories).createdBy(createdBy)
+				.lastModifiedBy(updatedBy).excludeContent(excludeContent).build();
 		final CursorPage<Entry, Instant> page = this.entryService.findPage(searchCriteria,
 				tenantId, pageRequest);
 		final List<EntryEdge> edges = page.content().stream().map(EntryEdge::new)
