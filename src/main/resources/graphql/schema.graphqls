@@ -1,7 +1,7 @@
 type Query {
-    getEntry(entryId: ID): Entry
-    getEntryForTenant(entryId: ID, tenantId: String): Entry
-    getEntries(first: Int, after: String!): EntryConnection
+    getEntry(entryId: ID!): Entry
+    getEntryForTenant(entryId: ID!, tenantId: String!): Entry
+    getEntries(first: Int, after: String): EntryConnection
 }
 
 type Entry {
@@ -22,8 +22,8 @@ type Author {
 }
 
 type PageInfo {
-    startCursor: String!
-    endCursor: String!
+    startCursor: String
+    endCursor: String
     hasNextPage: Boolean
     hadPreviousPage: Boolean
 }
