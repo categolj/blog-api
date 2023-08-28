@@ -23,7 +23,6 @@ import am.ik.yavi.core.ConstraintViolationsException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.springframework.security.core.parameters.P;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -42,21 +41,20 @@ public class EntryService {
 		return this.entryMapper.nextId(tenantId);
 	}
 
-	public CursorPage<Entry, Instant> findPage(SearchCriteria criteria, @P("tenantId") String tenantId,
+	public CursorPage<Entry, Instant> findPage(SearchCriteria criteria, String tenantId,
 			CursorPageRequest<Instant> pageRequest) {
 		return this.entryMapper.findPage(criteria, tenantId, pageRequest);
 	}
 
-	public OffsetPage<Entry> findPage(SearchCriteria criteria, @P("tenantId") String tenantId,
-			OffsetPageRequest pageRequest) {
+	public OffsetPage<Entry> findPage(SearchCriteria criteria, String tenantId, OffsetPageRequest pageRequest) {
 		return this.entryMapper.findPage(criteria, tenantId, pageRequest);
 	}
 
-	public Optional<Entry> findOne(Long entryId, @P("tenantId") String tenantId, boolean excludeContent) {
+	public Optional<Entry> findOne(Long entryId, String tenantId, boolean excludeContent) {
 		return this.entryMapper.findOne(entryId, tenantId, excludeContent);
 	}
 
-	public Path exportEntriesAsZip(@P("tenantId") String tenantId) {
+	public Path exportEntriesAsZip(String tenantId) {
 		try {
 			final Path zip = Files.createTempFile("entries", ".zip");
 			log.info("Exporting entries to {}", zip);
@@ -106,12 +104,12 @@ public class EntryService {
 		}
 	}
 
-	public List<Entry> findAll(SearchCriteria criteria, @P("tenantId") String tenantId, OffsetPageRequest pageRequest) {
+	public List<Entry> findAll(SearchCriteria criteria, String tenantId, OffsetPageRequest pageRequest) {
 		return this.entryMapper.findAll(criteria, tenantId, pageRequest);
 	}
 
 	@Transactional
-	public Map<String, Integer> save(Entry entry, @P("tenantId") String tenantId) {
+	public Map<String, Integer> save(Entry entry, String tenantId) {
 		log.info("Saving tenantId={}, entry={}", tenantId, entry);
 		Entry.validator.validate(entry).throwIfInvalid(violations -> {
 			log.info("Violated constraints {}", violations);
@@ -121,7 +119,7 @@ public class EntryService {
 	}
 
 	@Transactional
-	public int delete(Long entryId, @P("tenantId") String tenantId) {
+	public int delete(Long entryId, String tenantId) {
 		return this.entryMapper.delete(entryId, tenantId);
 	}
 

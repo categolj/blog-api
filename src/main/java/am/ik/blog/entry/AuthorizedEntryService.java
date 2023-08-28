@@ -14,6 +14,7 @@ import am.ik.pagination.CursorPageRequest;
 import am.ik.pagination.OffsetPage;
 import am.ik.pagination.OffsetPageRequest;
 
+import org.springframework.security.core.parameters.P;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,40 +32,41 @@ public class AuthorizedEntryService {
 	}
 
 	@Authorized(resource = "entry", requiredPrivileges = Privilege.LIST)
-	public CursorPage<Entry, Instant> findPage(SearchCriteria criteria, String tenantId,
+	public CursorPage<Entry, Instant> findPage(SearchCriteria criteria, @P("tenantId") String tenantId,
 			CursorPageRequest<Instant> pageRequest) {
 		return entryService.findPage(criteria, tenantId, pageRequest);
 	}
 
 	@Authorized(resource = "entry", requiredPrivileges = Privilege.LIST)
-	public OffsetPage<Entry> findPage(SearchCriteria criteria, String tenantId, OffsetPageRequest pageRequest) {
+	public OffsetPage<Entry> findPage(SearchCriteria criteria, @P("tenantId") String tenantId,
+			OffsetPageRequest pageRequest) {
 		return entryService.findPage(criteria, tenantId, pageRequest);
 	}
 
 	@Authorized(resource = "entry", requiredPrivileges = Privilege.GET)
-	public Optional<Entry> findOne(Long entryId, String tenantId, boolean excludeContent) {
+	public Optional<Entry> findOne(Long entryId, @P("tenantId") String tenantId, boolean excludeContent) {
 		return entryService.findOne(entryId, tenantId, excludeContent);
 	}
 
 	@Authorized(resource = "entry", requiredPrivileges = Privilege.EXPORT)
-	public Path exportEntriesAsZip(String tenantId) {
+	public Path exportEntriesAsZip(@P("tenantId") String tenantId) {
 		return entryService.exportEntriesAsZip(tenantId);
 	}
 
 	@Authorized(resource = "entry", requiredPrivileges = Privilege.LIST)
-	public List<Entry> findAll(SearchCriteria criteria, String tenantId, OffsetPageRequest pageRequest) {
+	public List<Entry> findAll(SearchCriteria criteria, @P("tenantId") String tenantId, OffsetPageRequest pageRequest) {
 		return entryService.findAll(criteria, tenantId, pageRequest);
 	}
 
 	@Transactional
 	@Authorized(resource = "entry", requiredPrivileges = Privilege.EDIT)
-	public Map<String, Integer> save(Entry entry, String tenantId) {
+	public Map<String, Integer> save(Entry entry, @P("tenantId") String tenantId) {
 		return entryService.save(entry, tenantId);
 	}
 
 	@Transactional
 	@Authorized(resource = "entry", requiredPrivileges = Privilege.DELETE)
-	public int delete(Long entryId, String tenantId) {
+	public int delete(Long entryId, @P("tenantId") String tenantId) {
 		return entryService.delete(entryId, tenantId);
 	}
 

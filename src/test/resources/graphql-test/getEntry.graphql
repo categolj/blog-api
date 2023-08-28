@@ -1,5 +1,5 @@
-query getEntry($entryId: ID!) {
-    getEntry(entryId: $entryId) {
+query getEntry($entryId: ID!, $tenantId: String) {
+    getEntry(entryId: $entryId, tenantId: $tenantId) {
         entryId
         content
         frontMatter {

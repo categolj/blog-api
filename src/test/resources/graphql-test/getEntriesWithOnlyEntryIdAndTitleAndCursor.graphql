@@ -1,5 +1,5 @@
-query getEntries($first: Int!, $after: String) {
-    getEntries(first: $first, after: $after) {
+query getEntries($first: Int!, $after: String, $tenantId: String) {
+    getEntries(first: $first, after: $after, tenantId: $tenantId) {
         edges {
             node {
                 entryId

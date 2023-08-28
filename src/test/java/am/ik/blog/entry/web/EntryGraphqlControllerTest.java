@@ -15,6 +15,7 @@ import org.springframework.boot.test.autoconfigure.json.AutoConfigureJsonTesters
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.json.JacksonTester;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
+import org.springframework.graphql.execution.ErrorType;
 import org.springframework.graphql.test.tester.HttpGraphQlTester;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.TestConstructor;
@@ -44,7 +45,6 @@ class EntryGraphqlControllerTest {
 	EntryGraphqlControllerTest(@Value("${local.server.port}") int port) {
 		this.tester = HttpGraphQlTester
 			.builder(WebTestClient.bindToServer().baseUrl("http://localhost:" + port + "/graphql"))
-			.headers(headers -> headers.setBasicAuth("blog-ui", "empty"))
 			.build();
 		;
 	}
@@ -59,6 +59,30 @@ class EntryGraphqlControllerTest {
 	void getEntry() {
 		this.tester.documentName("getEntry")
 			.variable("entryId", 99999)
+			.execute()
+			.path("getEntry")
+			.entity(Entry.class)
+			.satisfies(entry -> assertEntry99999(entry).assertContent());
+	}
+
+	@Test
+	void getEntryForTenantUnAuthorized() {
+		this.tester.documentName("getEntry")
+			.variable("entryId", 99999)
+			.variable("tenantId", "_")
+			.execute()
+			.errors()
+			.expect(errors -> ErrorType.UNAUTHORIZED.equals(errors.getErrorType()));
+	}
+
+	@Test
+	void getEntryForTenantAuthorized() {
+		this.tester.mutate()
+			.headers(headers -> headers.setBasicAuth("blog-ui", "empty"))
+			.build()
+			.documentName("getEntry")
+			.variable("entryId", 99999)
+			.variable("tenantId", "_")
 			.execute()
 			.path("getEntry")
 			.entity(Entry.class)
@@ -121,6 +145,16 @@ class EntryGraphqlControllerTest {
 				  }
 				}
 				""");
+	}
+
+	@Test
+	void getEntriesForTenantUnAuthorized() {
+		this.tester.documentName("getEntriesWithOnlyEntryIdAndTitleAndCursor")
+			.variable("first", 2)
+			.variable("tenantId", "_")
+			.execute()
+			.errors()
+			.expect(errors -> ErrorType.UNAUTHORIZED.equals(errors.getErrorType()));
 	}
 
 }
