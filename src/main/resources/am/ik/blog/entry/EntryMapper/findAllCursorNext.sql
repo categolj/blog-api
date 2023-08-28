@@ -1,15 +1,40 @@
-SELECT e.entry_id,
-       e.title,
+SELECT
+/*[# th:if="!${excludeEntryId}"]*/
+    e.entry_id,
+/*[/]*/
+/*[# th:if="${excludeEntryId}"][# th:utext="|       NULL AS entry_id,|"][/][/]*/
+/*[# th:if="!${excludeTitle}"]*/
+    e.title,
+/*[/]*/
+/*[# th:if="${excludeTitle}"][# th:utext="|       NULL AS title,|"][/][/]*/
 /*[# th:if="!${excludeContent}"]*/
-       e.content,
+    e.content,
 /*[/]*/
 /*[# th:if="${excludeContent}"][# th:utext="|       '' AS content,|"][/][/]*/
-       COALESCE(e.categories, '{}') AS categories,
-       COALESCE(e.tags, '{}')       AS tags,
-       e.created_by,
-       e.created_date,
-       e.last_modified_by,
-       e.last_modified_date
+/*[# th:if="!${excludeCategories}"]*/
+    COALESCE(e.categories, '{}') AS categories,
+/*[/]*/
+/*[# th:if="${excludeCategories}"][# th:utext="|       NULL AS categories,|"][/][/]*/
+/*[# th:if="!${excludeTags}"]*/
+    COALESCE(e.tags, '{}')       AS tags,
+/*[/]*/
+/*[# th:if="${excludeTags}"][# th:utext="|       NULL AS tags,|"][/][/]*/
+/*[# th:if="!${excludeCreatedBy}"]*/
+    e.created_by,
+/*[/]*/
+/*[# th:if="${excludeCreatedBy}"][# th:utext="|       NULL AS created_by,|"][/][/]*/
+/*[# th:if="!${excludeCreatedDate}"]*/
+    e.created_date,
+/*[/]*/
+/*[# th:if="${excludeCreatedDate}"][# th:utext="|       NULL AS created_date,|"][/][/]*/
+/*[# th:if="!${excludeLastModifiedBy}"]*/
+    e.last_modified_by,
+/*[/]*/
+/*[# th:if="${excludeLastModifiedBy}"][# th:utext="|       NULL AS last_modified_by,|"][/][/]*/
+/*[# th:if="!${excludeLastModifiedDate}"]*/
+    e.last_modified_date
+/*[/]*/
+/*[# th:if="${excludeLastModifiedDate}"][# th:utext="|       NULL AS last_modified_date|"][/][/]*/
 FROM entry AS e
 WHERE e.last_modified_date < COALESCE( /*[# mb:p="cursor"]*/ NULL /*[/]*/ , 'infinity'::timestamptz)
 /*[# th:if="${keywordsCount > 0}"]*/

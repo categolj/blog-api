@@ -1,5 +1,16 @@
 package am.ik.blog.entry;
 
+import java.sql.Array;
+import java.sql.Timestamp;
+import java.time.Instant;
+import java.time.ZoneOffset;
+import java.util.Arrays;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+
 import am.ik.blog.category.Category;
 import am.ik.blog.entry.keyword.KeywordExtractor;
 import am.ik.blog.entry.search.SearchCriteria;
@@ -10,16 +21,12 @@ import am.ik.pagination.OffsetPage;
 import am.ik.pagination.OffsetPageRequest;
 import am.ik.yavi.core.ConstraintViolationsException;
 import org.mybatis.scripting.thymeleaf.SqlGenerator;
+
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.sql.Timestamp;
-import java.time.Instant;
-import java.time.ZoneOffset;
-import java.util.*;
 
 import static am.ik.blog.util.FileLoader.loadSqlAsString;
 import static java.util.stream.Collectors.joining;
@@ -34,21 +41,28 @@ public class EntryMapper {
 
 	private final RowMapper<Entry> rowMapper = (rs, rowNum) -> {
 		final long entryId = rs.getLong("entry_id");
+		final Timestamp createdDate = rs.getTimestamp("created_date");
+		final Timestamp lastModifiedDate = rs.getTimestamp("last_modified_date");
+		final Array categories = rs.getArray("categories");
+		final Array tags = rs.getArray("tags");
 		return new EntryBuilder().withEntryId(entryId)
 				.withContent(rs.getString("content"))
 				.withFrontMatter(new FrontMatterBuilder().withTitle(rs.getString("title"))
-						.withCategories(Arrays
-								.stream((Object[]) rs.getArray("categories").getArray())
-								.map(String.class::cast).map(Category::new).toList())
-						.withTags(Arrays.stream((Object[]) rs.getArray("tags").getArray())
-								.map(String.class::cast).sorted().map(Tag::new).toList())
+						.withCategories(categories == null ? null
+								: Arrays.stream((Object[]) categories.getArray())
+										.map(String.class::cast).map(Category::new)
+										.toList())
+						.withTags(tags == null ? null
+								: Arrays.stream((Object[]) tags.getArray())
+										.map(String.class::cast).sorted().map(Tag::new)
+										.toList())
 						.build())
 				.withCreated(new Author(rs.getString("created_by"),
-						rs.getTimestamp("created_date").toInstant()
-								.atOffset(ZoneOffset.UTC)))
+						createdDate == null ? null
+								: createdDate.toInstant().atOffset(ZoneOffset.UTC)))
 				.withUpdated(new Author(rs.getString("last_modified_by"),
-						rs.getTimestamp("last_modified_date").toInstant()
-								.atOffset(ZoneOffset.UTC)))
+						lastModifiedDate == null ? null
+								: lastModifiedDate.toInstant().atOffset(ZoneOffset.UTC)))
 				.build();
 	};
 

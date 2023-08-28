@@ -1,14 +1,13 @@
 package am.ik.blog.entry.web;
 
 import java.time.Instant;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
 
-import am.ik.blog.category.Category;
 import am.ik.blog.entry.Entry;
 import am.ik.blog.entry.EntryService;
 import am.ik.blog.entry.search.SearchCriteria;
-import am.ik.blog.tag.Tag;
 import am.ik.pagination.CursorPage;
 import am.ik.pagination.CursorPageRequest;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -38,14 +37,28 @@ public class EntryGraphqlController {
 			@Argument Optional<String> after, @Argument String tenantId,
 			@Argument String query, @Argument String tag,
 			@Argument List<String> categories, @Argument String createdBy,
-			@Argument String updatedBy, DataFetchingFieldSelectionSet selectionSet) {
+			@Argument String updatedBy, DataFetchingFieldSelectionSet selections) {
 		final CursorPageRequest<Instant> pageRequest = new CursorPageRequest<>(
 				after.map(Instant::parse).orElse(null), first,
 				CursorPageRequest.Navigation.NEXT);
-		final boolean excludeContent = !selectionSet.contains("edges/node/content");
-		final SearchCriteria searchCriteria = SearchCriteria.builder().keyword(query)
-				.tag(tag).stringCategories(categories).createdBy(createdBy)
-				.lastModifiedBy(updatedBy).excludeContent(excludeContent).build();
+		final SearchCriteria searchCriteria = SearchCriteria.builder().keyword(query) //
+				.tag(tag) //
+				.stringCategories(categories) //
+				.createdBy(createdBy) //
+				.lastModifiedBy(updatedBy) //
+				.excludeEntryId(!selections.contains("edges/node/entryId")) //
+				.excludeTitle(!selections.contains("edges/node/frontMatter/title")) //
+				.excludeContent(!selections.contains("edges/node/content")) //
+				.excludeCategories(
+						!selections.contains("edges/node/frontMatter/categories")) //
+				.excludeTags(!selections.contains("edges/node/frontMatter/tags")) //
+				.excludeCreatedBy(!selections.contains("edges/node/created/name")) //
+				.excludeCreatedBy(!selections.contains("edges/node/created/date")) //
+				.excludeLastModifiedBy(!selections.contains("edges/node/updated/name")) //
+				.excludeLastModifiedDate(!selections.contains("pageInfo/endCursor")
+						&& !selections.contains("pageInfo/startCursor")
+						&& !selections.contains("edges/node/updated/date"))
+				.build();
 		final CursorPage<Entry, Instant> page = this.entryService.findPage(searchCriteria,
 				tenantId, pageRequest);
 		final List<EntryEdge> edges = page.content().stream().map(EntryEdge::new)
@@ -57,7 +70,10 @@ public class EntryGraphqlController {
 	public record EntryEdge(Entry node) {
 		@JsonProperty
 		public String cursor() {
-			return node.getUpdated().getDate().toString();
+			if (node.getUpdated() != null && node.getUpdated().getDate() != null) {
+				return DateTimeFormatter.ISO_DATE_TIME.format(node.getUpdated().getDate());
+			}
+			return null;
 		}
 	}
 
