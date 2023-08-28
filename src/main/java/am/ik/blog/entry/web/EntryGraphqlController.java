@@ -5,8 +5,8 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
 
+import am.ik.blog.entry.AuthorizedEntryService;
 import am.ik.blog.entry.Entry;
-import am.ik.blog.entry.EntryService;
 import am.ik.blog.entry.search.SearchCriteria;
 import am.ik.pagination.CursorPage;
 import am.ik.pagination.CursorPageRequest;
@@ -19,9 +19,9 @@ import org.springframework.stereotype.Controller;
 
 @Controller
 public class EntryGraphqlController {
-	private final EntryService entryService;
+	private final AuthorizedEntryService entryService;
 
-	public EntryGraphqlController(EntryService entryService) {
+	public EntryGraphqlController(AuthorizedEntryService entryService) {
 		this.entryService = entryService;
 	}
 

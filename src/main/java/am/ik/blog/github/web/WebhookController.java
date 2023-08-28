@@ -10,7 +10,7 @@ import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 import am.ik.blog.entry.Entry;
-import am.ik.blog.entry.EntryMapper;
+import am.ik.blog.entry.EntryService;
 import am.ik.blog.github.EntryFetcher;
 import am.ik.blog.github.GitHubProps;
 import am.ik.webhook.WebhookVerifier;
@@ -35,7 +35,7 @@ import static java.util.stream.Collectors.toUnmodifiableMap;
 public class WebhookController {
 	private final EntryFetcher entryFetcher;
 
-	private final EntryMapper entryMapper;
+	private final EntryService entryService;
 
 	private final WebhookVerifier webhookVerifier;
 
@@ -44,9 +44,9 @@ public class WebhookController {
 	private final ObjectMapper objectMapper;
 
 	public WebhookController(GitHubProps props, EntryFetcher entryFetcher,
-			EntryMapper entryMapper, ObjectMapper objectMapper) {
+			EntryService entryService, ObjectMapper objectMapper) {
 		this.entryFetcher = entryFetcher;
-		this.entryMapper = entryMapper;
+		this.entryService = entryService;
 		this.webhookVerifier = WebhookVerifier.gitHubSha256(props.getWebhookSecret());
 		this.tenantsWebhookVerifier = props.getTenants().entrySet().stream()
 				.collect(toUnmodifiableMap(Map.Entry::getKey, e -> WebhookVerifier
@@ -89,7 +89,7 @@ public class WebhookController {
 							path);
 					fetch.ifPresent(entry -> {
 						result.add(Map.of(key, entry.getEntryId()));
-						entryMapper.save(entry, tenantId);
+						entryService.save(entry, tenantId);
 					});
 				});
 			});
@@ -98,7 +98,7 @@ public class WebhookController {
 						.fetch(tenantId, owner, repo, path).map(Entry::getEntryId);
 				fetch.ifPresent(entryId -> {
 					result.add(Map.of("removed", entryId));
-					entryMapper.delete(entryId, tenantId);
+					entryService.delete(entryId, tenantId);
 				});
 			});
 		});
