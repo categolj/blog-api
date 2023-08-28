@@ -14,7 +14,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 @Inherited
 @Documented
 @PreAuthorize("")
-public @interface AccessControl {
+public @interface Authorized {
 	String resource();
 
 	Privilege[] requiredPrivileges() default {};

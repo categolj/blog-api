@@ -3,7 +3,7 @@ package am.ik.blog.tenant;
 import java.lang.reflect.Parameter;
 import java.util.Set;
 
-import am.ik.blog.security.AccessControl;
+import am.ik.blog.security.Authorized;
 import am.ik.blog.security.Privilege;
 import am.ik.blog.util.Tuple2;
 import am.ik.blog.util.Tuples;
@@ -54,11 +54,10 @@ public class MethodInvocationTenantAuthorizationManager
 	@Override
 	protected Tuple2<String, Set<Privilege>> resourceAndPrivileges(
 			MethodInvocation context) {
-		final AccessControl accessControl = context.getMethod()
-				.getAnnotation(AccessControl.class);
-		if (accessControl != null) {
-			return Tuples.of(accessControl.resource(),
-					Set.of(accessControl.requiredPrivileges()));
+		final Authorized authorized = context.getMethod().getAnnotation(Authorized.class);
+		if (authorized != null) {
+			return Tuples.of(authorized.resource(),
+					Set.of(authorized.requiredPrivileges()));
 		}
 		return null;
 	}

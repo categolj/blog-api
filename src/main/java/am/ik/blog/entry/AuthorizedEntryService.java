@@ -7,7 +7,7 @@ import java.util.Map;
 import java.util.Optional;
 
 import am.ik.blog.entry.search.SearchCriteria;
-import am.ik.blog.security.AccessControl;
+import am.ik.blog.security.Authorized;
 import am.ik.blog.security.Privilege;
 import am.ik.pagination.CursorPage;
 import am.ik.pagination.CursorPageRequest;
@@ -30,43 +30,43 @@ public class AuthorizedEntryService {
 		return entryService.nextId(tenantId);
 	}
 
-	@AccessControl(resource = "entry", requiredPrivileges = Privilege.LIST)
+	@Authorized(resource = "entry", requiredPrivileges = Privilege.LIST)
 	public CursorPage<Entry, Instant> findPage(SearchCriteria criteria, String tenantId,
 			CursorPageRequest<Instant> pageRequest) {
 		return entryService.findPage(criteria, tenantId, pageRequest);
 	}
 
-	@AccessControl(resource = "entry", requiredPrivileges = Privilege.LIST)
+	@Authorized(resource = "entry", requiredPrivileges = Privilege.LIST)
 	public OffsetPage<Entry> findPage(SearchCriteria criteria, String tenantId,
 			OffsetPageRequest pageRequest) {
 		return entryService.findPage(criteria, tenantId, pageRequest);
 	}
 
-	@AccessControl(resource = "entry", requiredPrivileges = Privilege.GET)
+	@Authorized(resource = "entry", requiredPrivileges = Privilege.GET)
 	public Optional<Entry> findOne(Long entryId, String tenantId,
 			boolean excludeContent) {
 		return entryService.findOne(entryId, tenantId, excludeContent);
 	}
 
-	@AccessControl(resource = "entry", requiredPrivileges = Privilege.EXPORT)
+	@Authorized(resource = "entry", requiredPrivileges = Privilege.EXPORT)
 	public Path exportEntriesAsZip(String tenantId) {
 		return entryService.exportEntriesAsZip(tenantId);
 	}
 
-	@AccessControl(resource = "entry", requiredPrivileges = Privilege.LIST)
+	@Authorized(resource = "entry", requiredPrivileges = Privilege.LIST)
 	public List<Entry> findAll(SearchCriteria criteria, String tenantId,
 			OffsetPageRequest pageRequest) {
 		return entryService.findAll(criteria, tenantId, pageRequest);
 	}
 
 	@Transactional
-	@AccessControl(resource = "entry", requiredPrivileges = Privilege.EDIT)
+	@Authorized(resource = "entry", requiredPrivileges = Privilege.EDIT)
 	public Map<String, Integer> save(Entry entry, String tenantId) {
 		return entryService.save(entry, tenantId);
 	}
 
 	@Transactional
-	@AccessControl(resource = "entry", requiredPrivileges = Privilege.DELETE)
+	@Authorized(resource = "entry", requiredPrivileges = Privilege.DELETE)
 	public int delete(Long entryId, String tenantId) {
 		return entryService.delete(entryId, tenantId);
 	}
