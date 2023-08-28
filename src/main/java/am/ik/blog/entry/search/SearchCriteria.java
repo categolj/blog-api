@@ -15,21 +15,48 @@ public class SearchCriteria {
 
 	public static final String SERIES = "Series";
 
-	private boolean excludeContent;
+	private final boolean excludeEntryId;
 
-	private String createdBy;
+	private final boolean excludeTitle;
 
-	private String lastModifiedBy;
+	private final boolean excludeContent;
 
-	private Tag tag;
+	private final boolean excludeCategories;
 
-	private List<Category> categories;
+	private final boolean excludeTags;
 
-	private String keyword;
+	private final boolean excludeCreatedBy;
 
-	SearchCriteria(boolean excludeContent, String createdBy, String lastModifiedBy,
+	private final boolean excludeCreatedDate;
+
+	private final boolean excludeLastModifiedBy;
+
+	private final boolean excludeLastModifiedDate;
+
+	private final String createdBy;
+
+	private final String lastModifiedBy;
+
+	private final Tag tag;
+
+	private final List<Category> categories;
+
+	private final String keyword;
+
+	SearchCriteria(boolean excludeEntryId, boolean excludeTitle, boolean excludeContent,
+			boolean excludeCategories, boolean excludeTags, boolean excludeCreatedBy,
+			boolean excludeCreatedDate, boolean excludeLastModifiedBy,
+			boolean excludeLastModifiedDate, String createdBy, String lastModifiedBy,
 			Tag tag, List<Category> categories, String keyword) {
+		this.excludeEntryId = excludeEntryId;
+		this.excludeTitle = excludeTitle;
 		this.excludeContent = excludeContent;
+		this.excludeCategories = excludeCategories;
+		this.excludeTags = excludeTags;
+		this.excludeCreatedBy = excludeCreatedBy;
+		this.excludeCreatedDate = excludeCreatedDate;
+		this.excludeLastModifiedBy = excludeLastModifiedBy;
+		this.excludeLastModifiedDate = excludeLastModifiedDate;
 		this.createdBy = createdBy;
 		this.lastModifiedBy = lastModifiedBy;
 		this.tag = tag;
@@ -65,8 +92,40 @@ public class SearchCriteria {
 		return this.tag;
 	}
 
+	public boolean isExcludeEntryId() {
+		return excludeEntryId;
+	}
+
+	public boolean isExcludeTitle() {
+		return excludeTitle;
+	}
+
 	public boolean isExcludeContent() {
 		return this.excludeContent;
+	}
+
+	public boolean isExcludeCategories() {
+		return excludeCategories;
+	}
+
+	public boolean isExcludeTags() {
+		return excludeTags;
+	}
+
+	public boolean isExcludeCreatedBy() {
+		return excludeCreatedBy;
+	}
+
+	public boolean isExcludeCreatedDate() {
+		return excludeCreatedDate;
+	}
+
+	public boolean isExcludeLastModifiedBy() {
+		return excludeLastModifiedBy;
+	}
+
+	public boolean isExcludeLastModifiedDate() {
+		return excludeLastModifiedDate;
 	}
 
 	boolean hasKeywords() {
@@ -100,8 +159,30 @@ public class SearchCriteria {
 				params.addValue("categories[%d]".formatted(i), categories.get(i).name());
 			}
 		}
+		params.addValue("excludeEntryId", this.excludeEntryId);
+		params.addValue("excludeTitle", this.excludeTitle);
 		params.addValue("excludeContent", this.excludeContent);
+		params.addValue("excludeCategories", this.excludeCategories);
+		params.addValue("excludeTags", this.excludeTags);
+		params.addValue("excludeCreatedBy", this.excludeCreatedBy);
+		params.addValue("excludeCreatedDate", this.excludeCreatedDate);
+		params.addValue("excludeLastModifiedBy", this.excludeLastModifiedBy);
+		params.addValue("excludeLastModifiedDate", this.excludeLastModifiedDate);
 		return params;
+	}
+
+	@Override
+	public String toString() {
+		return "SearchCriteria{" + "excludeEntryId=" + excludeEntryId + ", excludeTitle="
+				+ excludeTitle + ", excludeContent=" + excludeContent
+				+ ", excludeCategories=" + excludeCategories + ", excludeTags="
+				+ excludeTags + ", excludeCreatedBy=" + excludeCreatedBy
+				+ ", excludeCreatedDate=" + excludeCreatedDate
+				+ ", excludeLastModifiedBy=" + excludeLastModifiedBy
+				+ ", excludeLastModifiedDate=" + excludeLastModifiedDate + ", createdBy='"
+				+ createdBy + '\'' + ", lastModifiedBy='" + lastModifiedBy + '\''
+				+ ", tag=" + tag + ", categories=" + categories + ", keyword='" + keyword
+				+ '\'' + '}';
 	}
 
 	public static class SearchCriteriaBuilder {
@@ -110,7 +191,23 @@ public class SearchCriteria {
 
 		private String createdBy;
 
-		private boolean excludeContent;
+		private boolean excludeEntryId = false;
+
+		private boolean excludeTitle = false;
+
+		private boolean excludeContent = false;
+
+		private boolean excludeCategories = false;
+
+		private boolean excludeTags = false;
+
+		private boolean excludeCreatedBy = false;
+
+		private boolean excludeCreatedDate = false;
+
+		private boolean excludeLastModifiedBy = false;
+
+		private boolean excludeLastModifiedDate = false;
 
 		private String keyword;
 
@@ -122,12 +219,20 @@ public class SearchCriteria {
 		}
 
 		public SearchCriteria build() {
-			return new SearchCriteria(excludeContent, createdBy, lastModifiedBy, tag,
-					categories, keyword);
+			return new SearchCriteria(excludeEntryId, excludeTitle, excludeContent,
+					excludeCategories, excludeTags, excludeCreatedBy, excludeCreatedDate,
+					excludeLastModifiedBy, excludeLastModifiedDate, createdBy,
+					lastModifiedBy, tag, categories, keyword);
 		}
 
 		public SearchCriteriaBuilder categories(List<Category> categories) {
 			this.categories = categories;
+			return this;
+		}
+
+		public SearchCriteriaBuilder stringCategories(List<String> categories) {
+			this.categories = (categories == null) ? List.of()
+					: categories.stream().map(Category::new).toList();
 			return this;
 		}
 
@@ -136,8 +241,50 @@ public class SearchCriteria {
 			return this;
 		}
 
+		public SearchCriteriaBuilder excludeEntryId(boolean excludeEntryId) {
+			this.excludeEntryId = excludeEntryId;
+			return this;
+		}
+
+		public SearchCriteriaBuilder excludeTitle(boolean excludeTitle) {
+			this.excludeTitle = excludeTitle;
+			return this;
+		}
+
 		public SearchCriteriaBuilder excludeContent(boolean excludeContent) {
 			this.excludeContent = excludeContent;
+			return this;
+		}
+
+		public SearchCriteriaBuilder excludeCategories(boolean excludeCategories) {
+			this.excludeCategories = excludeCategories;
+			return this;
+		}
+
+		public SearchCriteriaBuilder excludeTags(boolean excludeTags) {
+			this.excludeTags = excludeTags;
+			return this;
+		}
+
+		public SearchCriteriaBuilder excludeCreatedBy(boolean excludeCreatedBy) {
+			this.excludeCreatedBy = excludeCreatedBy;
+			return this;
+		}
+
+		public SearchCriteriaBuilder excludeCreatedDate(boolean excludeCreatedDate) {
+			this.excludeCreatedDate = excludeCreatedDate;
+			return this;
+		}
+
+		public SearchCriteriaBuilder excludeLastModifiedBy(
+				boolean excludeLastModifiedBy) {
+			this.excludeLastModifiedBy = excludeLastModifiedBy;
+			return this;
+		}
+
+		public SearchCriteriaBuilder excludeLastModifiedDate(
+				boolean excludeLastModifiedDate) {
+			this.excludeLastModifiedDate = excludeLastModifiedDate;
 			return this;
 		}
 
@@ -161,6 +308,11 @@ public class SearchCriteria {
 
 		public SearchCriteriaBuilder tag(Tag tag) {
 			this.tag = tag;
+			return this;
+		}
+
+		public SearchCriteriaBuilder tag(String tag) {
+			this.tag = (tag == null) ? null : new Tag(tag);
 			return this;
 		}
 	}

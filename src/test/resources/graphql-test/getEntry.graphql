@@ -1,0 +1,21 @@
+query getEntry($entryId: ID!) {
+    getEntry(entryId: $entryId) {
+        entryId
+        content
+        frontMatter {
+            title
+            categories {
+                name
+            }
+            tags {
+                name
+            }
+        }
+        created {
+            date
+        }
+        updated {
+            date
+        }
+    }
+}

@@ -1,0 +1,15 @@
+query getEntries($first: Int!, $after: String) {
+    getEntries(first: $first, after: $after) {
+        edges {
+            node {
+                entryId
+                frontMatter {
+                    title
+                }
+            }
+        }
+        pageInfo {
+            endCursor
+        }
+    }
+}
