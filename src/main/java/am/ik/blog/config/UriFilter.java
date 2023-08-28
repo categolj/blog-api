@@ -10,4 +10,5 @@ public class UriFilter implements Predicate<String> {
 				|| uri.startsWith("/actuator") || uri.startsWith("/_static"));
 		return !deny;
 	}
+
 }

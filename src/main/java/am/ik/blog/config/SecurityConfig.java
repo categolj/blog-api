@@ -66,22 +66,19 @@ public class SecurityConfig {
 	@Bean
 	public AccessLogger accessLogger() {
 		final UriFilter uriFilter = new UriFilter();
-		return new AccessLogger(httpExchange -> uriFilter
-				.test(httpExchange.getRequest().getUri().getPath()));
+		return new AccessLogger(httpExchange -> uriFilter.test(httpExchange.getRequest().getUri().getPath()));
 	}
 
 	@Bean
 	@Role(BeanDefinition.ROLE_INFRASTRUCTURE)
 	public Advisor postAuthorize() {
 		return AuthorizationManagerBeforeMethodInterceptor
-				.preAuthorize(new MethodInvocationTenantAuthorizationManager());
+			.preAuthorize(new MethodInvocationTenantAuthorizationManager());
 	}
 
 	@Bean
-	public SecurityFilterChain securityFilterChain(HttpSecurity http,
-			CompositeUserDetailsService userDetailsService,
-			HttpExchangeRepository repository, HttpExchangesProperties properties)
-			throws Exception {
+	public SecurityFilterChain securityFilterChain(HttpSecurity http, CompositeUserDetailsService userDetailsService,
+			HttpExchangeRepository repository, HttpExchangesProperties properties) throws Exception {
 		final AuthorizationManager<RequestAuthorizationContext> listForTenant = new RequestTenantAuthorizationManager(
 				"entry", Privilege.LIST);
 		final AuthorizationManager<RequestAuthorizationContext> exportForTenant = new RequestTenantAuthorizationManager(
@@ -95,41 +92,51 @@ public class SecurityConfig {
 		final AuthorizationManager<RequestAuthorizationContext> deleteForTenant = new RequestTenantAuthorizationManager(
 				"entry", Privilege.DELETE);
 		return http.authorizeHttpRequests(authorize -> authorize //
-				.requestMatchers("/admin/import").hasAuthority("entry:import") //
-				.requestMatchers("/entries.zip").hasAuthority("entry:export") //
-				.requestMatchers(POST, "/entries/**").hasAuthority("entry:edit") //
-				.requestMatchers(PATCH, "/entries/**").hasAuthority("entry:edit") //
-				.requestMatchers(PUT, "/entries/**").hasAuthority("entry:edit") //
-				.requestMatchers(DELETE, "/entries/**").hasAuthority("entry:delete") //
-				.requestMatchers(POST, "/tenants/{tenantId}/webhook").permitAll() //
-				.requestMatchers(GET, "/tenants/{tenantId}/entries.zip")
-				.access(exportForTenant) //
-				.requestMatchers(GET, "/tenants/{tenantId}/entries").access(listForTenant) //
-				.requestMatchers(GET, "/tenants/{tenantId}/entries/**")
-				.access(getForTenant) //
-				.requestMatchers(POST, "/tenants/{tenantId}/**").access(editForTenant) //
-				.requestMatchers(PATCH, "/tenants/{tenantId}/**").access(editForTenant) //
-				.requestMatchers(PUT, "/tenants/{tenantId}/**").access(editForTenant) //
-				.requestMatchers(DELETE, "/tenants/{tenantId}/**").access(deleteForTenant) //
-				.requestMatchers(POST, "/tenants/{tenantId}/admin/import")
-				.access(importForTenant) //
-				.anyRequest().permitAll()) //
-				.httpBasic(Customizer.withDefaults())
-				.userDetailsService(userDetailsService)
-				.csrf(AbstractHttpConfigurer::disable) //
-				.cors(Customizer.withDefaults())
-				.sessionManagement(
-						s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-				.addFilterAfter(
-						new HttpExchangesFilter(repository,
-								properties.getRecording().getInclude()),
-						SecurityContextHolderAwareRequestFilter.class)
-				.build();
+			.requestMatchers("/admin/import")
+			.hasAuthority("entry:import") //
+			.requestMatchers("/entries.zip")
+			.hasAuthority("entry:export") //
+			.requestMatchers(POST, "/entries/**")
+			.hasAuthority("entry:edit") //
+			.requestMatchers(PATCH, "/entries/**")
+			.hasAuthority("entry:edit") //
+			.requestMatchers(PUT, "/entries/**")
+			.hasAuthority("entry:edit") //
+			.requestMatchers(DELETE, "/entries/**")
+			.hasAuthority("entry:delete") //
+			.requestMatchers(POST, "/tenants/{tenantId}/webhook")
+			.permitAll() //
+			.requestMatchers(GET, "/tenants/{tenantId}/entries.zip")
+			.access(exportForTenant) //
+			.requestMatchers(GET, "/tenants/{tenantId}/entries")
+			.access(listForTenant) //
+			.requestMatchers(GET, "/tenants/{tenantId}/entries/**")
+			.access(getForTenant) //
+			.requestMatchers(POST, "/tenants/{tenantId}/**")
+			.access(editForTenant) //
+			.requestMatchers(PATCH, "/tenants/{tenantId}/**")
+			.access(editForTenant) //
+			.requestMatchers(PUT, "/tenants/{tenantId}/**")
+			.access(editForTenant) //
+			.requestMatchers(DELETE, "/tenants/{tenantId}/**")
+			.access(deleteForTenant) //
+			.requestMatchers(POST, "/tenants/{tenantId}/admin/import")
+			.access(importForTenant) //
+			.anyRequest()
+			.permitAll()) //
+			.httpBasic(Customizer.withDefaults())
+			.userDetailsService(userDetailsService)
+			.csrf(AbstractHttpConfigurer::disable) //
+			.cors(Customizer.withDefaults())
+			.sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+			.addFilterAfter(new HttpExchangesFilter(repository, properties.getRecording().getInclude()),
+					SecurityContextHolderAwareRequestFilter.class)
+			.build();
 	}
 
 	@Bean
-	public AuthenticationManager authenticationManager(
-			UserDetailsService userDetailsService, PasswordEncoder passwordEncoder) {
+	public AuthenticationManager authenticationManager(UserDetailsService userDetailsService,
+			PasswordEncoder passwordEncoder) {
 		final DaoAuthenticationProvider authenticationProvider = new DaoAuthenticationProvider();
 		authenticationProvider.setUserDetailsService(userDetailsService);
 		authenticationProvider.setPasswordEncoder(passwordEncoder);
@@ -143,24 +150,26 @@ public class SecurityConfig {
 
 	@Bean
 	@Primary
-	public CompositeUserDetailsService compositeUserDetailsService(
-			List<UserDetailsService> userDetailsServices) {
+	public CompositeUserDetailsService compositeUserDetailsService(List<UserDetailsService> userDetailsServices) {
 		return new CompositeUserDetailsService(userDetailsServices);
 	}
 
 	@Bean
 	@Order(1)
-	public InMemoryUserDetailsManager inMemoryUserDetailsManager(
-			SecurityProperties properties, PasswordEncoder passwordEncoder) {
+	public InMemoryUserDetailsManager inMemoryUserDetailsManager(SecurityProperties properties,
+			PasswordEncoder passwordEncoder) {
 		final SecurityProperties.User user = properties.getUser();
-		final List<GrantedAuthority> authorities = user.getRoles().stream()
-				.map(Privilege::fromRole).flatMap(Collection::stream).flatMap(p -> Stream
-						.of(p.toAuthority("entry"), p.toAuthority("*", "entry")))
-				.toList();
+		final List<GrantedAuthority> authorities = user.getRoles()
+			.stream()
+			.map(Privilege::fromRole)
+			.flatMap(Collection::stream)
+			.flatMap(p -> Stream.of(p.toAuthority("entry"), p.toAuthority("*", "entry")))
+			.toList();
 		return new InMemoryUserDetailsManager(User.withUsername(user.getName())
-				.password(passwordEncoder.encode(user.getPassword()))
+			.password(passwordEncoder.encode(user.getPassword()))
 
-				.authorities(authorities).build());
+			.authorities(authorities)
+			.build());
 	}
 
 	@Bean
@@ -172,12 +181,14 @@ public class SecurityConfig {
 	public static class RuntimeHints implements RuntimeHintsRegistrar {
 
 		@Override
-		public void registerHints(org.springframework.aot.hint.RuntimeHints hints,
-				ClassLoader classLoader) {
-			hints.reflection().registerMethod(
-					Objects.requireNonNull(ReflectionUtils.findMethod(
-							TenantUserDetails.class, "valueOf", String.class)),
-					ExecutableMode.INVOKE);
+		public void registerHints(org.springframework.aot.hint.RuntimeHints hints, ClassLoader classLoader) {
+			hints.reflection()
+				.registerMethod(
+						Objects.requireNonNull(
+								ReflectionUtils.findMethod(TenantUserDetails.class, "valueOf", String.class)),
+						ExecutableMode.INVOKE);
 		}
+
 	}
+
 }

@@ -33,6 +33,7 @@ import static java.util.stream.Collectors.toUnmodifiableMap;
 @RestController
 @Tag(name = "webhook")
 public class WebhookController {
+
 	private final EntryFetcher entryFetcher;
 
 	private final EntryService entryService;
@@ -43,14 +44,16 @@ public class WebhookController {
 
 	private final ObjectMapper objectMapper;
 
-	public WebhookController(GitHubProps props, EntryFetcher entryFetcher,
-			EntryService entryService, ObjectMapper objectMapper) {
+	public WebhookController(GitHubProps props, EntryFetcher entryFetcher, EntryService entryService,
+			ObjectMapper objectMapper) {
 		this.entryFetcher = entryFetcher;
 		this.entryService = entryService;
 		this.webhookVerifier = WebhookVerifier.gitHubSha256(props.getWebhookSecret());
-		this.tenantsWebhookVerifier = props.getTenants().entrySet().stream()
-				.collect(toUnmodifiableMap(Map.Entry::getKey, e -> WebhookVerifier
-						.gitHubSha256(e.getValue().getWebhookSecret())));
+		this.tenantsWebhookVerifier = props.getTenants()
+			.entrySet()
+			.stream()
+			.collect(toUnmodifiableMap(Map.Entry::getKey,
+					e -> WebhookVerifier.gitHubSha256(e.getValue().getWebhookSecret())));
 		this.objectMapper = objectMapper;
 	}
 
@@ -60,33 +63,27 @@ public class WebhookController {
 	}
 
 	@PostMapping(path = "tenants/{tenantId}/webhook")
-	public List<Map<String, Long>> webhookForTenant(
-			@RequestHeader(name = X_HUB_SIGNATURE_256) String signature,
-			@RequestBody String payload,
-			@PathVariable(name = "tenantId", required = false) String tenantId) {
-		final WebhookVerifier verifier = this.tenantsWebhookVerifier
-				.getOrDefault(tenantId, this.webhookVerifier);
+	public List<Map<String, Long>> webhookForTenant(@RequestHeader(name = X_HUB_SIGNATURE_256) String signature,
+			@RequestBody String payload, @PathVariable(name = "tenantId", required = false) String tenantId) {
+		final WebhookVerifier verifier = this.tenantsWebhookVerifier.getOrDefault(tenantId, this.webhookVerifier);
 		verifier.verify(payload, signature);
 		return this.processWebhook(payload, tenantId);
 	}
 
 	List<Map<String, Long>> processWebhook(String payload, String tenantId) {
 		final JsonNode node = this.node(payload);
-		final String[] repository = node.get("repository").get("full_name").asText()
-				.split("/");
+		final String[] repository = node.get("repository").get("full_name").asText().split("/");
 		final String owner = repository[0];
 		final String repo = repository[1];
 		if (!node.has("commits")) {
 			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "commit is empty!");
 		}
-		final Stream<JsonNode> commits = StreamSupport
-				.stream(node.get("commits").spliterator(), false);
+		final Stream<JsonNode> commits = StreamSupport.stream(node.get("commits").spliterator(), false);
 		final List<Map<String, Long>> result = new ArrayList<>();
 		commits.forEach(commit -> {
 			Stream.of("added", "modified").forEach(key -> {
 				this.paths(commit.get(key)).forEach(path -> {
-					Optional<Entry> fetch = this.entryFetcher.fetch(tenantId, owner, repo,
-							path);
+					Optional<Entry> fetch = this.entryFetcher.fetch(tenantId, owner, repo, path);
 					fetch.ifPresent(entry -> {
 						result.add(Map.of(key, entry.getEntryId()));
 						entryService.save(entry, tenantId);
@@ -94,8 +91,7 @@ public class WebhookController {
 				});
 			});
 			this.paths(commit.get("removed")).forEach(path -> {
-				Optional<Long> fetch = this.entryFetcher
-						.fetch(tenantId, owner, repo, path).map(Entry::getEntryId);
+				Optional<Long> fetch = this.entryFetcher.fetch(tenantId, owner, repo, path).map(Entry::getEntryId);
 				fetch.ifPresent(entryId -> {
 					result.add(Map.of("removed", entryId));
 					entryService.delete(entryId, tenantId);
@@ -117,4 +113,5 @@ public class WebhookController {
 	Stream<String> paths(JsonNode paths) {
 		return StreamSupport.stream(paths.spliterator(), false).map(JsonNode::asText);
 	}
+
 }

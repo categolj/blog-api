@@ -9,6 +9,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
 public enum Privilege {
+
 	GET, LIST, EDIT, DELETE, IMPORT, EXPORT;
 
 	public static Set<Privilege> fromRole(String role) {
@@ -29,12 +30,12 @@ public enum Privilege {
 	}
 
 	public GrantedAuthority toAuthority(String tenantId, String resource) {
-		return new SimpleGrantedAuthority(
-				"%s:%s:%s".formatted(tenantId, resource, this.toString()));
+		return new SimpleGrantedAuthority("%s:%s:%s".formatted(tenantId, resource, this.toString()));
 	}
 
 	@Override
 	public String toString() {
 		return name().toLowerCase();
 	}
+
 }

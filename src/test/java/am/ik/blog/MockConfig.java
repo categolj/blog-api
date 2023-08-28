@@ -13,6 +13,7 @@ import org.springframework.context.annotation.Bean;
 
 @TestConfiguration
 public class MockConfig {
+
 	@Bean
 	public EntryService entryService(EntryMapper entryMapper) {
 		return new EntryService(entryMapper);
@@ -20,8 +21,7 @@ public class MockConfig {
 
 	@Bean
 	public Clock fixedClock() {
-		return Clock.fixed(
-				OffsetDateTime.of(2022, 4, 1, 1, 0, 0, 0, ZoneOffset.UTC).toInstant(),
-				ZoneId.of("UTC"));
+		return Clock.fixed(OffsetDateTime.of(2022, 4, 1, 1, 0, 0, 0, ZoneOffset.UTC).toInstant(), ZoneId.of("UTC"));
 	}
+
 }

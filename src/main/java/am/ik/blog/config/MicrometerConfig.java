@@ -15,9 +15,10 @@ public class MicrometerConfig {
 	public MeterRegistryCustomizer meterRegistryCustomizer(UriFilter uriFilter) {
 		final Predicate<String> negate = uriFilter.negate();
 		return registry -> registry.config() //
-				.meterFilter(MeterFilter.deny(id -> {
-					final String uri = id.getTag("uri");
-					return negate.test(uri);
-				}));
+			.meterFilter(MeterFilter.deny(id -> {
+				final String uri = id.getTag("uri");
+				return negate.test(uri);
+			}));
 	}
+
 }

@@ -11,11 +11,10 @@ import org.aopalliance.intercept.MethodInvocation;
 
 import org.springframework.security.core.parameters.P;
 
-public class MethodInvocationTenantAuthorizationManager
-		extends AbstractTenantAuthorizationManager<MethodInvocation> {
+public class MethodInvocationTenantAuthorizationManager extends AbstractTenantAuthorizationManager<MethodInvocation> {
+
 	@Override
-	protected boolean isPermitted(String tenantId, String resource,
-			Set<Privilege> privileges) {
+	protected boolean isPermitted(String tenantId, String resource, Set<Privilege> privileges) {
 		if (tenantId != null) {
 			return false;
 		}
@@ -24,12 +23,10 @@ public class MethodInvocationTenantAuthorizationManager
 		}
 		int size = privileges.size();
 		if (size == 1) {
-			return privileges.contains(Privilege.LIST)
-					|| privileges.contains(Privilege.GET);
+			return privileges.contains(Privilege.LIST) || privileges.contains(Privilege.GET);
 		}
 		else if (size == 2) {
-			return privileges.contains(Privilege.LIST)
-					&& privileges.contains(Privilege.GET);
+			return privileges.contains(Privilege.LIST) && privileges.contains(Privilege.GET);
 		}
 		return false;
 	}
@@ -52,13 +49,12 @@ public class MethodInvocationTenantAuthorizationManager
 	}
 
 	@Override
-	protected Tuple2<String, Set<Privilege>> resourceAndPrivileges(
-			MethodInvocation context) {
+	protected Tuple2<String, Set<Privilege>> resourceAndPrivileges(MethodInvocation context) {
 		final Authorized authorized = context.getMethod().getAnnotation(Authorized.class);
 		if (authorized != null) {
-			return Tuples.of(authorized.resource(),
-					Set.of(authorized.requiredPrivileges()));
+			return Tuples.of(authorized.resource(), Set.of(authorized.requiredPrivileges()));
 		}
 		return null;
 	}
+
 }

@@ -10,6 +10,7 @@ import org.springframework.context.annotation.Configuration;
 // Remove when updating to Java 21
 @Configuration(proxyBeanMethods = false)
 public class VirtualThreadsConfig {
+
 	@Bean
 	public WebServerFactoryCustomizer<ConfigurableTomcatWebServerFactory> tomcatVirtualThreadsProtocolHandlerCustomizer() {
 		if (JavaVersion.getJavaVersion().equals(JavaVersion.TWENTY)) {
@@ -20,4 +21,5 @@ public class VirtualThreadsConfig {
 			};
 		}
 	}
+
 }

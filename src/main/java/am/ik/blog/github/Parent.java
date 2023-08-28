@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class Parent {
+
 	private final String sha;
 
 	private final String url;
@@ -49,8 +50,7 @@ public class Parent {
 
 	@Override
 	public String toString() {
-		return "Parent[" + "sha=" + sha + ", " + "url=" + url + ", " + "htmlUrl="
-				+ htmlUrl + ']';
+		return "Parent[" + "sha=" + sha + ", " + "url=" + url + ", " + "htmlUrl=" + htmlUrl + ']';
 	}
 
 }

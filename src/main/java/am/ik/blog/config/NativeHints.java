@@ -25,40 +25,33 @@ public class NativeHints {
 	public static class RuntimeHints implements RuntimeHintsRegistrar {
 
 		@Override
-		public void registerHints(org.springframework.aot.hint.RuntimeHints hints,
-				ClassLoader classLoader) {
+		public void registerHints(org.springframework.aot.hint.RuntimeHints hints, ClassLoader classLoader) {
 			try {
 				final List<Method> builderMethods = new ArrayList<>();
-				builderMethods
-						.addAll(Arrays.asList(EntryBuilder.class.getDeclaredMethods()));
-				builderMethods.addAll(
-						Arrays.asList(FrontMatterBuilder.class.getDeclaredMethods()));
-				builderMethods
-						.addAll(Arrays.asList(AuthorBuilder.class.getDeclaredMethods()));
+				builderMethods.addAll(Arrays.asList(EntryBuilder.class.getDeclaredMethods()));
+				builderMethods.addAll(Arrays.asList(FrontMatterBuilder.class.getDeclaredMethods()));
+				builderMethods.addAll(Arrays.asList(AuthorBuilder.class.getDeclaredMethods()));
 				builderMethods.stream()
-						.filter(m -> m.getName().equals("build")
-								|| m.getName().startsWith("with"))
-						.forEach(method -> hints.reflection().registerMethod(method,
-								ExecutableMode.INVOKE));
-				hints.reflection().registerConstructor(
-						org.flywaydb.core.internal.logging.slf4j.Slf4jLogCreator.class
+					.filter(m -> m.getName().equals("build") || m.getName().startsWith("with"))
+					.forEach(method -> hints.reflection().registerMethod(method, ExecutableMode.INVOKE));
+				hints.reflection()
+					.registerConstructor(
+							org.flywaydb.core.internal.logging.slf4j.Slf4jLogCreator.class.getConstructor(),
+							ExecutableMode.INVOKE);
+				hints.reflection()
+					.registerConstructor(
+							org.apache.tomcat.util.modeler.modules.MbeansDescriptorsIntrospectionSource.class
 								.getConstructor(),
-						ExecutableMode.INVOKE);
-				hints.reflection().registerConstructor(
-						org.apache.tomcat.util.modeler.modules.MbeansDescriptorsIntrospectionSource.class
-								.getConstructor(),
-						ExecutableMode.INVOKE);
+							ExecutableMode.INVOKE);
 				// https://github.com/oracle/graal/issues/5626
-				hints.reflection().registerConstructor(
-						org.hibernate.validator.internal.util.logging.Log_$logger.class
-								.getConstructor(org.jboss.logging.Logger.class),
-						ExecutableMode.INVOKE).registerField(
-								org.hibernate.validator.internal.util.logging.Messages_$bundle.class
-										.getField("INSTANCE"));
-				hints.reflection().registerMethod(
-						Objects.requireNonNull(ReflectionUtils
-								.findMethod(TenantUserProps.class, "users")),
-						ExecutableMode.INVOKE);
+				hints.reflection()
+					.registerConstructor(org.hibernate.validator.internal.util.logging.Log_$logger.class
+						.getConstructor(org.jboss.logging.Logger.class), ExecutableMode.INVOKE)
+					.registerField(
+							org.hibernate.validator.internal.util.logging.Messages_$bundle.class.getField("INSTANCE"));
+				hints.reflection()
+					.registerMethod(Objects.requireNonNull(ReflectionUtils.findMethod(TenantUserProps.class, "users")),
+							ExecutableMode.INVOKE);
 			}
 			catch (Exception e) {
 				throw new RuntimeException(e);
@@ -66,6 +59,7 @@ public class NativeHints {
 			hints.resources().registerPattern("org/flywaydb/core/internal/*");
 			hints.resources().registerPattern("com/atilika/kuromoji/ipadic/*.bin");
 		}
+
 	}
 
 }

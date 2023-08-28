@@ -29,6 +29,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class EntryService {
+
 	private final Logger log = LoggerFactory.getLogger(EntryService.class);
 
 	private final EntryMapper entryMapper;
@@ -41,18 +42,17 @@ public class EntryService {
 		return this.entryMapper.nextId(tenantId);
 	}
 
-	public CursorPage<Entry, Instant> findPage(SearchCriteria criteria,
-			@P("tenantId") String tenantId, CursorPageRequest<Instant> pageRequest) {
+	public CursorPage<Entry, Instant> findPage(SearchCriteria criteria, @P("tenantId") String tenantId,
+			CursorPageRequest<Instant> pageRequest) {
 		return this.entryMapper.findPage(criteria, tenantId, pageRequest);
 	}
 
-	public OffsetPage<Entry> findPage(SearchCriteria criteria,
-			@P("tenantId") String tenantId, OffsetPageRequest pageRequest) {
+	public OffsetPage<Entry> findPage(SearchCriteria criteria, @P("tenantId") String tenantId,
+			OffsetPageRequest pageRequest) {
 		return this.entryMapper.findPage(criteria, tenantId, pageRequest);
 	}
 
-	public Optional<Entry> findOne(Long entryId, @P("tenantId") String tenantId,
-			boolean excludeContent) {
+	public Optional<Entry> findOne(Long entryId, @P("tenantId") String tenantId, boolean excludeContent) {
 		return this.entryMapper.findOne(entryId, tenantId, excludeContent);
 	}
 
@@ -60,21 +60,16 @@ public class EntryService {
 		try {
 			final Path zip = Files.createTempFile("entries", ".zip");
 			log.info("Exporting entries to {}", zip);
-			try (ZipOutputStream outputStream = new ZipOutputStream(Files.newOutputStream(
-					zip, StandardOpenOption.CREATE, StandardOpenOption.WRITE))) {
-				final List<Entry> entries = this.entryMapper.findAll(
-						SearchCriteria.builder().includeContent().build(), tenantId,
-						new OffsetPageRequest(0, 10_0000));
+			try (ZipOutputStream outputStream = new ZipOutputStream(
+					Files.newOutputStream(zip, StandardOpenOption.CREATE, StandardOpenOption.WRITE))) {
+				final List<Entry> entries = this.entryMapper.findAll(SearchCriteria.builder().includeContent().build(),
+						tenantId, new OffsetPageRequest(0, 10_0000));
 				for (Entry entry : entries) {
-					final ZipEntry zipEntry = new ZipEntry(
-							"content/%s.md".formatted(entry.formatId()));
-					zipEntry.setCreationTime(
-							FileTime.from(entry.getCreated().getDate().toInstant()));
-					zipEntry.setLastModifiedTime(
-							FileTime.from(entry.getUpdated().getDate().toInstant()));
+					final ZipEntry zipEntry = new ZipEntry("content/%s.md".formatted(entry.formatId()));
+					zipEntry.setCreationTime(FileTime.from(entry.getCreated().getDate().toInstant()));
+					zipEntry.setLastModifiedTime(FileTime.from(entry.getUpdated().getDate().toInstant()));
 					outputStream.putNextEntry(zipEntry);
-					outputStream
-							.write(entry.toMarkdown().getBytes(StandardCharsets.UTF_8));
+					outputStream.write(entry.toMarkdown().getBytes(StandardCharsets.UTF_8));
 					outputStream.closeEntry();
 				}
 				final Map<String, String> additionalContents = Map.of("README.md", """
@@ -111,8 +106,7 @@ public class EntryService {
 		}
 	}
 
-	public List<Entry> findAll(SearchCriteria criteria, @P("tenantId") String tenantId,
-			OffsetPageRequest pageRequest) {
+	public List<Entry> findAll(SearchCriteria criteria, @P("tenantId") String tenantId, OffsetPageRequest pageRequest) {
 		return this.entryMapper.findAll(criteria, tenantId, pageRequest);
 	}
 
@@ -130,4 +124,5 @@ public class EntryService {
 	public int delete(Long entryId, @P("tenantId") String tenantId) {
 		return this.entryMapper.delete(entryId, tenantId);
 	}
+
 }

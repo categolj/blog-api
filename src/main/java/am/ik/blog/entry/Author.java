@@ -13,11 +13,12 @@ import static java.time.format.DateTimeFormatter.RFC_1123_DATE_TIME;
 
 @JsonDeserialize(builder = AuthorBuilder.class)
 public class Author {
-	public static Validator<Author> validator = ValidatorBuilder.<Author> of()
-			.constraint(Author::getName, "name", c -> c.notBlank().lessThanOrEqual(128))
-			.constraint(Author::getDate, "date", c -> c.notNull().afterOrEqual(
-					() -> OffsetDateTime.ofInstant(Instant.EPOCH, ZoneId.of("UTC"))))
-			.build();
+
+	public static Validator<Author> validator = ValidatorBuilder.<Author>of()
+		.constraint(Author::getName, "name", c -> c.notBlank().lessThanOrEqual(128))
+		.constraint(Author::getDate, "date",
+				c -> c.notNull().afterOrEqual(() -> OffsetDateTime.ofInstant(Instant.EPOCH, ZoneId.of("UTC"))))
+		.build();
 
 	public static Author NULL_AUTHOR = new Author(null, null);
 
@@ -73,4 +74,5 @@ public class Author {
 	public String toString() {
 		return "Author{" + "name='" + name + '\'' + ", date=" + date + '}';
 	}
+
 }

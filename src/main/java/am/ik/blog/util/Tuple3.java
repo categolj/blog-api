@@ -25,7 +25,6 @@ public class Tuple3<T1, T2, T3> extends Tuple2<T1, T2> {
 
 	/**
 	 * Type-safe way to get the third object of this {@link Tuples}.
-	 *
 	 * @return The third object
 	 */
 	public T3 getT3() {
@@ -35,7 +34,6 @@ public class Tuple3<T1, T2, T3> extends Tuple2<T1, T2> {
 	/**
 	 * Map the 1st part (T1) of this {@link Tuple3} into a different value and type,
 	 * keeping the other parts.
-	 *
 	 * @param mapper the mapping {@link Function} for the T1 part
 	 * @param <R> the new type for the T1 part
 	 * @return a new {@link Tuple3} with a different T1 value
@@ -47,7 +45,6 @@ public class Tuple3<T1, T2, T3> extends Tuple2<T1, T2> {
 	/**
 	 * Map the 2nd part (T2) of this {@link Tuple3} into a different value and type,
 	 * keeping the other parts.
-	 *
 	 * @param mapper the mapping {@link Function} for the T2 part
 	 * @param <R> the new type for the T2 part
 	 * @return a new {@link Tuple3} with a different T2 value
@@ -59,7 +56,6 @@ public class Tuple3<T1, T2, T3> extends Tuple2<T1, T2> {
 	/**
 	 * Map the 3rd part (T3) of this {@link Tuple3} into a different value and type,
 	 * keeping the other parts.
-	 *
 	 * @param mapper the mapping {@link Function} for the T3 part
 	 * @param <R> the new type for the T3 part
 	 * @return a new {@link Tuple3} with a different T3 value
@@ -71,14 +67,14 @@ public class Tuple3<T1, T2, T3> extends Tuple2<T1, T2> {
 	@Override
 	public Object get(int index) {
 		switch (index) {
-		case 0:
-			return t1;
-		case 1:
-			return t2;
-		case 2:
-			return t3;
-		default:
-			return null;
+			case 0:
+				return t1;
+			case 1:
+				return t2;
+			case 2:
+				return t3;
+			default:
+				return null;
 		}
 	}
 
@@ -113,4 +109,5 @@ public class Tuple3<T1, T2, T3> extends Tuple2<T1, T2> {
 		result = 31 * result + t3.hashCode();
 		return result;
 	}
+
 }

@@ -19,4 +19,5 @@ public class SystemConfig {
 	public IdGenerator idGenerator() {
 		return new AlternativeJdkIdGenerator();
 	}
+
 }

@@ -18,7 +18,9 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 @Configuration(proxyBeanMethods = false)
 @EnableConfigurationProperties(CorsProps.class)
 public class WebConfig implements WebMvcConfigurer {
+
 	private final GitHubProps githubProps;
+
 	private final CorsProps corsProps;
 
 	public WebConfig(GitHubProps githubProps, CorsProps corsProps) {
@@ -28,8 +30,7 @@ public class WebConfig implements WebMvcConfigurer {
 
 	@Bean
 	public WebhookVerifierRequestBodyAdvice webhookVerifierRequestBodyAdvice() {
-		return WebhookVerifierRequestBodyAdvice
-				.githubSha256(this.githubProps.getWebhookSecret());
+		return WebhookVerifierRequestBodyAdvice.githubSha256(this.githubProps.getWebhookSecret());
 	}
 
 	@Bean
@@ -39,14 +40,17 @@ public class WebConfig implements WebMvcConfigurer {
 
 	@Override
 	public void addCorsMappings(CorsRegistry registry) {
-		registry.addMapping("/**").allowedOrigins(this.corsProps.allowedOrigins())
-				.allowedMethods("*").allowedHeaders("*").maxAge(3600);
+		registry.addMapping("/**")
+			.allowedOrigins(this.corsProps.allowedOrigins())
+			.allowedMethods("*")
+			.allowedHeaders("*")
+			.maxAge(3600);
 	}
 
 	@Override
 	public void addArgumentResolvers(List<HandlerMethodArgumentResolver> resolvers) {
 		resolvers.add(new OffsetPageRequestHandlerMethodArgumentResolver());
-		resolvers.add(
-				new CursorPageRequestHandlerMethodArgumentResolver<>(Instant::parse));
+		resolvers.add(new CursorPageRequestHandlerMethodArgumentResolver<>(Instant::parse));
 	}
+
 }

@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @Tag(name = "info")
 public class InfoController {
+
 	private final InfoEndpoint infoEndpoint;
 
 	public InfoController(InfoEndpoint infoEndpoint) {
@@ -21,4 +22,5 @@ public class InfoController {
 	public Map<String, Object> info() {
 		return this.infoEndpoint.info();
 	}
+
 }

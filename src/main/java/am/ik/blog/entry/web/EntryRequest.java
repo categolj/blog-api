@@ -3,8 +3,7 @@ package am.ik.blog.entry.web;
 import am.ik.blog.entry.Author;
 import am.ik.blog.entry.FrontMatter;
 
-public record EntryRequest(String content, FrontMatter frontMatter, Author created,
-						   Author updated) {
+public record EntryRequest(String content, FrontMatter frontMatter, Author created, Author updated) {
 
 	public Author createdOrNullAuthor() {
 		if (created != null) {

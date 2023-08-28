@@ -16,21 +16,21 @@ import org.springframework.context.annotation.Bean;
 
 @ManagementContextConfiguration(proxyBeanMethods = false)
 public class AcceptTrailingSlashFilterConfig {
+
 	@Bean
 	public Filter acceptTrailingSlashFilter() {
 		return new GenericFilter() {
 			@Override
-			public void doFilter(ServletRequest request, ServletResponse response,
-					FilterChain filterChain) throws IOException, ServletException {
+			public void doFilter(ServletRequest request, ServletResponse response, FilterChain filterChain)
+					throws IOException, ServletException {
 				final String uri = ((HttpServletRequest) request).getRequestURI();
 				if (uri != null && uri.endsWith("/")) {
-					filterChain.doFilter(
-							new HttpServletRequestWrapper((HttpServletRequest) request) {
-								@Override
-								public String getRequestURI() {
-									return uri.substring(0, uri.length() - 1);
-								}
-							}, response);
+					filterChain.doFilter(new HttpServletRequestWrapper((HttpServletRequest) request) {
+						@Override
+						public String getRequestURI() {
+							return uri.substring(0, uri.length() - 1);
+						}
+					}, response);
 				}
 				else {
 					filterChain.doFilter(request, response);
@@ -38,4 +38,5 @@ public class AcceptTrailingSlashFilterConfig {
 			}
 		};
 	}
+
 }

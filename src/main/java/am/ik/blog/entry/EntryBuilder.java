@@ -32,8 +32,10 @@ public class EntryBuilder {
 
 	public static EntryBuilder copyFrom(Entry entry) {
 		return new EntryBuilder().withEntryId(entry.getEntryId())
-				.withContent(entry.getContent()).withFrontMatter(entry.getFrontMatter())
-				.withCreated(entry.getCreated()).withUpdated(entry.getUpdated());
+			.withContent(entry.getContent())
+			.withFrontMatter(entry.getFrontMatter())
+			.withCreated(entry.getCreated())
+			.withUpdated(entry.getUpdated());
 	}
 
 	public Entry build() {
@@ -96,13 +98,12 @@ public class EntryBuilder {
 			Optional<OffsetDateTime> updated;
 			if (FrontMatter.SEPARATOR.equals(firstLine)) {
 				for (String line = reader.readLine(); line != null
-						&& !FrontMatter.SEPARATOR.equals(line); line = reader
-								.readLine()) {
+						&& !FrontMatter.SEPARATOR.equals(line); line = reader.readLine()) {
 					yaml.append(line);
 					yaml.append(System.lineSeparator());
 				}
 				final Tuple3<FrontMatter, Optional<OffsetDateTime>, Optional<OffsetDateTime>> parsed = FrontMatterBuilder
-						.parseYaml(yaml.toString());
+					.parseYaml(yaml.toString());
 				builder.withFrontMatter(parsed.getT1());
 				created = parsed.getT2();
 				updated = parsed.getT3();
@@ -111,8 +112,7 @@ public class EntryBuilder {
 				return Optional.empty();
 			}
 			final StringBuilder content = new StringBuilder();
-			for (String line = reader.readLine(); line != null; line = reader
-					.readLine()) {
+			for (String line = reader.readLine(); line != null; line = reader.readLine()) {
 				content.append(line);
 				content.append(System.lineSeparator());
 			}
@@ -123,4 +123,5 @@ public class EntryBuilder {
 			throw new UncheckedIOException(e);
 		}
 	}
+
 }

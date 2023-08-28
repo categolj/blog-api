@@ -8,17 +8,15 @@ import am.ik.blog.util.Tuples;
 
 import org.springframework.security.web.access.intercept.RequestAuthorizationContext;
 
-public class RequestTenantAuthorizationManager
-		extends AbstractTenantAuthorizationManager<RequestAuthorizationContext> {
+public class RequestTenantAuthorizationManager extends AbstractTenantAuthorizationManager<RequestAuthorizationContext> {
+
 	private final Tuple2<String, Set<Privilege>> resourceAndPrivileges;
 
-	public RequestTenantAuthorizationManager(String resource,
-			Privilege... requiredPrivileges) {
+	public RequestTenantAuthorizationManager(String resource, Privilege... requiredPrivileges) {
 		this(resource, Set.of(requiredPrivileges));
 	}
 
-	public RequestTenantAuthorizationManager(String resource,
-			Set<Privilege> requiredPrivileges) {
+	public RequestTenantAuthorizationManager(String resource, Set<Privilege> requiredPrivileges) {
 		this.resourceAndPrivileges = Tuples.of(resource, requiredPrivileges);
 	}
 
@@ -28,8 +26,8 @@ public class RequestTenantAuthorizationManager
 	}
 
 	@Override
-	protected Tuple2<String, Set<Privilege>> resourceAndPrivileges(
-			RequestAuthorizationContext context) {
+	protected Tuple2<String, Set<Privilege>> resourceAndPrivileges(RequestAuthorizationContext context) {
 		return this.resourceAndPrivileges;
 	}
+
 }

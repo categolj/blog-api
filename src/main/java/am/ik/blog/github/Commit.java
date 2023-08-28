@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public final class Commit extends Parent {
+
 	private final String commentsUrl;
 
 	private final GitCommit commit;
@@ -18,12 +19,9 @@ public final class Commit extends Parent {
 
 	@JsonCreator
 	public Commit(@JsonProperty("sha") String sha, @JsonProperty("url") String url,
-			@JsonProperty("html_url") String htmlUrl,
-			@JsonProperty("comments_url") String commentsUrl,
-			@JsonProperty("commit") GitCommit commit,
-			@JsonProperty("author") Committer author,
-			@JsonProperty("committer") Committer committer,
-			@JsonProperty("parents") List<Parent> parents) {
+			@JsonProperty("html_url") String htmlUrl, @JsonProperty("comments_url") String commentsUrl,
+			@JsonProperty("commit") GitCommit commit, @JsonProperty("author") Committer author,
+			@JsonProperty("committer") Committer committer, @JsonProperty("parents") List<Parent> parents) {
 		super(sha, url, htmlUrl);
 		this.commentsUrl = commentsUrl;
 		this.commit = commit;
@@ -54,9 +52,9 @@ public final class Commit extends Parent {
 
 	@Override
 	public String toString() {
-		return "Commit[" + "sha=" + sha() + ", " + "url=" + url() + ", " + "htmlUrl="
-				+ htmlUrl() + ", " + "commentsUrl=" + commentsUrl + ", " + "commit="
-				+ commit + ", " + "author=" + author + ", " + "committer=" + committer
-				+ ", " + "parents=" + parents + ']';
+		return "Commit[" + "sha=" + sha() + ", " + "url=" + url() + ", " + "htmlUrl=" + htmlUrl() + ", "
+				+ "commentsUrl=" + commentsUrl + ", " + "commit=" + commit + ", " + "author=" + author + ", "
+				+ "committer=" + committer + ", " + "parents=" + parents + ']';
 	}
+
 }

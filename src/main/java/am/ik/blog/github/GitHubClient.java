@@ -10,12 +10,13 @@ import java.util.List;
 
 @HttpExchange(url = "/repos/{owner}/{repo}")
 public interface GitHubClient {
+
 	@GetExchange(url = "/contents/{path}")
 	File getFile(@PathVariable("owner") String owner, @PathVariable("repo") String repo,
 			@PathVariable("path") String path);
 
 	@GetExchange(url = "/commits")
-	List<Commit> getCommits(@PathVariable("owner") String owner,
-			@PathVariable("repo") String repo,
+	List<Commit> getCommits(@PathVariable("owner") String owner, @PathVariable("repo") String repo,
 			@RequestParam MultiValueMap<String, String> params);
+
 }

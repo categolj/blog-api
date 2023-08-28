@@ -27,49 +27,44 @@ import static org.mybatis.scripting.thymeleaf.processor.BindVariableRender.Built
 @Configuration(proxyBeanMethods = false)
 @ImportRuntimeHints(RuntimeHints.class)
 public class MyBatisThymeleafConfig {
+
 	@Bean
 	public SqlGenerator sqlGenerator() {
 		final SqlGeneratorConfig config = SqlGeneratorConfig
-				.newInstanceWithCustomizer(c -> c.getDialect()
-						.setBindVariableRenderInstance(SPRING_NAMED_PARAMETER));
+			.newInstanceWithCustomizer(c -> c.getDialect().setBindVariableRenderInstance(SPRING_NAMED_PARAMETER));
 		return new SqlGenerator(config);
 	}
 
 	public static class RuntimeHints implements RuntimeHintsRegistrar {
+
 		@Override
-		public void registerHints(org.springframework.aot.hint.RuntimeHints hints,
-				ClassLoader classLoader) {
+		public void registerHints(org.springframework.aot.hint.RuntimeHints hints, ClassLoader classLoader) {
 			try {
 				hints.reflection()
-						.registerMethod(
-								Objects.requireNonNull(ReflectionUtils
-										.findMethod(Lists.class, "isEmpty", List.class)),
-								ExecutableMode.INVOKE)
-						.registerMethod(
-								Objects.requireNonNull(ReflectionUtils.findMethod(
-										Strings.class, "toLowerCase", Object.class)),
-								ExecutableMode.INVOKE)
-						.registerMethod(
-								Objects.requireNonNull(ReflectionUtils.findMethod(
-										Likes.class, "escapeWildcard", String.class)),
-								ExecutableMode.INVOKE)
-						.registerMethod(Objects.requireNonNull(ReflectionUtils.findMethod(
-								Numbers.class, "sequence", Integer.class, Integer.class)),
-								ExecutableMode.INVOKE)
-						.registerConstructor(NotEqualsExpression.class.getConstructor(
-								IStandardExpression.class, IStandardExpression.class),
-								ExecutableMode.INVOKE)
-						.registerConstructor(AdditionExpression.class.getConstructor(
-								IStandardExpression.class, IStandardExpression.class),
-								ExecutableMode.INVOKE)
-						.registerMethod(
-								Objects.requireNonNull(ReflectionUtils.findMethod(
-										IterationStatusVar.class, "getIndex")),
-								ExecutableMode.INVOKE)
-						.registerMethod(
-								Objects.requireNonNull(ReflectionUtils.findMethod(
-										IterationStatusVar.class, "getCount")),
-								ExecutableMode.INVOKE);
+					.registerMethod(
+							Objects.requireNonNull(ReflectionUtils.findMethod(Lists.class, "isEmpty", List.class)),
+							ExecutableMode.INVOKE)
+					.registerMethod(
+							Objects
+								.requireNonNull(ReflectionUtils.findMethod(Strings.class, "toLowerCase", Object.class)),
+							ExecutableMode.INVOKE)
+					.registerMethod(
+							Objects.requireNonNull(
+									ReflectionUtils.findMethod(Likes.class, "escapeWildcard", String.class)),
+							ExecutableMode.INVOKE)
+					.registerMethod(Objects.requireNonNull(
+							ReflectionUtils.findMethod(Numbers.class, "sequence", Integer.class, Integer.class)),
+							ExecutableMode.INVOKE)
+					.registerConstructor(NotEqualsExpression.class.getConstructor(IStandardExpression.class,
+							IStandardExpression.class), ExecutableMode.INVOKE)
+					.registerConstructor(AdditionExpression.class.getConstructor(IStandardExpression.class,
+							IStandardExpression.class), ExecutableMode.INVOKE)
+					.registerMethod(
+							Objects.requireNonNull(ReflectionUtils.findMethod(IterationStatusVar.class, "getIndex")),
+							ExecutableMode.INVOKE)
+					.registerMethod(
+							Objects.requireNonNull(ReflectionUtils.findMethod(IterationStatusVar.class, "getCount")),
+							ExecutableMode.INVOKE);
 				;
 			}
 			catch (NoSuchMethodException e) {
@@ -77,5 +72,7 @@ public class MyBatisThymeleafConfig {
 			}
 			hints.resources().registerPattern("am/ik/blog/*");
 		}
+
 	}
+
 }

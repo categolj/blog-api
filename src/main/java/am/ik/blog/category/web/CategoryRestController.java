@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @Tag(name = "category")
 public class CategoryRestController {
+
 	private final CategoryMapper categoryMapper;
 
 	public CategoryRestController(CategoryMapper categoryMapper) {
@@ -29,4 +30,5 @@ public class CategoryRestController {
 			@PathVariable(name = "tenantId", required = false) String tenantId) {
 		return this.categoryMapper.findAll(tenantId);
 	}
+
 }

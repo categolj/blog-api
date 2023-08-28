@@ -33,6 +33,7 @@ import static java.util.stream.Collectors.joining;
 
 @Repository
 public class EntryMapper {
+
 	private final JdbcClient jdbcClient;
 
 	private final SqlGenerator sqlGenerator;
@@ -46,130 +47,117 @@ public class EntryMapper {
 		final Array categories = rs.getArray("categories");
 		final Array tags = rs.getArray("tags");
 		return new EntryBuilder().withEntryId(entryId)
-				.withContent(rs.getString("content"))
-				.withFrontMatter(new FrontMatterBuilder().withTitle(rs.getString("title"))
-						.withCategories(categories == null ? null
-								: Arrays.stream((Object[]) categories.getArray())
-										.map(String.class::cast).map(Category::new)
-										.toList())
-						.withTags(tags == null ? null
-								: Arrays.stream((Object[]) tags.getArray())
-										.map(String.class::cast).sorted().map(Tag::new)
-										.toList())
-						.build())
-				.withCreated(new Author(rs.getString("created_by"),
-						createdDate == null ? null
-								: createdDate.toInstant().atOffset(ZoneOffset.UTC)))
-				.withUpdated(new Author(rs.getString("last_modified_by"),
-						lastModifiedDate == null ? null
-								: lastModifiedDate.toInstant().atOffset(ZoneOffset.UTC)))
-				.build();
+			.withContent(rs.getString("content"))
+			.withFrontMatter(new FrontMatterBuilder().withTitle(rs.getString("title"))
+				.withCategories(categories == null ? null
+						: Arrays.stream((Object[]) categories.getArray())
+							.map(String.class::cast)
+							.map(Category::new)
+							.toList())
+				.withTags(tags == null ? null
+						: Arrays.stream((Object[]) tags.getArray())
+							.map(String.class::cast)
+							.sorted()
+							.map(Tag::new)
+							.toList())
+				.build())
+			.withCreated(new Author(rs.getString("created_by"),
+					createdDate == null ? null : createdDate.toInstant().atOffset(ZoneOffset.UTC)))
+			.withUpdated(new Author(rs.getString("last_modified_by"),
+					lastModifiedDate == null ? null : lastModifiedDate.toInstant().atOffset(ZoneOffset.UTC)))
+			.build();
 	};
 
-	public EntryMapper(JdbcClient jdbcClient, SqlGenerator sqlGenerator,
-			KeywordExtractor keywordExtractor) {
+	public EntryMapper(JdbcClient jdbcClient, SqlGenerator sqlGenerator, KeywordExtractor keywordExtractor) {
 		this.jdbcClient = jdbcClient;
 		this.sqlGenerator = sqlGenerator;
 		this.keywordExtractor = keywordExtractor;
 	}
 
 	@Transactional(readOnly = true)
-	public Optional<Entry> findOne(Long entryId, String tenantId,
-			boolean excludeContent) {
-		final MapSqlParameterSource params = new MapSqlParameterSource()
-				.addValue("entryId", entryId).addValue("tenantId", tenantId)
-				.addValue("excludeContent", excludeContent);
-		final String sql = this.sqlGenerator.generate(
-				loadSqlAsString("am/ik/blog/entry/EntryMapper/findOne.sql"),
+	public Optional<Entry> findOne(Long entryId, String tenantId, boolean excludeContent) {
+		final MapSqlParameterSource params = new MapSqlParameterSource().addValue("entryId", entryId)
+			.addValue("tenantId", tenantId)
+			.addValue("excludeContent", excludeContent);
+		final String sql = this.sqlGenerator.generate(loadSqlAsString("am/ik/blog/entry/EntryMapper/findOne.sql"),
 				params.getValues(), params::addValue);
 		return this.jdbcClient.sql(sql).paramSource(params).query(rowMapper).optional();
 	}
 
 	@Transactional(readOnly = true)
-	public List<Entry> findAll(SearchCriteria searchCriteria, String tenantId,
-			OffsetPageRequest pageRequest) {
+	public List<Entry> findAll(SearchCriteria searchCriteria, String tenantId, OffsetPageRequest pageRequest) {
 		final List<Long> ids = this.entryIds(searchCriteria, tenantId, pageRequest);
 		if (ids.isEmpty()) {
 			return List.of();
 		}
 		final MapSqlParameterSource params = entryIdsParameterSource(ids)
-				.addValue("excludeContent", searchCriteria.isExcludeContent())
-				.addValue("tenantId", tenantId);
-		final String sql = this.sqlGenerator.generate(
-				loadSqlAsString("am/ik/blog/entry/EntryMapper/findAll.sql"),
+			.addValue("excludeContent", searchCriteria.isExcludeContent())
+			.addValue("tenantId", tenantId);
+		final String sql = this.sqlGenerator.generate(loadSqlAsString("am/ik/blog/entry/EntryMapper/findAll.sql"),
 				params.getValues(), params::addValue);
 		return this.jdbcClient.sql(sql).paramSource(params).query(rowMapper).list();
 	}
 
 	@Transactional(readOnly = true)
-	public OffsetPage<Entry> findPage(SearchCriteria searchCriteria, String tenantId,
-			OffsetPageRequest pageRequest) {
+	public OffsetPage<Entry> findPage(SearchCriteria searchCriteria, String tenantId, OffsetPageRequest pageRequest) {
 		final List<Entry> content = this.findAll(searchCriteria, tenantId, pageRequest);
 		final long total = this.count(searchCriteria, tenantId);
-		return new OffsetPage<>(content, pageRequest.pageSize(), pageRequest.pageNumber(),
-				total);
+		return new OffsetPage<>(content, pageRequest.pageSize(), pageRequest.pageNumber(), total);
 	}
 
 	@Transactional(readOnly = true)
-	public CursorPage<Entry, Instant> findPage(SearchCriteria searchCriteria,
-			String tenantId, CursorPageRequest<Instant> pageRequest) {
+	public CursorPage<Entry, Instant> findPage(SearchCriteria searchCriteria, String tenantId,
+			CursorPageRequest<Instant> pageRequest) {
 		final Optional<Instant> cursor = pageRequest.cursorOptional();
 		final int pageSizePlus1 = pageRequest.pageSize() + 1;
-		final MapSqlParameterSource params = searchCriteria
-				.toParameterSource(this.keywordExtractor).addValue("tenantId", tenantId)
-				.addValue("cursor", cursor.map(Timestamp::from).orElse(null));
-		final String sql = "%s LIMIT %d".formatted(this.sqlGenerator.generate(
-				loadSqlAsString("am/ik/blog/entry/EntryMapper/findAllCursorNext.sql"),
-				params.getValues(), params::addValue), pageSizePlus1);
-		final List<Entry> contentPlus1 = this.jdbcClient.sql(sql).paramSource(params)
-				.query(this.rowMapper).list();
+		final MapSqlParameterSource params = searchCriteria.toParameterSource(this.keywordExtractor)
+			.addValue("tenantId", tenantId)
+			.addValue("cursor", cursor.map(Timestamp::from).orElse(null));
+		final String sql = "%s LIMIT %d"
+			.formatted(this.sqlGenerator.generate(loadSqlAsString("am/ik/blog/entry/EntryMapper/findAllCursorNext.sql"),
+					params.getValues(), params::addValue), pageSizePlus1);
+		final List<Entry> contentPlus1 = this.jdbcClient.sql(sql).paramSource(params).query(this.rowMapper).list();
 		final boolean hasPrevious = cursor.isPresent();
 		final boolean hasNext = contentPlus1.size() == pageSizePlus1;
-		final List<Entry> content = hasNext
-				? contentPlus1.subList(0, pageRequest.pageSize())
-				: contentPlus1;
-		return new CursorPage<>(content, pageRequest.pageSize(),
-				entry -> entry.getUpdated().getDate().toInstant(), hasPrevious, hasNext);
+		final List<Entry> content = hasNext ? contentPlus1.subList(0, pageRequest.pageSize()) : contentPlus1;
+		return new CursorPage<>(content, pageRequest.pageSize(), entry -> entry.getUpdated().getDate().toInstant(),
+				hasPrevious, hasNext);
 	}
 
 	public long count(SearchCriteria searchCriteria, String tenantId) {
-		final MapSqlParameterSource params = searchCriteria
-				.toParameterSource(this.keywordExtractor).addValue("tenantId", tenantId);
-		final String sql = this.sqlGenerator.generate(
-				loadSqlAsString("am/ik/blog/entry/EntryMapper/count.sql"),
+		final MapSqlParameterSource params = searchCriteria.toParameterSource(this.keywordExtractor)
+			.addValue("tenantId", tenantId);
+		final String sql = this.sqlGenerator.generate(loadSqlAsString("am/ik/blog/entry/EntryMapper/count.sql"),
 				params.getValues(), params::addValue);
 		final Long count = this.jdbcClient.sql(sql) //
-				.paramSource(params) //
-				.query((rs, rowNum) -> rs.getLong("count")) //
-				.single();
-		return Objects.<Long> requireNonNullElse(count, 0L);
+			.paramSource(params) //
+			.query((rs, rowNum) -> rs.getLong("count")) //
+			.single();
+		return Objects.<Long>requireNonNullElse(count, 0L);
 	}
 
 	public long nextId(String tenantId) {
-		final MapSqlParameterSource params = new MapSqlParameterSource()
-				.addValue("tenantId", tenantId);
-		final String sql = this.sqlGenerator.generate(
-				loadSqlAsString("am/ik/blog/entry/EntryMapper/nextId.sql"),
+		final MapSqlParameterSource params = new MapSqlParameterSource().addValue("tenantId", tenantId);
+		final String sql = this.sqlGenerator.generate(loadSqlAsString("am/ik/blog/entry/EntryMapper/nextId.sql"),
 				params.getValues(), params::addValue);
 		final Long nextId = this.jdbcClient.sql(sql) //
-				.query((rs, i) -> rs.getLong("next")).single();
-		return Objects.<Long> requireNonNullElse(nextId, 1L);
+			.query((rs, i) -> rs.getLong("next"))
+			.single();
+		return Objects.<Long>requireNonNullElse(nextId, 1L);
 	}
 
 	@Transactional
 	public int delete(Long entryId, String tenantId) {
-		final MapSqlParameterSource params = new MapSqlParameterSource()
-				.addValue("entryId", entryId).addValue("tenantId", tenantId);
-		final String sql = this.sqlGenerator.generate(
-				loadSqlAsString("am/ik/blog/entry/EntryMapper/deleteEntry.sql"),
+		final MapSqlParameterSource params = new MapSqlParameterSource().addValue("entryId", entryId)
+			.addValue("tenantId", tenantId);
+		final String sql = this.sqlGenerator.generate(loadSqlAsString("am/ik/blog/entry/EntryMapper/deleteEntry.sql"),
 				params.getValues(), params::addValue);
 		return this.jdbcClient.sql(sql).paramSource(params).update();
 	}
 
 	@Transactional
 	public Map<String, Integer> save(Entry entry, String tenantId) {
-		Entry.validator.validate(entry)
-				.throwIfInvalid(ConstraintViolationsException::new);
+		Entry.validator.validate(entry).throwIfInvalid(ConstraintViolationsException::new);
 		final Map<String, Integer> result = new LinkedHashMap<>();
 		final FrontMatter frontMatter = entry.getFrontMatter();
 		final Author created = entry.getCreated();
@@ -178,52 +166,47 @@ public class EntryMapper {
 		final List<Category> categories = frontMatter.getCategories();
 		final List<Tag> tags = frontMatter.getTags();
 		final List<String> keywords = this.keywordExtractor.extract(entry.getContent());
-		final MapSqlParameterSource params = new MapSqlParameterSource()
-				.addValue("entryId", entryId).addValue("title", frontMatter.getTitle())
-				.addValue("tenantId", tenantId).addValue("content", entry.getContent())
-				.addValue("categories",
-						categories.stream().map(Category::name).collect(joining(",")))
-				.addValue("tags", tags.stream().map(Tag::name).collect(joining(",")))
-				.addValue("keywords", String.join(",", keywords))
-				.addValue("createdBy", created.getName())
-				.addValue("createdDate", Timestamp.from(created.getDate().toInstant()))
-				.addValue("lastModifiedBy", updated.getName())
-				.addValue("lastModifiedDate",
-						Timestamp.from(updated.getDate().toInstant()));
+		final MapSqlParameterSource params = new MapSqlParameterSource().addValue("entryId", entryId)
+			.addValue("title", frontMatter.getTitle())
+			.addValue("tenantId", tenantId)
+			.addValue("content", entry.getContent())
+			.addValue("categories", categories.stream().map(Category::name).collect(joining(",")))
+			.addValue("tags", tags.stream().map(Tag::name).collect(joining(",")))
+			.addValue("keywords", String.join(",", keywords))
+			.addValue("createdBy", created.getName())
+			.addValue("createdDate", Timestamp.from(created.getDate().toInstant()))
+			.addValue("lastModifiedBy", updated.getName())
+			.addValue("lastModifiedDate", Timestamp.from(updated.getDate().toInstant()));
 		final String upsertEntrySql = this.sqlGenerator.generate(
-				loadSqlAsString("am/ik/blog/entry/EntryMapper/upsertEntry.sql"),
-				params.getValues(), params::addValue);
+				loadSqlAsString("am/ik/blog/entry/EntryMapper/upsertEntry.sql"), params.getValues(), params::addValue);
 		final int upsertEntryCount = this.jdbcClient.sql(upsertEntrySql) //
-				.paramSource(params) //
-				.update();
+			.paramSource(params) //
+			.update();
 		result.put("upsertEntry", upsertEntryCount);
 		return result;
 	}
 
-	private List<Long> entryIds(SearchCriteria searchCriteria, String tenantId,
-			OffsetPageRequest pageRequest) {
-		final MapSqlParameterSource params = searchCriteria
-				.toParameterSource(this.keywordExtractor).addValue("tenantId", tenantId);
-		final String sql = this.sqlGenerator.generate(
-				loadSqlAsString("am/ik/blog/entry/EntryMapper/entryIds.sql"),
+	private List<Long> entryIds(SearchCriteria searchCriteria, String tenantId, OffsetPageRequest pageRequest) {
+		final MapSqlParameterSource params = searchCriteria.toParameterSource(this.keywordExtractor)
+			.addValue("tenantId", tenantId);
+		final String sql = this.sqlGenerator.generate(loadSqlAsString("am/ik/blog/entry/EntryMapper/entryIds.sql"),
 				params.getValues(), params::addValue)
-				+ " LIMIT %d OFFSET %d".formatted(pageRequest.pageSize(),
-						pageRequest.offset());
+				+ " LIMIT %d OFFSET %d".formatted(pageRequest.pageSize(), pageRequest.offset());
 		return this.jdbcClient.sql(sql) //
-				.paramSource(params) //
-				.query((rs, rowNum) -> rs.getLong("entry_id")) //
-				.list();
+			.paramSource(params) //
+			.query((rs, rowNum) -> rs.getLong("entry_id")) //
+			.list();
 	}
 
 	private static MapSqlParameterSource entryIdsParameterSource(List<Long> ids) {
 		if (ids.isEmpty()) {
 			return new MapSqlParameterSource();
 		}
-		final MapSqlParameterSource params = new MapSqlParameterSource()
-				.addValue("entryIds", ids);
+		final MapSqlParameterSource params = new MapSqlParameterSource().addValue("entryIds", ids);
 		for (int i = 0; i < ids.size(); i++) {
 			params.addValue("entryIds[%d]".formatted(i), ids.get(i));
 		}
 		return params;
 	}
+
 }

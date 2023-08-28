@@ -18,10 +18,11 @@ class TenantUserDetailsTest {
 	@Test
 	void valueOf() {
 		final TenantUserDetails userDetails = TenantUserDetails
-				.valueOf("user|{noop}passwd|tenant1=GET,EDIT|tenant2=GET,DELETE");
+			.valueOf("user|{noop}passwd|tenant1=GET,EDIT|tenant2=GET,DELETE");
 		assertThat(userDetails.getUsername()).isEqualTo("user");
 		assertThat(userDetails.password()).isEqualTo("{noop}passwd");
-		assertThat(userDetails.privileges()).containsExactlyInAnyOrderEntriesOf(
-				Map.of("tenant1", List.of(GET, EDIT), "tenant2", List.of(GET, DELETE)));
+		assertThat(userDetails.privileges())
+			.containsExactlyInAnyOrderEntriesOf(Map.of("tenant1", List.of(GET, EDIT), "tenant2", List.of(GET, DELETE)));
 	}
+
 }

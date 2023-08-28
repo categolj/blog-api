@@ -7,6 +7,7 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 
 public class CompositeUserDetailsService implements UserDetailsService {
+
 	private final List<UserDetailsService> delegates;
 
 	public CompositeUserDetailsService(List<UserDetailsService> delegates) {
@@ -14,8 +15,7 @@ public class CompositeUserDetailsService implements UserDetailsService {
 	}
 
 	@Override
-	public UserDetails loadUserByUsername(String username)
-			throws UsernameNotFoundException {
+	public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
 		for (UserDetailsService delegate : delegates) {
 			try {
 				final UserDetails userDetails = delegate.loadUserByUsername(username);
@@ -27,7 +27,7 @@ public class CompositeUserDetailsService implements UserDetailsService {
 
 			}
 		}
-		throw new UsernameNotFoundException(
-				"The requested user (%s) is not found.".formatted(username));
+		throw new UsernameNotFoundException("The requested user (%s) is not found.".formatted(username));
 	}
+
 }

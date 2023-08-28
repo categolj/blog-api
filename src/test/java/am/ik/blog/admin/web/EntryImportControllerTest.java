@@ -20,11 +20,11 @@ import java.util.Optional;
 
 import static org.mockito.BDDMockito.given;
 
-@WebMvcTest(properties = { "spring.security.user.name=admin",
-		"spring.security.user.password=password", "blog.github.content-owner=foo",
-		"blog.github.content-repo=my-blog" })
+@WebMvcTest(properties = { "spring.security.user.name=admin", "spring.security.user.password=password",
+		"blog.github.content-owner=foo", "blog.github.content-repo=my-blog" })
 @Import({ SecurityConfig.class, MockConfig.class, GitHubProps.class })
 class EntryImportControllerTest {
+
 	@Autowired
 	WebTestClient webTestClient;
 
@@ -38,25 +38,29 @@ class EntryImportControllerTest {
 	@CsvSource({ ",", "demo," })
 	void importEntries_200(String tenantId) {
 		final Entry entry = Fixtures.entry(100L);
-		given(this.entryFetcher.fetch(tenantId, "foo", "my-blog", "content/00100.md"))
-				.willReturn(Optional.of(entry));
+		given(this.entryFetcher.fetch(tenantId, "foo", "my-blog", "content/00100.md")).willReturn(Optional.of(entry));
 		this.webTestClient.post()
-				.uri("%s/admin/import?from=100&to=100"
-						.formatted(tenantId == null ? "" : "/tenants/" + tenantId))
-				.headers(httpHeaders -> httpHeaders.setBasicAuth("admin", "password"))
-				.exchange().expectStatus().isOk().expectBody().jsonPath("$.length()")
-				.isEqualTo(1).jsonPath("[0]", "100 Hello");
+			.uri("%s/admin/import?from=100&to=100".formatted(tenantId == null ? "" : "/tenants/" + tenantId))
+			.headers(httpHeaders -> httpHeaders.setBasicAuth("admin", "password"))
+			.exchange()
+			.expectStatus()
+			.isOk()
+			.expectBody()
+			.jsonPath("$.length()")
+			.isEqualTo(1)
+			.jsonPath("[0]", "100 Hello");
 	}
 
 	@ParameterizedTest
 	@CsvSource({ ",", "demo," })
 	void importEntries_401(String tenantId) {
 		final Entry entry = Fixtures.entry(100L);
-		given(this.entryFetcher.fetch(tenantId, "foo", "my-blog", "content/00100.md"))
-				.willReturn(Optional.of(entry));
+		given(this.entryFetcher.fetch(tenantId, "foo", "my-blog", "content/00100.md")).willReturn(Optional.of(entry));
 		this.webTestClient.post()
-				.uri("%s/admin/import?from=100&to=100"
-						.formatted(tenantId == null ? "" : "/tenants/" + tenantId))
-				.exchange().expectStatus().isUnauthorized();
+			.uri("%s/admin/import?from=100&to=100".formatted(tenantId == null ? "" : "/tenants/" + tenantId))
+			.exchange()
+			.expectStatus()
+			.isUnauthorized();
 	}
+
 }

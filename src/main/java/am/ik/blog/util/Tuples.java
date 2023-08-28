@@ -1,13 +1,13 @@
 package am.ik.blog.util;
 
 public class Tuples {
+
 	public static <T1, T2> Tuple2<T1, T2> of(T1 t1, T2 t2) {
 		return new Tuple2<>(t1, t2);
 	}
 
 	/**
 	 * Create a {@link Tuple3} with the given objects.
-	 *
 	 * @param t1 The first value in the tuple. Not null.
 	 * @param t2 The second value in the tuple. Not null.
 	 * @param t3 The third value in the tuple. Not null.

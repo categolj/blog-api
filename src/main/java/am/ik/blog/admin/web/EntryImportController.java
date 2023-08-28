@@ -28,6 +28,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @Tag(name = "admin")
 public class EntryImportController {
+
 	private final EntryFetcher entryFetcher;
 
 	private final EntryService entryService;
@@ -36,8 +37,7 @@ public class EntryImportController {
 
 	private final Logger log = LoggerFactory.getLogger(EntryImportController.class);
 
-	public EntryImportController(EntryFetcher entryFetcher, EntryService entryService,
-			GitHubProps props) {
+	public EntryImportController(EntryFetcher entryFetcher, EntryService entryService, GitHubProps props) {
 		this.entryFetcher = entryFetcher;
 		this.entryService = entryService;
 		this.props = props;
@@ -58,20 +58,23 @@ public class EntryImportController {
 			@RequestParam(defaultValue = "0") int to,
 			@PathVariable(name = "tenantId", required = false) String tenantId) {
 		final Tuple2<String, String> ownerAndRepo = this.getOwnerAndRepo(tenantId);
-		log.info("Importing entries from https://github.com/{}/{} ({}-{})",
-				ownerAndRepo.getT1(), ownerAndRepo.getT2(), from, to);
+		log.info("Importing entries from https://github.com/{}/{} ({}-{})", ownerAndRepo.getT1(), ownerAndRepo.getT2(),
+				from, to);
 		return IntStream.rangeClosed(from, to).boxed().map(entryId -> {
 			try {
-				return this.entryFetcher.fetch(tenantId, ownerAndRepo.getT1(),
-						ownerAndRepo.getT2(), String.format("content/%05d.md", entryId));
+				return this.entryFetcher.fetch(tenantId, ownerAndRepo.getT1(), ownerAndRepo.getT2(),
+						String.format("content/%05d.md", entryId));
 			}
 			catch (HttpClientErrorException e) {
 				log.warn(e.getMessage(), e);
-				return Optional.<Entry> empty();
+				return Optional.<Entry>empty();
 			}
-		}).filter(Optional::isPresent).map(Optional::get)
-				.peek(entry -> this.entryService.save(entry, tenantId))
-				.map(e -> e.getEntryId() + " " + e.getFrontMatter().getTitle()).toList();
+		})
+			.filter(Optional::isPresent)
+			.map(Optional::get)
+			.peek(entry -> this.entryService.save(entry, tenantId))
+			.map(e -> e.getEntryId() + " " + e.getFrontMatter().getTitle())
+			.toList();
 	}
 
 	private Tuple2<String, String> getOwnerAndRepo(String tenantId) {
@@ -83,11 +86,9 @@ public class EntryImportController {
 			if (props == null) {
 				return this.getOwnerAndRepo(null);
 			}
-			return Tuples.of(
-					Objects.requireNonNullElse(props.getContentOwner(),
-							this.props.getContentOwner()),
-					Objects.requireNonNullElse(props.getContentRepo(),
-							this.props.getContentRepo()));
+			return Tuples.of(Objects.requireNonNullElse(props.getContentOwner(), this.props.getContentOwner()),
+					Objects.requireNonNullElse(props.getContentRepo(), this.props.getContentRepo()));
 		}
 	}
+
 }

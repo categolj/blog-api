@@ -12,4 +12,5 @@ public class BlogApiApplication {
 		System.setProperty("info.env.launch", Instant.now().toString());
 		SpringApplication.run(BlogApiApplication.class, args);
 	}
+
 }

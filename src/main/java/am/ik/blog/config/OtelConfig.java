@@ -10,13 +10,12 @@ import org.springframework.context.annotation.Configuration;
 
 @Configuration(proxyBeanMethods = false)
 public class OtelConfig {
+
 	@Bean
-	public static BeanPostProcessor filteringSpanExporterRegistrar(
-			ObjectProvider<UriFilter> uriFilter) {
+	public static BeanPostProcessor filteringSpanExporterRegistrar(ObjectProvider<UriFilter> uriFilter) {
 		return new BeanPostProcessor() {
 			@Override
-			public Object postProcessAfterInitialization(Object bean, String beanName)
-					throws BeansException {
+			public Object postProcessAfterInitialization(Object bean, String beanName) throws BeansException {
 				if (bean instanceof final SpanExporter spanExporter) {
 					return new FilteringSpanExporter(spanExporter, uriFilter.getObject());
 				}
@@ -24,4 +23,5 @@ public class OtelConfig {
 			}
 		};
 	}
+
 }

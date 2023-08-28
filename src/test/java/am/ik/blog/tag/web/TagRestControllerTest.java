@@ -20,6 +20,7 @@ import static org.mockito.BDDMockito.given;
 @WebMvcTest
 @Import({ SecurityConfig.class, GitHubProps.class })
 class TagRestControllerTest {
+
 	@Autowired
 	WebTestClient webTestClient;
 
@@ -29,13 +30,24 @@ class TagRestControllerTest {
 	@ParameterizedTest
 	@CsvSource({ ",", "demo," })
 	void tags(String tenantId) {
-		given(this.tagMapper.findOrderByTagNameAsc(tenantId)).willReturn(
-				List.of(new TagNameAndCount("aaa", 1), new TagNameAndCount("bbb", 2)));
+		given(this.tagMapper.findOrderByTagNameAsc(tenantId))
+			.willReturn(List.of(new TagNameAndCount("aaa", 1), new TagNameAndCount("bbb", 2)));
 		this.webTestClient.get()
-				.uri((tenantId == null ? "" : "/tenants/" + tenantId) + "/tags")
-				.exchange().expectStatus().isOk().expectBody().jsonPath("$.length()")
-				.isEqualTo(2).jsonPath("$.[0].name").isEqualTo("aaa")
-				.jsonPath("$.[0].count").isEqualTo(1).jsonPath("$.[1].name")
-				.isEqualTo("bbb").jsonPath("$.[1].count").isEqualTo(2);
+			.uri((tenantId == null ? "" : "/tenants/" + tenantId) + "/tags")
+			.exchange()
+			.expectStatus()
+			.isOk()
+			.expectBody()
+			.jsonPath("$.length()")
+			.isEqualTo(2)
+			.jsonPath("$.[0].name")
+			.isEqualTo("aaa")
+			.jsonPath("$.[0].count")
+			.isEqualTo(1)
+			.jsonPath("$.[1].name")
+			.isEqualTo("bbb")
+			.jsonPath("$.[1].count")
+			.isEqualTo(2);
 	}
+
 }

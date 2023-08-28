@@ -31,8 +31,7 @@ class CategoryMapperIntegrationTest {
 
 	@Container
 	@ServiceConnection
-	static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>(
-			"postgres:14-alpine");
+	static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:14-alpine");
 
 	@BeforeEach
 	public void reset() {
@@ -44,13 +43,11 @@ class CategoryMapperIntegrationTest {
 	void findAll() {
 		final List<List<Category>> categories = this.categoryMapper.findAll(null);
 		assertThat(categories).hasSize(3);
-		assertThat(categories.get(0)).containsExactly(new Category("a"),
-				new Category("b"), new Category("c"));
-		assertThat(categories.get(1)).containsExactly(new Category("x"),
-				new Category("y"));
-		assertThat(categories.get(2)).containsExactly(new Category("x"),
-				new Category("y"), new Category("z"));
+		assertThat(categories.get(0)).containsExactly(new Category("a"), new Category("b"), new Category("c"));
+		assertThat(categories.get(1)).containsExactly(new Category("x"), new Category("y"));
+		assertThat(categories.get(2)).containsExactly(new Category("x"), new Category("y"), new Category("z"));
 		final List<List<Category>> demoCategories = this.categoryMapper.findAll("demo");
 		assertThat(demoCategories).isEmpty();
 	}
+
 }

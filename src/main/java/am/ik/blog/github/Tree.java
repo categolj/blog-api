@@ -1,5 +1,4 @@
 package am.ik.blog.github;
 
-public record Tree(String sha,
-				   String url) {
+public record Tree(String sha, String url) {
 }

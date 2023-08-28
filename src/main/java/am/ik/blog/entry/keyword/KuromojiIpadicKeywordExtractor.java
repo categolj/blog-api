@@ -9,6 +9,7 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class KuromojiIpadicKeywordExtractor implements KeywordExtractor {
+
 	final Tokenizer tokenizer = new Tokenizer();
 
 	@Override
@@ -18,8 +19,8 @@ public class KuromojiIpadicKeywordExtractor implements KeywordExtractor {
 			final String partOfSpeechLevel1 = token.getPartOfSpeechLevel1();
 			final String partOfSpeechLevel2 = token.getPartOfSpeechLevel2();
 			return surface.length() > 1 && partOfSpeechLevel1.equals("名詞")
-					&& (partOfSpeechLevel2.equals("一般")
-							|| partOfSpeechLevel2.equals("固有名詞"));
+					&& (partOfSpeechLevel2.equals("一般") || partOfSpeechLevel2.equals("固有名詞"));
 		}).map(Token::getSurface).map(String::toUpperCase).sorted().distinct().toList();
 	}
+
 }

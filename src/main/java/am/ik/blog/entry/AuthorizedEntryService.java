@@ -37,14 +37,12 @@ public class AuthorizedEntryService {
 	}
 
 	@Authorized(resource = "entry", requiredPrivileges = Privilege.LIST)
-	public OffsetPage<Entry> findPage(SearchCriteria criteria, String tenantId,
-			OffsetPageRequest pageRequest) {
+	public OffsetPage<Entry> findPage(SearchCriteria criteria, String tenantId, OffsetPageRequest pageRequest) {
 		return entryService.findPage(criteria, tenantId, pageRequest);
 	}
 
 	@Authorized(resource = "entry", requiredPrivileges = Privilege.GET)
-	public Optional<Entry> findOne(Long entryId, String tenantId,
-			boolean excludeContent) {
+	public Optional<Entry> findOne(Long entryId, String tenantId, boolean excludeContent) {
 		return entryService.findOne(entryId, tenantId, excludeContent);
 	}
 
@@ -54,8 +52,7 @@ public class AuthorizedEntryService {
 	}
 
 	@Authorized(resource = "entry", requiredPrivileges = Privilege.LIST)
-	public List<Entry> findAll(SearchCriteria criteria, String tenantId,
-			OffsetPageRequest pageRequest) {
+	public List<Entry> findAll(SearchCriteria criteria, String tenantId, OffsetPageRequest pageRequest) {
 		return entryService.findAll(criteria, tenantId, pageRequest);
 	}
 
@@ -70,4 +67,5 @@ public class AuthorizedEntryService {
 	public int delete(Long entryId, String tenantId) {
 		return entryService.delete(entryId, tenantId);
 	}
+
 }

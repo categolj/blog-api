@@ -27,6 +27,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 		"blog.github.tenants.xyz.access-token=foo" })
 @Import({ GitHubConfig.class, GitHubProps.class, EntryFetcher.class })
 public class EntryFetcherTest {
+
 	@Autowired
 	EntryFetcher entryFetcher;
 
@@ -39,18 +40,12 @@ public class EntryFetcherTest {
 	@CsvSource({ ",someone,my-blog", "demo,someone,my-blog", "xyz,foo,bar" })
 	void fetch(String tenantId, String owner, String repo) throws Exception {
 		final String basePath = "/repos/" + owner + "/" + repo;
-		this.server
-				.expect(MockRestRequestMatchers
-						.requestTo(basePath + "/contents/content%2F00001.md"))
-				.andRespond(MockRestResponseCreators.withSuccess(
-						new ClassPathResource("github/sample-content-response.json"),
-						MediaType.APPLICATION_JSON));
-		this.server
-				.expect(MockRestRequestMatchers
-						.requestTo(basePath + "/commits?path=content/00001.md"))
-				.andRespond(MockRestResponseCreators.withSuccess(
-						new ClassPathResource("github/sample-commits-response.json"),
-						MediaType.APPLICATION_JSON));
+		this.server.expect(MockRestRequestMatchers.requestTo(basePath + "/contents/content%2F00001.md"))
+			.andRespond(MockRestResponseCreators
+				.withSuccess(new ClassPathResource("github/sample-content-response.json"), MediaType.APPLICATION_JSON));
+		this.server.expect(MockRestRequestMatchers.requestTo(basePath + "/commits?path=content/00001.md"))
+			.andRespond(MockRestResponseCreators
+				.withSuccess(new ClassPathResource("github/sample-commits-response.json"), MediaType.APPLICATION_JSON));
 		Optional<Entry> entry = this.entryFetcher.fetch(tenantId, owner, repo, path);
 		assertThat(entry).isNotEmpty();
 		Entry e = entry.get();
@@ -59,17 +54,15 @@ public class EntryFetcherTest {
 		assertThat(e.getContent()).isEqualTo("This is my first blog post!");
 		assertThat(e.getCreated()).isNotNull();
 		assertThat(e.getCreated().getName()).isEqualTo("Toshiaki Maki");
-		assertThat(e.getCreated().getDate())
-				.isEqualTo(OffsetDateTime.parse("2015-12-28T17:16:23Z"));
+		assertThat(e.getCreated().getDate()).isEqualTo(OffsetDateTime.parse("2015-12-28T17:16:23Z"));
 		assertThat(e.getUpdated()).isNotNull();
 		assertThat(e.getUpdated().getName()).isEqualTo("Toshiaki Maki");
-		assertThat(e.getUpdated().getDate())
-				.isEqualTo(OffsetDateTime.parse("2018-01-14T08:09:06Z"));
+		assertThat(e.getUpdated().getDate()).isEqualTo(OffsetDateTime.parse("2018-01-14T08:09:06Z"));
 		FrontMatter frontMatter = e.getFrontMatter();
 		assertThat(frontMatter).isNotNull();
 		assertThat(frontMatter.getTitle()).isEqualTo("First article");
-		assertThat(frontMatter.getCategories()).containsExactly(new Category("Demo"),
-				new Category("Hello"));
+		assertThat(frontMatter.getCategories()).containsExactly(new Category("Demo"), new Category("Hello"));
 		assertThat(frontMatter.getTags()).containsExactly(new Tag("Demo"));
 	}
+
 }

@@ -20,6 +20,7 @@ import java.util.Optional;
 
 @RestControllerAdvice
 public class ProblemControllerAdvice {
+
 	private final Logger log = LoggerFactory.getLogger(ProblemControllerAdvice.class);
 
 	private final Tracer tracer;
@@ -40,28 +41,24 @@ public class ProblemControllerAdvice {
 
 	@ExceptionHandler(ConstraintViolationsException.class)
 	@ResponseStatus(HttpStatus.BAD_REQUEST)
-	public ProblemDetail handleConstraintViolationsException(
-			ConstraintViolationsException e) {
-		final ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(
-				HttpStatus.BAD_REQUEST, "Constraint violations found!");
+	public ProblemDetail handleConstraintViolationsException(ConstraintViolationsException e) {
+		final ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST,
+				"Constraint violations found!");
 		problemDetail.setProperty("violations", e.violations().details());
 		return setTraceId(problemDetail);
 	}
 
 	@ExceptionHandler(WebhookAuthenticationException.class)
 	@ResponseStatus(HttpStatus.FORBIDDEN)
-	public ProblemDetail handleWebhookAuthenticationException(
-			WebhookAuthenticationException e) {
-		final ProblemDetail problemDetail = ProblemDetail
-				.forStatusAndDetail(HttpStatus.FORBIDDEN, e.getMessage());
+	public ProblemDetail handleWebhookAuthenticationException(WebhookAuthenticationException e) {
+		final ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.FORBIDDEN, e.getMessage());
 		return setTraceId(problemDetail);
 	}
 
 	@ExceptionHandler(DataAccessException.class)
 	@ResponseStatus(HttpStatus.SERVICE_UNAVAILABLE)
 	public ProblemDetail handleDataAccessException(DataAccessException e) {
-		final ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(
-				HttpStatus.SERVICE_UNAVAILABLE,
+		final ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.SERVICE_UNAVAILABLE,
 				"There is a problem with database access.");
 		log.error("There is a problem with database access.", e);
 		return setTraceId(problemDetail);
@@ -70,24 +67,22 @@ public class ProblemControllerAdvice {
 	@ExceptionHandler(NoResourceFoundException.class)
 	@ResponseStatus(HttpStatus.NOT_FOUND)
 	public ProblemDetail handleNoResourceFoundException(NoResourceFoundException e) {
-		final ProblemDetail problemDetail = ProblemDetail
-				.forStatusAndDetail(HttpStatus.NOT_FOUND, e.getMessage());
+		final ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, e.getMessage());
 		return setTraceId(problemDetail);
 	}
 
 	@ExceptionHandler(AccessDeniedException.class)
 	@ResponseStatus(HttpStatus.FORBIDDEN)
 	public ProblemDetail handleAccessDeniedException(AccessDeniedException e) {
-		final ProblemDetail problemDetail = ProblemDetail
-				.forStatusAndDetail(HttpStatus.FORBIDDEN, e.getMessage());
+		final ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.FORBIDDEN, e.getMessage());
 		return setTraceId(problemDetail);
 	}
 
 	@ExceptionHandler(RuntimeException.class)
 	@ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
 	public ProblemDetail handleRuntimeException(RuntimeException e) {
-		final ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(
-				HttpStatus.INTERNAL_SERVER_ERROR, "Unexpected runtime error occurred!");
+		final ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.INTERNAL_SERVER_ERROR,
+				"Unexpected runtime error occurred!");
 		log.error("Unexpected runtime error occurred!", e);
 		return setTraceId(problemDetail);
 	}
@@ -95,8 +90,8 @@ public class ProblemControllerAdvice {
 	@ExceptionHandler(Exception.class)
 	@ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
 	public ProblemDetail handleException(Exception e) {
-		final ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(
-				HttpStatus.INTERNAL_SERVER_ERROR, "Unexpected error occurred!");
+		final ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.INTERNAL_SERVER_ERROR,
+				"Unexpected error occurred!");
 		log.error("Unexpected error occurred!", e);
 		return setTraceId(problemDetail);
 	}
@@ -108,4 +103,5 @@ public class ProblemControllerAdvice {
 		}
 		return problemDetail;
 	}
+
 }

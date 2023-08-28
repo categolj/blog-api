@@ -24,4 +24,5 @@ public class AuthorBuilder {
 		this.name = name;
 		return this;
 	}
+
 }

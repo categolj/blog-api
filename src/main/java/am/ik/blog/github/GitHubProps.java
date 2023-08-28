@@ -33,29 +33,21 @@ public class GitHubProps implements org.springframework.validation.Validator {
 
 	private Duration readTimeout = Duration.ofSeconds(5);
 
-	private final BiConsumer<GitHubProps, Errors> validator = ValidatorBuilder
-			.<GitHubProps> of()
-			.constraint(GitHubProps::getAccessToken, "accessToken",
-					c -> c.codePoints(ASCII_PRINTABLE_CHARS).asWhiteList())
-			.constraint(GitHubProps::getWebhookSecret, "webhookSecret",
-					c -> c.codePoints(ASCII_PRINTABLE_CHARS).asWhiteList())
-			.constraint(GitHubProps::getContentOwner, "contentOwner",
-					c -> c.codePoints(ASCII_PRINTABLE_CHARS).asWhiteList())
-			.constraint(GitHubProps::getContentRepo, "contentRepo",
-					c -> c.codePoints(ASCII_PRINTABLE_CHARS).asWhiteList())
-			.constraint(GitHubProps::getTenants, "tenants", c -> c.notNull())
-			.constraintOnObject(GitHubProps::getRetryInterval, "retryInterval",
-					c -> c.notNull())
-			.constraintOnObject(GitHubProps::getRetryMaxElapsedTime,
-					"retryMaxElapsedTime", c -> c.notNull())
-			.constraintOnObject(GitHubProps::getReadTimeout, "readTimeout",
-					c -> c.notNull())
-			.constraintOnObject(GitHubProps::getConnectTimeout, "connectTimeout",
-					c -> c.notNull())
-			.constraintOnObject(GitHubProps::getConnectTimeout, "connectTimeout",
-					c -> c.notNull())
-			.build() //
-			.toBiConsumer(Errors::rejectValue);
+	private final BiConsumer<GitHubProps, Errors> validator = ValidatorBuilder.<GitHubProps>of()
+		.constraint(GitHubProps::getAccessToken, "accessToken", c -> c.codePoints(ASCII_PRINTABLE_CHARS).asWhiteList())
+		.constraint(GitHubProps::getWebhookSecret, "webhookSecret",
+				c -> c.codePoints(ASCII_PRINTABLE_CHARS).asWhiteList())
+		.constraint(GitHubProps::getContentOwner, "contentOwner",
+				c -> c.codePoints(ASCII_PRINTABLE_CHARS).asWhiteList())
+		.constraint(GitHubProps::getContentRepo, "contentRepo", c -> c.codePoints(ASCII_PRINTABLE_CHARS).asWhiteList())
+		.constraint(GitHubProps::getTenants, "tenants", c -> c.notNull())
+		.constraintOnObject(GitHubProps::getRetryInterval, "retryInterval", c -> c.notNull())
+		.constraintOnObject(GitHubProps::getRetryMaxElapsedTime, "retryMaxElapsedTime", c -> c.notNull())
+		.constraintOnObject(GitHubProps::getReadTimeout, "readTimeout", c -> c.notNull())
+		.constraintOnObject(GitHubProps::getConnectTimeout, "connectTimeout", c -> c.notNull())
+		.constraintOnObject(GitHubProps::getConnectTimeout, "connectTimeout", c -> c.notNull())
+		.build() //
+		.toBiConsumer(Errors::rejectValue);
 
 	public String getAccessToken() {
 		return accessToken;
@@ -138,4 +130,5 @@ public class GitHubProps implements org.springframework.validation.Validator {
 	public void validate(Object target, Errors errors) {
 		this.validator.accept((GitHubProps) target, errors);
 	}
+
 }

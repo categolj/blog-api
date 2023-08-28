@@ -13,23 +13,22 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import static java.util.stream.Collectors.toUnmodifiableMap;
 
 public class TenantUserDetailsService implements UserDetailsService {
+
 	private final Map<String, TenantUserDetails> users;
 
 	public TenantUserDetailsService(TenantUserProps props) {
-		this.users = Objects
-				.<List<TenantUserDetails>> requireNonNullElseGet(props.users(), List::of)
-				.stream().collect(toUnmodifiableMap(TenantUserDetails::getUsername,
-						Function.identity()));
+		this.users = Objects.<List<TenantUserDetails>>requireNonNullElseGet(props.users(), List::of)
+			.stream()
+			.collect(toUnmodifiableMap(TenantUserDetails::getUsername, Function.identity()));
 	}
 
 	@Override
-	public UserDetails loadUserByUsername(String username)
-			throws UsernameNotFoundException {
+	public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
 		final TenantUserDetails tenantUserDetails = this.users.get(username);
 		if (tenantUserDetails == null) {
-			throw new UsernameNotFoundException(
-					"The requested user (%s) is not found.".formatted(username));
+			throw new UsernameNotFoundException("The requested user (%s) is not found.".formatted(username));
 		}
 		return tenantUserDetails;
 	}
+
 }
