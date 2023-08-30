@@ -1,5 +1,6 @@
 package am.ik.blog.entry;
 
+import java.io.UncheckedIOException;
 import java.sql.Array;
 import java.sql.Timestamp;
 import java.time.Instant;
@@ -20,7 +21,11 @@ import am.ik.pagination.CursorPageRequest;
 import am.ik.pagination.OffsetPage;
 import am.ik.pagination.OffsetPageRequest;
 import am.ik.yavi.core.ConstraintViolationsException;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.mybatis.scripting.thymeleaf.SqlGenerator;
+import org.postgresql.util.PGobject;
 
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
@@ -36,6 +41,8 @@ public class EntryMapper {
 
 	private final JdbcClient jdbcClient;
 
+	private ObjectMapper objectMapper = null;
+
 	private final SqlGenerator sqlGenerator;
 
 	private final KeywordExtractor keywordExtractor;
@@ -45,31 +52,34 @@ public class EntryMapper {
 		final Timestamp createdDate = rs.getTimestamp("created_date");
 		final Timestamp lastModifiedDate = rs.getTimestamp("last_modified_date");
 		final Array categories = rs.getArray("categories");
-		final Array tags = rs.getArray("tags");
-		return new EntryBuilder().withEntryId(entryId)
-			.withContent(rs.getString("content"))
-			.withFrontMatter(new FrontMatterBuilder().withTitle(rs.getString("title"))
-				.withCategories(categories == null ? null
-						: Arrays.stream((Object[]) categories.getArray())
-							.map(String.class::cast)
-							.map(Category::new)
-							.toList())
-				.withTags(tags == null ? null
-						: Arrays.stream((Object[]) tags.getArray())
-							.map(String.class::cast)
-							.sorted()
-							.map(Tag::new)
-							.toList())
-				.build())
-			.withCreated(new Author(rs.getString("created_by"),
-					createdDate == null ? null : createdDate.toInstant().atOffset(ZoneOffset.UTC)))
-			.withUpdated(new Author(rs.getString("last_modified_by"),
-					lastModifiedDate == null ? null : lastModifiedDate.toInstant().atOffset(ZoneOffset.UTC)))
-			.build();
+		final String tags = rs.getString("tags");
+		try {
+			return new EntryBuilder().withEntryId(entryId)
+				.withContent(rs.getString("content"))
+				.withFrontMatter(new FrontMatterBuilder().withTitle(rs.getString("title"))
+					.withCategories(categories == null ? null
+							: Arrays.stream((Object[]) categories.getArray())
+								.map(String.class::cast)
+								.map(Category::new)
+								.toList())
+					.withTags(tags == null ? null : this.objectMapper.readValue(tags, new TypeReference<>() {
+					}))
+					.build())
+				.withCreated(new Author(rs.getString("created_by"),
+						createdDate == null ? null : createdDate.toInstant().atOffset(ZoneOffset.UTC)))
+				.withUpdated(new Author(rs.getString("last_modified_by"),
+						lastModifiedDate == null ? null : lastModifiedDate.toInstant().atOffset(ZoneOffset.UTC)))
+				.build();
+		}
+		catch (JsonProcessingException e) {
+			throw new UncheckedIOException(e);
+		}
 	};
 
-	public EntryMapper(JdbcClient jdbcClient, SqlGenerator sqlGenerator, KeywordExtractor keywordExtractor) {
+	public EntryMapper(JdbcClient jdbcClient, ObjectMapper objectMapper, SqlGenerator sqlGenerator,
+			KeywordExtractor keywordExtractor) {
 		this.jdbcClient = jdbcClient;
+		this.objectMapper = objectMapper;
 		this.sqlGenerator = sqlGenerator;
 		this.keywordExtractor = keywordExtractor;
 	}
@@ -166,24 +176,30 @@ public class EntryMapper {
 		final List<Category> categories = frontMatter.getCategories();
 		final List<Tag> tags = frontMatter.getTags();
 		final List<String> keywords = this.keywordExtractor.extract(entry.getContent());
-		final MapSqlParameterSource params = new MapSqlParameterSource().addValue("entryId", entryId)
-			.addValue("title", frontMatter.getTitle())
-			.addValue("tenantId", tenantId)
-			.addValue("content", entry.getContent())
-			.addValue("categories", categories.stream().map(Category::name).collect(joining(",")))
-			.addValue("tags", tags.stream().map(Tag::name).collect(joining(",")))
-			.addValue("keywords", String.join(",", keywords))
-			.addValue("createdBy", created.getName())
-			.addValue("createdDate", Timestamp.from(created.getDate().toInstant()))
-			.addValue("lastModifiedBy", updated.getName())
-			.addValue("lastModifiedDate", Timestamp.from(updated.getDate().toInstant()));
-		final String upsertEntrySql = this.sqlGenerator.generate(
-				loadSqlAsString("am/ik/blog/entry/EntryMapper/upsertEntry.sql"), params.getValues(), params::addValue);
-		final int upsertEntryCount = this.jdbcClient.sql(upsertEntrySql) //
-			.paramSource(params) //
-			.update();
-		result.put("upsertEntry", upsertEntryCount);
-		return result;
+		try {
+			final MapSqlParameterSource params = new MapSqlParameterSource().addValue("entryId", entryId)
+				.addValue("title", frontMatter.getTitle())
+				.addValue("tenantId", tenantId)
+				.addValue("content", entry.getContent())
+				.addValue("categories", categories.stream().map(Category::name).collect(joining(",")))
+				.addValue("tags", this.objectMapper.writeValueAsString(tags))
+				.addValue("keywords", String.join(",", keywords))
+				.addValue("createdBy", created.getName())
+				.addValue("createdDate", Timestamp.from(created.getDate().toInstant()))
+				.addValue("lastModifiedBy", updated.getName())
+				.addValue("lastModifiedDate", Timestamp.from(updated.getDate().toInstant()));
+			final String upsertEntrySql = this.sqlGenerator.generate(
+					loadSqlAsString("am/ik/blog/entry/EntryMapper/upsertEntry.sql"), params.getValues(),
+					params::addValue);
+			final int upsertEntryCount = this.jdbcClient.sql(upsertEntrySql) //
+				.paramSource(params) //
+				.update();
+			result.put("upsertEntry", upsertEntryCount);
+			return result;
+		}
+		catch (JsonProcessingException e) {
+			throw new UncheckedIOException(e);
+		}
 	}
 
 	private List<Long> entryIds(SearchCriteria searchCriteria, String tenantId, OffsetPageRequest pageRequest) {

@@ -4,8 +4,9 @@ import java.util.List;
 
 import am.ik.blog.config.SecurityConfig;
 import am.ik.blog.github.GitHubProps;
+import am.ik.blog.tag.Tag;
 import am.ik.blog.tag.TagMapper;
-import am.ik.blog.tag.TagNameAndCount;
+import am.ik.blog.tag.TagAndCount;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 
@@ -31,7 +32,7 @@ class TagRestControllerTest {
 	@CsvSource({ ",", "demo," })
 	void tags(String tenantId) {
 		given(this.tagMapper.findOrderByTagNameAsc(tenantId))
-			.willReturn(List.of(new TagNameAndCount("aaa", 1), new TagNameAndCount("bbb", 2)));
+			.willReturn(List.of(new TagAndCount(new Tag("aaa"), 1), new TagAndCount(new Tag("bbb"), 2)));
 		this.webTestClient.get()
 			.uri((tenantId == null ? "" : "/tenants/" + tenantId) + "/tags")
 			.exchange()

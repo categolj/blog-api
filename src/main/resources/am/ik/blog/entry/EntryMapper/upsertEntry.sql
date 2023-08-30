@@ -1,4 +1,4 @@
-INSERT INTO entry (entry_id, tenant_id,title, content, categories, tags, keywords, created_by, created_date,
+INSERT INTO entry (entry_id, tenant_id, title, content, categories, tags_json, keywords, created_by, created_date,
                    last_modified_by,
                    last_modified_date)
 VALUES (/*[# mb:p="entryId"]*/ 999 /*[/]*/,
@@ -6,9 +6,16 @@ VALUES (/*[# mb:p="entryId"]*/ 999 /*[/]*/,
            /*[# th:unless="${tenantId}"][# th:utext="| '_'|"][/][/]*/,
            /*[# mb:p="title"]*/ 'Hello World!' /*[/]*/,
            /*[# mb:p="content"]*/ 'This is a test post.' /*[/]*/,
-           STRING_TO_ARRAY(/*[# mb:p="categories"]*/ 'Java,Framework,Spring' /*[/]*/, ','),
-           STRING_TO_ARRAY(/*[# mb:p="tags"]*/ 'Java,Programming' /*[/]*/, ','),
-           STRING_TO_ARRAY(/*[# mb:p="keywords"]*/ 'Hello,World' /*[/]*/, ','),
+                               STRING_TO_ARRAY(/*[# mb:p="categories"]*/ 'Java,Framework,Spring' /*[/]*/, ','),
+           /*[# mb:p="tags"]*/ '[
+    {
+      "name": "Java"
+    },
+    {
+      "name": "Programming"
+    }
+  ]' /*[/]*/ ::jsonb,
+                               STRING_TO_ARRAY(/*[# mb:p="keywords"]*/ 'Hello,World' /*[/]*/, ','),
            /*[# mb:p="createdBy"]*/'Toshiaki Maki' /*[/]*/,
            /*[# mb:p="createdDate"]*/'2017-03-31 00:00:00' /*[/]*/,
            /*[# mb:p="lastModifiedBy"]*/'Toshiaki Maki' /*[/]*/,
@@ -16,8 +23,16 @@ VALUES (/*[# mb:p="entryId"]*/ 999 /*[/]*/,
 ON CONFLICT ON CONSTRAINT entry_pkey DO UPDATE SET title              = /*[# mb:p="title"]*/ 'Hello World!' /*[/]*/,
                                                    tenant_id          = /*[# th:if="${tenantId}"]*//*[# mb:p="tenantId"]*/ '_'/*[/]*//*[/]*//*[# th:unless="${tenantId}"][# th:utext="| '_'|"][/][/]*/,
                                                    content            = /*[# mb:p="content"]*/ 'This is a test post.' /*[/]*/,
-                                                   categories         = STRING_TO_ARRAY(/*[# mb:p="categories"]*/ 'Java,Framework,Spring' /*[/]*/, ','),
-                                                   tags               = STRING_TO_ARRAY(/*[# mb:p="tags"]*/ 'Java,Programming' /*[/]*/, ','),
+                                                   categories         = STRING_TO_ARRAY(/*[# mb:p="categories"]*/
+                                                           'Java,Framework,Spring' /*[/]*/, ','),
+                                                   tags_json          = /*[# mb:p="tags"]*/ '[
+                                                     {
+                                                       "name": "Java"
+                                                     },
+                                                     {
+                                                       "name": "Programming"
+                                                     }
+                                                   ]' /*[/]*/ ::jsonb,
                                                    keywords           = STRING_TO_ARRAY(/*[# mb:p="keywords"]*/ 'Hello,World' /*[/]*/, ','),
                                                    created_by         = /*[# mb:p="createdBy"]*/ 'Toshiaki Maki' /*[/]*/,
                                                    created_date       = /*[# mb:p="createdDate"]*/'2017-03-31 00:00:00' /*[/]*/,

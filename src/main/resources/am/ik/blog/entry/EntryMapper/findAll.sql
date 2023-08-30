@@ -4,8 +4,8 @@ SELECT e.entry_id,
        e.content,
 /*[/]*/
 /*[# th:if="${excludeContent}"][# th:utext="|       '' AS content,|"][/][/]*/
-       COALESCE(e.categories, '{}') AS categories,
-       COALESCE(e.tags, '{}')       AS tags,
+       COALESCE(e.categories, '{}')       AS categories,
+       COALESCE(e.tags_json, '[]'::jsonb) AS tags,
        e.created_by,
        e.created_date,
        e.last_modified_by,

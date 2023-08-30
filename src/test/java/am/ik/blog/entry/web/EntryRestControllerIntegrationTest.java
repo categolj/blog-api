@@ -215,10 +215,9 @@ class EntryRestControllerIntegrationTest {
 			.jsonPath("$.frontMatter.tags.length()")
 			.isEqualTo(2)
 			.jsonPath("$.frontMatter.tags[0].name")
-			.isEqualTo("Demo") // alphabetic
-								// order
-			.jsonPath("$.frontMatter.tags[1].name")
 			.isEqualTo("Test")
+			.jsonPath("$.frontMatter.tags[1].name")
+			.isEqualTo("Demo")
 			.jsonPath("$.frontMatter.categories.length()")
 			.isEqualTo(3)
 			.jsonPath("$.frontMatter.categories[0].name")
@@ -301,10 +300,9 @@ class EntryRestControllerIntegrationTest {
 			.jsonPath("$.frontMatter.tags.length()")
 			.isEqualTo(2)
 			.jsonPath("$.frontMatter.tags[0].name")
-			.isEqualTo("Demo") // alphabetic
-								// order
-			.jsonPath("$.frontMatter.tags[1].name")
 			.isEqualTo("Test")
+			.jsonPath("$.frontMatter.tags[1].name")
+			.isEqualTo("Demo")
 			.jsonPath("$.frontMatter.categories.length()")
 			.isEqualTo(3)
 			.jsonPath("$.frontMatter.categories[0].name")

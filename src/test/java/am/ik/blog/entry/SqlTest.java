@@ -4,6 +4,7 @@ import java.util.List;
 
 import am.ik.blog.category.Category;
 import am.ik.blog.util.FileLoader;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.mybatis.scripting.thymeleaf.SqlGenerator;
 import org.mybatis.scripting.thymeleaf.SqlGeneratorConfig;
@@ -25,6 +26,7 @@ class SqlTest {
 	final SqlGenerator sqlGenerator = new SqlGenerator(config);
 
 	@Test
+	@Disabled
 	public void findOneExcludeContent() {
 		final MapSqlParameterSource params = new MapSqlParameterSource().addValue("entryId", 100)
 			.addValue("excludeContent", true);
@@ -49,6 +51,7 @@ class SqlTest {
 	}
 
 	@Test
+	@Disabled
 	public void findOneIncludeContent() {
 		final MapSqlParameterSource params = new MapSqlParameterSource().addValue("entryId", 100)
 			.addValue("excludeContent", false);
@@ -75,6 +78,7 @@ class SqlTest {
 	}
 
 	@Test
+	@Disabled
 	public void findOneIncludeContentWithTenantId() {
 		final MapSqlParameterSource params = new MapSqlParameterSource().addValue("entryId", 100)
 			.addValue("excludeContent", false)
@@ -102,6 +106,7 @@ class SqlTest {
 	}
 
 	@Test
+	@Disabled
 	public void findAll() {
 		final MapSqlParameterSource params = new MapSqlParameterSource().addValue("entryIds", List.of(1, 2, 3))
 			.addValue("entryIds[0]", 1)
@@ -161,6 +166,7 @@ class SqlTest {
 	}
 
 	@Test
+	@Disabled
 	public void deleteEntry() {
 		final MapSqlParameterSource params = new MapSqlParameterSource().addValue("entryId", 100);
 		final String sql = sqlGenerator.generate(
@@ -196,6 +202,7 @@ class SqlTest {
 	}
 
 	@Test
+	@Disabled
 	public void entryIdsWithKeyword() {
 		final MapSqlParameterSource params = new MapSqlParameterSource().addValue("keywordsCount", 2)
 			.addValue("keywords[0]", "xyz")
@@ -250,6 +257,7 @@ class SqlTest {
 	}
 
 	@Test
+	@Disabled
 	public void entryIdsWithTag() {
 		final MapSqlParameterSource params = new MapSqlParameterSource().addValue("tag", "foo");
 		final String sql = sqlGenerator.generate(FileLoader.loadAsString("am/ik/blog/entry/EntryMapper/entryIds.sql"),

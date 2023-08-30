@@ -12,11 +12,11 @@ SELECT
 /*[/]*/
 /*[# th:if="${excludeContent}"][# th:utext="|       '' AS content,|"][/][/]*/
 /*[# th:if="!${excludeCategories}"]*/
-    COALESCE(e.categories, '{}') AS categories,
+    COALESCE(e.categories, '{}')       AS categories,
 /*[/]*/
 /*[# th:if="${excludeCategories}"][# th:utext="|       NULL AS categories,|"][/][/]*/
 /*[# th:if="!${excludeTags}"]*/
-    COALESCE(e.tags, '{}')       AS tags,
+    COALESCE(e.tags_json, '[]'::jsonb) AS tags,
 /*[/]*/
 /*[# th:if="${excludeTags}"][# th:utext="|       NULL AS tags,|"][/][/]*/
 /*[# th:if="!${excludeCreatedBy}"]*/
@@ -55,7 +55,7 @@ WHERE e.last_modified_date < COALESCE( /*[# mb:p="cursor"]*/ NULL /*[/]*/ , 'inf
 /*[/]*/
 /*[/]*/
 /*[# th:if="${tag} != null"]*/
-  AND e.tags @> ARRAY [ /*[# mb:p="tag"]*/ 'Java' /*[/]*/ ]::character varying[]
+  AND e.tags_json @> JSONB_BUILD_ARRAY(JSONB_BUILD_OBJECT('name', /*[# mb:p="tag"]*/'Java'/*[/]*/))
 /*[/]*/
 /*[# th:if="${tenantId}"]*/
   AND e.tenant_id = /*[# mb:p="tenantId"]*/ '_'

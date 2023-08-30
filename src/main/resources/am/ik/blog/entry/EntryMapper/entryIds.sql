@@ -3,7 +3,7 @@ FROM entry AS e
 WHERE 1 = 1
 /*[# th:if="${keywordsCount > 0}"]*/
 /*[# th:each="i : ${#numbers.sequence(0, keywordsCount - 1)}"]*/
-  AND e.keywords @> ARRAY[ /*[# mb:p="keywords[${i}]"]*/ 'JAVA' /*[/]*/ ]::character varying[]
+  AND e.keywords @> ARRAY [ /*[# mb:p="keywords[${i}]"]*/ 'JAVA' /*[/]*/ ]::character varying[]
 /*[/]*/
 /*[/]*/
 /*[# th:if="${createdBy} != null"]*/
@@ -14,11 +14,12 @@ WHERE 1 = 1
 /*[/]*/
 /*[# th:if="${not #lists.isEmpty(categories)}"]*/
 /*[# th:each="category,stat : ${categories}"]*/
-  AND e.categories/*[# th:utext="${'[' + stat.count + ']'}"]*/ [1] /*[/]*/ = /*[# mb:p="categories[${stat.index}]"]*/ 'Java' /*[/]*/
+  AND e.categories/*[# th:utext="${'[' + stat.count + ']'}"]*/ [1] /*[/]*/ = /*[# mb:p="categories[${stat.index}]"]*/
+      'Java' /*[/]*/
 /*[/]*/
 /*[/]*/
 /*[# th:if="${tag} != null"]*/
-  AND e.tags @> ARRAY[ /*[# mb:p="tag"]*/ 'Java' /*[/]*/ ]::character varying[]
+  AND e.tags_json @> JSONB_BUILD_ARRAY(JSONB_BUILD_OBJECT('name', /*[# mb:p="tag"]*/'Java'/*[/]*/))
 /*[/]*/
 /*[# th:if="${tenantId}"]*/
   AND e.tenant_id = /*[# mb:p="tenantId"]*/ '_'
