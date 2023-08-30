@@ -1,0 +1,2 @@
+ALTER TABLE entry
+    DROP COLUMN IF EXISTS tags_json;
