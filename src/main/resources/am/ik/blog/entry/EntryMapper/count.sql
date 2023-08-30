@@ -19,7 +19,7 @@ WHERE 1 = 1
 /*[/]*/
 /*[/]*/
 /*[# th:if="${tag} != null"]*/
-  AND tags_json @> JSONB_BUILD_ARRAY(JSONB_BUILD_OBJECT('name', /*[# mb:p="tag"]*/'Java'/*[/]*/))
+  AND tags @> JSONB_BUILD_ARRAY(JSONB_BUILD_OBJECT('name', /*[# mb:p="tag"]*/'Java'/*[/]*/))
 /*[/]*/
 /*[# th:if="${tenantId}"]*/
   AND e.tenant_id = /*[# mb:p="tenantId"]*/ '_'

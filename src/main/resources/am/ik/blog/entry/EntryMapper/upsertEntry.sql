@@ -1,4 +1,4 @@
-INSERT INTO entry (entry_id, tenant_id, title, content, categories, tags_json, keywords, created_by, created_date,
+INSERT INTO entry (entry_id, tenant_id, title, content, categories, tags, keywords, created_by, created_date,
                    last_modified_by,
                    last_modified_date)
 VALUES (/*[# mb:p="entryId"]*/ 999 /*[/]*/,
@@ -25,7 +25,7 @@ ON CONFLICT ON CONSTRAINT entry_pkey DO UPDATE SET title              = /*[# mb:
                                                    content            = /*[# mb:p="content"]*/ 'This is a test post.' /*[/]*/,
                                                    categories         = STRING_TO_ARRAY(/*[# mb:p="categories"]*/
                                                            'Java,Framework,Spring' /*[/]*/, ','),
-                                                   tags_json          = /*[# mb:p="tags"]*/ '[
+                                                   tags               = /*[# mb:p="tags"]*/ '[
                                                      {
                                                        "name": "Java"
                                                      },

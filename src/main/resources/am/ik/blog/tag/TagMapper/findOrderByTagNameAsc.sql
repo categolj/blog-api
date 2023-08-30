@@ -1,6 +1,6 @@
 SELECT tag ->> 'name' AS tag_name, COUNT(*) AS count
 FROM entry AS e,
-     JSONB_ARRAY_ELEMENTS(e.tags_json) AS tag
+     JSONB_ARRAY_ELEMENTS(e.tags) AS tag
 WHERE 1 = 1
 /*[# th:if="${tenantId}"]*/
   AND e.tenant_id = /*[# mb:p="tenantId"]*/ '_'
