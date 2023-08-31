@@ -12,11 +12,11 @@ SELECT
 /*[/]*/
 /*[# th:if="${excludeContent}"][# th:utext="|       '' AS content,|"][/][/]*/
 /*[# th:if="!${excludeCategories}"]*/
-    COALESCE(e.categories, '{}')  AS categories,
+    COALESCE(e.categories, '{}') AS categories,
 /*[/]*/
 /*[# th:if="${excludeCategories}"][# th:utext="|       NULL AS categories,|"][/][/]*/
 /*[# th:if="!${excludeTags}"]*/
-    COALESCE(e.tags, '[]'::jsonb) AS tags,
+    e.tags,
 /*[/]*/
 /*[# th:if="${excludeTags}"][# th:utext="|       NULL AS tags,|"][/][/]*/
 /*[# th:if="!${excludeCreatedBy}"]*/
