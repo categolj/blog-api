@@ -3,11 +3,13 @@ package am.ik.blog.github;
 import am.ik.yavi.builder.ValidatorBuilder;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
+import org.springframework.util.backoff.BackOff;
+import org.springframework.util.backoff.ExponentialBackOff;
 import org.springframework.validation.Errors;
+import org.springframework.validation.Validator;
 
 import java.time.Duration;
 import java.util.Map;
-import java.util.function.BiConsumer;
 
 import static am.ik.yavi.constraint.charsequence.codepoints.AsciiCodePoints.ASCII_PRINTABLE_CHARS;
 
@@ -33,7 +35,7 @@ public class GitHubProps implements org.springframework.validation.Validator {
 
 	private Duration readTimeout = Duration.ofSeconds(5);
 
-	private final BiConsumer<GitHubProps, Errors> validator = ValidatorBuilder.<GitHubProps>of()
+	private final Validator validator = Validator.forInstanceOf(GitHubProps.class, ValidatorBuilder.<GitHubProps>of()
 		.constraint(GitHubProps::getAccessToken, "accessToken", c -> c.codePoints(ASCII_PRINTABLE_CHARS).asWhiteList())
 		.constraint(GitHubProps::getWebhookSecret, "webhookSecret",
 				c -> c.codePoints(ASCII_PRINTABLE_CHARS).asWhiteList())
@@ -46,8 +48,8 @@ public class GitHubProps implements org.springframework.validation.Validator {
 		.constraintOnObject(GitHubProps::getReadTimeout, "readTimeout", c -> c.notNull())
 		.constraintOnObject(GitHubProps::getConnectTimeout, "connectTimeout", c -> c.notNull())
 		.constraintOnObject(GitHubProps::getConnectTimeout, "connectTimeout", c -> c.notNull())
-		.build() //
-		.toBiConsumer(Errors::rejectValue);
+		.build()
+		.toBiConsumer(Errors::rejectValue));
 
 	public String getAccessToken() {
 		return accessToken;
@@ -105,6 +107,12 @@ public class GitHubProps implements org.springframework.validation.Validator {
 		this.retryMaxElapsedTime = retryMaxElapsedTime;
 	}
 
+	public BackOff getBackOff() {
+		final ExponentialBackOff backOff = new ExponentialBackOff(this.getRetryInterval().toMillis(), 2);
+		backOff.setMaxElapsedTime(this.getRetryMaxElapsedTime().toMillis());
+		return backOff;
+	}
+
 	public Duration getConnectTimeout() {
 		return connectTimeout;
 	}
@@ -128,7 +136,7 @@ public class GitHubProps implements org.springframework.validation.Validator {
 
 	@Override
 	public void validate(Object target, Errors errors) {
-		this.validator.accept((GitHubProps) target, errors);
+		this.validator.validate(target, errors);
 	}
 
 }

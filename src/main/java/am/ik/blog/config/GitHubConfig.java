@@ -1,9 +1,23 @@
 package am.ik.blog.config;
 
-import am.ik.blog.github.*;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Objects;
+import java.util.stream.Collectors;
+
+import am.ik.blog.github.Committer;
+import am.ik.blog.github.GitCommit;
+import am.ik.blog.github.GitCommitter;
+import am.ik.blog.github.GitHubClient;
+import am.ik.blog.github.GitHubProps;
+import am.ik.blog.github.GitHubUserContentClient;
+import am.ik.blog.github.Parent;
+import am.ik.blog.github.Tree;
 import am.ik.blog.github.web.WebhookController;
 import am.ik.spring.http.client.RetryableClientHttpRequestInterceptor;
 import com.fasterxml.jackson.databind.JsonNode;
+
 import org.springframework.aot.hint.ExecutableMode;
 import org.springframework.aot.hint.RuntimeHintsRegistrar;
 import org.springframework.boot.web.client.RestTemplateBuilder;
@@ -12,17 +26,11 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.ImportRuntimeHints;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.client.JdkClientHttpRequestFactory;
 import org.springframework.util.ReflectionUtils;
-import org.springframework.util.backoff.ExponentialBackOff;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.client.support.RestTemplateAdapter;
 import org.springframework.web.service.invoker.HttpServiceProxyFactory;
-
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Objects;
-import java.util.stream.Collectors;
 
 @Configuration(proxyBeanMethods = false)
 @ImportRuntimeHints(GitHubConfig.RuntimeHints.class)
@@ -30,10 +38,10 @@ public class GitHubConfig {
 
 	@Bean
 	public RestTemplateCustomizer restTemplateCustomizer(GitHubProps props) {
-		final ExponentialBackOff backOff = new ExponentialBackOff(props.getRetryInterval().toMillis(), 2);
-		backOff.setMaxElapsedTime(props.getRetryMaxElapsedTime().toMillis());
-		return restTemplate -> restTemplate
-			.setInterceptors(List.of(new RetryableClientHttpRequestInterceptor(backOff)));
+		return restTemplate -> {
+			restTemplate.setInterceptors(List.of(new RetryableClientHttpRequestInterceptor(props.getBackOff())));
+			restTemplate.setRequestFactory(new JdkClientHttpRequestFactory());
+		};
 	}
 
 	@Bean
