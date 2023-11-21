@@ -14,7 +14,7 @@ ADD ./.git .git/
 RUN ./mvnw -V clean package -DskipTests --no-transfer-progress && \
     cp target/*.jar application.jar && \
     java -Djarmode=layertools -jar application.jar extract
-ADD https://repo1.maven.org/maven2/org/springframework/cloud/spring-cloud-bindings/2.0.2/spring-cloud-bindings-2.0.2.jar dependencies/BOOT-INF/lib 
+ADD https://repo1.maven.org/maven2/org/springframework/cloud/spring-cloud-bindings/2.0.2/spring-cloud-bindings-2.0.2.jar dependencies/BOOT-INF/lib/spring-cloud-bindings-2.0.2.jar 
 RUN rm -rf $JAVA_HOME/demo $JAVA_HOME/man
 
 FROM ubuntu:22.04
