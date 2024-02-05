@@ -21,8 +21,7 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@RestClientTest(properties = { "logging.level.web=DEBUG",
-		"logging.level.am.ik.spring.http.client.RetryableClientHttpRequestInterceptor=INFO",
+@RestClientTest(properties = { "logging.level.am.ik.spring.http.client.RetryableClientHttpRequestInterceptor=DEBUG",
 		"blog.github.retry-interval=5ms", "blog.github.retry-max-elapsed-time=40ms",
 		"blog.github.tenants.xyz.access-token=foo" })
 @Import({ GitHubConfig.class, GitHubProps.class, EntryFetcher.class })
