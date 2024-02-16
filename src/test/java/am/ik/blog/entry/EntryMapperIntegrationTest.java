@@ -29,7 +29,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @TestConstructor(autowireMode = TestConstructor.AutowireMode.ALL)
-@Testcontainers(disabledWithoutDocker = false)
+@Testcontainers(disabledWithoutDocker = true)
 class EntryMapperIntegrationTest {
 
 	@Autowired
