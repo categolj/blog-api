@@ -26,7 +26,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @TestConstructor(autowireMode = TestConstructor.AutowireMode.ALL)
-@Testcontainers(disabledWithoutDocker = true)
+@Testcontainers(disabledWithoutDocker = false)
 @AutoConfigureJsonTesters
 class EntryGraphqlControllerTest {
 

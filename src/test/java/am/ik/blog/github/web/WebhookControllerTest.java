@@ -34,7 +34,7 @@ import static org.mockito.BDDMockito.given;
 		properties = { "blog.github.access-token=foo", "blog.github.webhook-secret=bar",
 				"blog.github.tenants.xyz.webhook-secret=abc" })
 @TestConstructor(autowireMode = TestConstructor.AutowireMode.ALL)
-@Testcontainers(disabledWithoutDocker = true)
+@Testcontainers(disabledWithoutDocker = false)
 public class WebhookControllerTest {
 
 	private final ObjectMapper objectMapper;
