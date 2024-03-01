@@ -17,6 +17,7 @@
 
 	<properties>
 		<java.version>17</java.version>
+		<jackson-bom.version>2.16.1</jackson-bom.version>
 		<start-class>am.ik.blog.BlogApiApplication</start-class>
 		<jar-classifier></jar-classifier>
 	</properties>
