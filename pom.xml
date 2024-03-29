@@ -216,7 +216,7 @@
 				<configuration>
 					<compilerArgs>
 						<arg>-XDcompilePolicy=simple</arg>
-						<arg>-Xplugin:ErrorProne -XepOpt:NullAway:AnnotatedPackages=am.ik</arg>
+						<arg>-Xplugin:ErrorProne -Xep:NullAway:ERROR -XepOpt:NullAway:AnnotatedPackages=am.ik.blog</arg>
 					</compilerArgs>
 					<annotationProcessorPaths>
 						<path>
