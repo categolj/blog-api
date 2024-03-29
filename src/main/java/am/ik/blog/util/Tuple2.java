@@ -12,7 +12,7 @@ import java.util.function.Function;
  * @author Jon Brisbin
  * @author Stephane Maldini
  */
-@SuppressWarnings("rawtypes")
+@SuppressWarnings("NullAway")
 public class Tuple2<T1, T2> implements Iterable<Object>, Serializable {
 
 	private static final long serialVersionUID = -3518082018884860684L;
@@ -114,6 +114,7 @@ public class Tuple2<T1, T2> implements Iterable<Object>, Serializable {
 		return Collections.unmodifiableList(toList()).iterator();
 	}
 
+	@SuppressWarnings("EqualsGetClass")
 	@Override
 	public boolean equals(Object o) {
 		if (this == o) {

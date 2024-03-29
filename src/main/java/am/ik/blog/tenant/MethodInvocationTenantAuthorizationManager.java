@@ -9,12 +9,13 @@ import am.ik.blog.util.Tuple2;
 import am.ik.blog.util.Tuples;
 import org.aopalliance.intercept.MethodInvocation;
 
+import org.springframework.lang.Nullable;
 import org.springframework.security.core.parameters.P;
 
 public class MethodInvocationTenantAuthorizationManager extends AbstractTenantAuthorizationManager<MethodInvocation> {
 
 	@Override
-	protected boolean isPermitted(String tenantId, String resource, Set<Privilege> privileges) {
+	protected boolean isPermitted(@Nullable String tenantId, @Nullable String resource, Set<Privilege> privileges) {
 		if (tenantId != null) {
 			return false;
 		}
@@ -32,6 +33,7 @@ public class MethodInvocationTenantAuthorizationManager extends AbstractTenantAu
 	}
 
 	@Override
+	@Nullable
 	protected String tenantId(MethodInvocation context) {
 		final Parameter[] parameters = context.getMethod().getParameters();
 		int i;
@@ -49,6 +51,7 @@ public class MethodInvocationTenantAuthorizationManager extends AbstractTenantAu
 	}
 
 	@Override
+	@Nullable
 	protected Tuple2<String, Set<Privilege>> resourceAndPrivileges(MethodInvocation context) {
 		final Authorized authorized = context.getMethod().getAnnotation(Authorized.class);
 		if (authorized != null) {

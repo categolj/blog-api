@@ -53,7 +53,8 @@ public class FilteringSpanExporter implements SpanExporter {
 			.collect(Collectors.groupingBy(Function.identity()));
 		return delegate.export(filteredSpans.stream().filter(spanData -> {
 			if (spanData.getName().startsWith("spring.security")) {
-				return groups.get(spanData.getTraceId()).size() > 3;
+				List<String> group = groups.get(spanData.getTraceId());
+				return group != null && group.size() > 3;
 			}
 			return true;
 		}).toList());

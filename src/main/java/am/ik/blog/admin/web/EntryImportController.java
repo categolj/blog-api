@@ -16,6 +16,8 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import org.springframework.lang.Nullable;
 import org.springframework.web.client.HttpClientErrorException;
 
 import org.springframework.http.MediaType;
@@ -56,7 +58,7 @@ public class EntryImportController {
 	@Operation(security = { @SecurityRequirement(name = "basic") })
 	public List<String> importEntriesForTenant(@RequestParam(defaultValue = "0") int from,
 			@RequestParam(defaultValue = "0") int to,
-			@PathVariable(name = "tenantId", required = false) String tenantId) {
+			@Nullable @PathVariable(name = "tenantId", required = false) String tenantId) {
 		final Tuple2<String, String> ownerAndRepo = this.getOwnerAndRepo(tenantId);
 		log.info("Importing entries from https://github.com/{}/{} ({}-{})", ownerAndRepo.getT1(), ownerAndRepo.getT2(),
 				from, to);
@@ -77,7 +79,7 @@ public class EntryImportController {
 			.toList();
 	}
 
-	private Tuple2<String, String> getOwnerAndRepo(String tenantId) {
+	private Tuple2<String, String> getOwnerAndRepo(@Nullable String tenantId) {
 		if (tenantId == null) {
 			return Tuples.of(this.props.getContentOwner(), this.props.getContentRepo());
 		}

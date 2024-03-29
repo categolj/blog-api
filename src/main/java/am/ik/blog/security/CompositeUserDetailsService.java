@@ -24,7 +24,7 @@ public class CompositeUserDetailsService implements UserDetailsService {
 				}
 			}
 			catch (UsernameNotFoundException ignored) {
-
+				//
 			}
 		}
 		throw new UsernameNotFoundException("The requested user (%s) is not found.".formatted(username));

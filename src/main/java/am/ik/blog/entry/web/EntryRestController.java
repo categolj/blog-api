@@ -41,6 +41,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.lang.Nullable;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.transaction.annotation.Transactional;
@@ -81,18 +82,21 @@ public class EntryRestController {
 	public ResponseEntity<Entry> getEntry(@PathVariable("entryId") Long entryId,
 			@RequestParam(defaultValue = "false") boolean excludeContent, NativeWebRequest webRequest) {
 		final Entry entry = this.getEntryForTenant(entryId, null, excludeContent);
-		final long lastModifiedTimestamp = entry.getUpdated().getDate().toInstant().toEpochMilli();
-		if (webRequest.checkNotModified(lastModifiedTimestamp)) {
-			return ResponseEntity.status(HttpStatus.NOT_MODIFIED)
-				.cacheControl(CacheControl.maxAge(Duration.ofHours(1)))
-				.build();
+		OffsetDateTime updated = entry.getUpdated().getDate();
+		if (updated != null) {
+			final long lastModifiedTimestamp = updated.toInstant().toEpochMilli();
+			if (webRequest.checkNotModified(lastModifiedTimestamp)) {
+				return ResponseEntity.status(HttpStatus.NOT_MODIFIED)
+					.cacheControl(CacheControl.maxAge(Duration.ofHours(1)))
+					.build();
+			}
 		}
 		return ResponseEntity.ok().cacheControl(CacheControl.maxAge(Duration.ofHours(1))).body(entry);
 	}
 
 	@GetMapping(path = "/tenants/{tenantId}/entries/{entryId:\\d+}")
 	public Entry getEntryForTenant(@PathVariable("entryId") Long entryId,
-			@PathVariable(name = "tenantId", required = false) String tenantId,
+			@Nullable @PathVariable(name = "tenantId", required = false) String tenantId,
 			@RequestParam(defaultValue = "false") boolean excludeContent) {
 		final Optional<Entry> entry = this.entryService.findOne(entryId, tenantId, excludeContent);
 		return entry.orElseThrow(() -> new ResponseStatusException(NOT_FOUND,
@@ -107,7 +111,7 @@ public class EntryRestController {
 
 	@GetMapping(path = "/tenants/{tenantId}/entries/{entryId:\\d+}.md", produces = MediaType.TEXT_MARKDOWN_VALUE)
 	public ResponseEntity<String> getEntryAsMarkdownForTenant(@PathVariable("entryId") Long entryId,
-			@PathVariable(name = "tenantId", required = false) String tenantId,
+			@Nullable @PathVariable(name = "tenantId", required = false) String tenantId,
 			@RequestParam(defaultValue = "false") boolean excludeContent) {
 		final Entry entry = this.getEntryForTenant(entryId, tenantId, excludeContent);
 		return ResponseEntity.ok()
@@ -138,7 +142,8 @@ public class EntryRestController {
 							requiredMode = RequiredMode.NOT_REQUIRED)),
 			@Parameter(name = "size", schema = @Schema(implementation = Integer.class, defaultValue = "20",
 					requiredMode = RequiredMode.NOT_REQUIRED)) })
-	public OffsetPage<Entry> getEntriesForTenant(@PathVariable(name = "tenantId", required = false) String tenantId,
+	public OffsetPage<Entry> getEntriesForTenant(
+			@Nullable @PathVariable(name = "tenantId", required = false) String tenantId,
 			@RequestParam(required = false) String query, @RequestParam(required = false) String tag,
 			@RequestParam(required = false) List<String> categories, @RequestParam(required = false) String createdBy,
 			@RequestParam(required = false) String updatedBy,
@@ -177,7 +182,7 @@ public class EntryRestController {
 			@Parameter(name = "size", schema = @Schema(implementation = Integer.class, defaultValue = "20",
 					requiredMode = RequiredMode.NOT_REQUIRED)) })
 	public CursorPage<Entry, Instant> getEntriesForTenantByCursor(
-			@PathVariable(name = "tenantId", required = false) String tenantId,
+			@Nullable @PathVariable(name = "tenantId", required = false) String tenantId,
 			@RequestParam(required = false) String query, @RequestParam(required = false) String tag,
 			@RequestParam(required = false) List<String> categories, @RequestParam(required = false) String createdBy,
 			@RequestParam(required = false) String updatedBy,
@@ -203,7 +208,7 @@ public class EntryRestController {
 	@DeleteMapping(path = "/tenants/{tenantId}/entries/{entryId:\\d+}")
 	@Operation(security = { @SecurityRequirement(name = "basic") })
 	public ResponseEntity<Void> deleteEntryForTenant(@PathVariable("entryId") Long entryId,
-			@PathVariable(name = "tenantId", required = false) String tenantId) {
+			@Nullable @PathVariable(name = "tenantId", required = false) String tenantId) {
 		this.entryService.delete(entryId, tenantId);
 		return ResponseEntity.noContent().build();
 	}
@@ -220,7 +225,7 @@ public class EntryRestController {
 	@Operation(security = { @SecurityRequirement(name = "basic") })
 	@Transactional
 	public ResponseEntity<?> postEntryFromMarkdownForTenant(
-			@PathVariable(name = "tenantId", required = false) String tenantId, @RequestBody String markdown,
+			@Nullable @PathVariable(name = "tenantId", required = false) String tenantId, @RequestBody String markdown,
 			@AuthenticationPrincipal UserDetails userDetails, UriComponentsBuilder builder) {
 		final Long entryId = this.entryService.nextId(tenantId);
 		return EntryBuilder.parseBody(entryId, markdown.trim()).map(tpl -> {
@@ -249,7 +254,7 @@ public class EntryRestController {
 	@Operation(security = { @SecurityRequirement(name = "basic") })
 	@Transactional
 	public ResponseEntity<?> postEntryFromJsonForTenant(@RequestBody EntryRequest request,
-			@PathVariable(name = "tenantId", required = false) String tenantId,
+			@Nullable @PathVariable(name = "tenantId", required = false) String tenantId,
 			@AuthenticationPrincipal UserDetails userDetails, UriComponentsBuilder builder) {
 		final Long entryId = this.entryService.nextId(tenantId);
 		final String username = userDetails.getUsername();
@@ -278,7 +283,7 @@ public class EntryRestController {
 	@Operation(security = { @SecurityRequirement(name = "basic") })
 	@Transactional
 	public ResponseEntity<?> putEntryFromMarkdownForTenant(@PathVariable("entryId") Long entryId,
-			@PathVariable(name = "tenantId", required = false) String tenantId, @RequestBody String markdown,
+			@Nullable @PathVariable(name = "tenantId", required = false) String tenantId, @RequestBody String markdown,
 			@AuthenticationPrincipal UserDetails userDetails, UriComponentsBuilder builder) {
 		final AtomicBoolean isUpdate = new AtomicBoolean(false);
 		return EntryBuilder.parseBody(entryId, markdown.trim()).map(tpl -> {
@@ -313,8 +318,9 @@ public class EntryRestController {
 	@Operation(security = { @SecurityRequirement(name = "basic") })
 	@Transactional
 	public ResponseEntity<?> putEntryFromJsonForTenant(@PathVariable("entryId") Long entryId,
-			@PathVariable(name = "tenantId", required = false) String tenantId, @RequestBody EntryRequest request,
-			@AuthenticationPrincipal UserDetails userDetails, UriComponentsBuilder builder) {
+			@Nullable @PathVariable(name = "tenantId", required = false) String tenantId,
+			@RequestBody EntryRequest request, @AuthenticationPrincipal UserDetails userDetails,
+			UriComponentsBuilder builder) {
 		final AtomicBoolean isUpdate = new AtomicBoolean(false);
 		final String username = userDetails.getUsername();
 		final OffsetDateTime now = OffsetDateTime.ofInstant(this.clock.instant(), ZoneId.of("UTC"));
@@ -370,7 +376,7 @@ public class EntryRestController {
 	@GetMapping(path = "/tenants/{tenantId}/entries.zip", produces = "application/zip")
 	@Operation(security = { @SecurityRequirement(name = "basic") })
 	public ResponseEntity<?> exportEntriesForTenant(
-			@PathVariable(name = "tenantId", required = false) String tenantId) {
+			@Nullable @PathVariable(name = "tenantId", required = false) String tenantId) {
 		final Path zip = this.entryService.exportEntriesAsZip(tenantId);
 		try (final InputStream stream = Files.newInputStream(zip)) {
 			final byte[] content = StreamUtils.copyToByteArray(stream);

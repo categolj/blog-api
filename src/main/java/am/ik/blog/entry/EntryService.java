@@ -8,6 +8,7 @@ import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.FileTime;
 import java.time.Instant;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -23,6 +24,7 @@ import am.ik.yavi.core.ConstraintViolationsException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -37,24 +39,25 @@ public class EntryService {
 		this.entryMapper = entryMapper;
 	}
 
-	public Long nextId(String tenantId) {
+	public Long nextId(@Nullable String tenantId) {
 		return this.entryMapper.nextId(tenantId);
 	}
 
-	public CursorPage<Entry, Instant> findPage(SearchCriteria criteria, String tenantId,
+	public CursorPage<Entry, Instant> findPage(SearchCriteria criteria, @Nullable String tenantId,
 			CursorPageRequest<Instant> pageRequest) {
 		return this.entryMapper.findPage(criteria, tenantId, pageRequest);
 	}
 
-	public OffsetPage<Entry> findPage(SearchCriteria criteria, String tenantId, OffsetPageRequest pageRequest) {
+	public OffsetPage<Entry> findPage(SearchCriteria criteria, @Nullable String tenantId,
+			OffsetPageRequest pageRequest) {
 		return this.entryMapper.findPage(criteria, tenantId, pageRequest);
 	}
 
-	public Optional<Entry> findOne(Long entryId, String tenantId, boolean excludeContent) {
+	public Optional<Entry> findOne(Long entryId, @Nullable String tenantId, boolean excludeContent) {
 		return this.entryMapper.findOne(entryId, tenantId, excludeContent);
 	}
 
-	public Path exportEntriesAsZip(String tenantId) {
+	public Path exportEntriesAsZip(@Nullable String tenantId) {
 		try {
 			final Path zip = Files.createTempFile("entries", ".zip");
 			log.info("Exporting entries to {}", zip);
@@ -64,8 +67,14 @@ public class EntryService {
 						tenantId, new OffsetPageRequest(0, 10_0000));
 				for (Entry entry : entries) {
 					final ZipEntry zipEntry = new ZipEntry("content/%s.md".formatted(entry.formatId()));
-					zipEntry.setCreationTime(FileTime.from(entry.getCreated().getDate().toInstant()));
-					zipEntry.setLastModifiedTime(FileTime.from(entry.getUpdated().getDate().toInstant()));
+					OffsetDateTime created = entry.getCreated().getDate();
+					if (created != null) {
+						zipEntry.setCreationTime(FileTime.from(created.toInstant()));
+					}
+					OffsetDateTime updated = entry.getUpdated().getDate();
+					if (updated != null) {
+						zipEntry.setLastModifiedTime(FileTime.from(updated.toInstant()));
+					}
 					outputStream.putNextEntry(zipEntry);
 					outputStream.write(entry.toMarkdown().getBytes(StandardCharsets.UTF_8));
 					outputStream.closeEntry();
@@ -104,12 +113,12 @@ public class EntryService {
 		}
 	}
 
-	public List<Entry> findAll(SearchCriteria criteria, String tenantId, OffsetPageRequest pageRequest) {
+	public List<Entry> findAll(SearchCriteria criteria, @Nullable String tenantId, OffsetPageRequest pageRequest) {
 		return this.entryMapper.findAll(criteria, tenantId, pageRequest);
 	}
 
 	@Transactional
-	public Map<String, Integer> save(Entry entry, String tenantId) {
+	public Map<String, Integer> save(Entry entry, @Nullable String tenantId) {
 		log.info("Saving tenantId={}, entry={}", tenantId, entry);
 		Entry.validator.validate(entry).throwIfInvalid(violations -> {
 			log.info("Violated constraints {}", violations);
@@ -119,7 +128,7 @@ public class EntryService {
 	}
 
 	@Transactional
-	public int delete(Long entryId, String tenantId) {
+	public int delete(Long entryId, @Nullable String tenantId) {
 		return this.entryMapper.delete(entryId, tenantId);
 	}
 

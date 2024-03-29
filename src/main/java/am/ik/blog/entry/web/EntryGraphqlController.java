@@ -15,6 +15,7 @@ import graphql.schema.DataFetchingFieldSelectionSet;
 
 import org.springframework.graphql.data.method.annotation.Argument;
 import org.springframework.graphql.data.method.annotation.QueryMapping;
+import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Controller;
 
 @Controller
@@ -37,6 +38,7 @@ public class EntryGraphqlController {
 	public EntryConnection getEntries(@Argument Integer first, @Argument Optional<String> after,
 			@Argument String tenantId, @Argument String query, @Argument String tag, @Argument List<String> categories,
 			@Argument String createdBy, @Argument String updatedBy, DataFetchingFieldSelectionSet selections) {
+		@SuppressWarnings("NullAway")
 		final CursorPageRequest<Instant> pageRequest = new CursorPageRequest<>(after.map(Instant::parse).orElse(null),
 				first, CursorPageRequest.Navigation.NEXT);
 		final SearchCriteria searchCriteria = SearchCriteria.builder()
@@ -63,6 +65,7 @@ public class EntryGraphqlController {
 
 	public record EntryEdge(Entry node) {
 		@JsonProperty
+		@Nullable
 		public String cursor() {
 			if (node.getUpdated() != null && node.getUpdated().getDate() != null) {
 				return DateTimeFormatter.ISO_DATE_TIME.format(node.getUpdated().getDate());
@@ -71,7 +74,8 @@ public class EntryGraphqlController {
 		}
 	}
 
-	public record PageInfo(String startCursor, String endCursor, boolean hasNextPage, boolean hadPreviousPage) {
+	public record PageInfo(@Nullable String startCursor, @Nullable String endCursor, boolean hasNextPage,
+			boolean hadPreviousPage) {
 		public PageInfo(List<EntryEdge> edges, boolean hasNextPage, boolean hadPreviousPage) {
 			this(edges.isEmpty() ? null : edges.get(0).cursor(),
 					edges.isEmpty() ? null : edges.get(edges.size() - 1).cursor(), hasNextPage, hadPreviousPage);

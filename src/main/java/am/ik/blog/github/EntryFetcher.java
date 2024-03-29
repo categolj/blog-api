@@ -4,6 +4,8 @@ import am.ik.blog.entry.Author;
 import am.ik.blog.entry.Entry;
 import am.ik.blog.entry.EntryBuilder;
 import am.ik.blog.util.Tuple3;
+
+import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Component;
 
 import java.nio.file.Paths;
@@ -24,12 +26,7 @@ public class EntryFetcher {
 		this.tenantsGitHubClient = tenantsGitHubClient;
 	}
 
-	@Deprecated
-	public Optional<Entry> fetch(String owner, String repo, String path) {
-		return this.fetch(null, owner, repo, path);
-	}
-
-	public Optional<Entry> fetch(String tenantId, String owner, String repo, String path) {
+	public Optional<Entry> fetch(@Nullable String tenantId, String owner, String repo, String path) {
 		GitHubClient gitHubClient;
 		if (tenantId == null) {
 			gitHubClient = this.gitHubClient;
@@ -46,10 +43,13 @@ public class EntryFetcher {
 		Author updated = commits.isEmpty() ? null : toAuthor(commits.get(0));
 		return parsed.map(tpl -> {
 			EntryBuilder entryBuilder = tpl.getT1();
-			return entryBuilder //
-				.withCreated(tpl.getT2().map(created::withDate).orElse(created)) //
-				.withUpdated(tpl.getT3().map(updated::withDate).orElse(updated)) //
-				.build();
+			if (created != null) {
+				entryBuilder.withCreated(tpl.getT2().map(created::withDate).orElse(created));
+			}
+			if (updated != null) {
+				entryBuilder.withUpdated(tpl.getT3().map(updated::withDate).orElse(updated));
+			}
+			return entryBuilder.build();
 		});
 	}
 

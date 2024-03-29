@@ -6,6 +6,7 @@ import am.ik.blog.security.Privilege;
 import am.ik.blog.util.Tuple2;
 import am.ik.blog.util.Tuples;
 
+import org.springframework.lang.Nullable;
 import org.springframework.security.web.access.intercept.RequestAuthorizationContext;
 
 public class RequestTenantAuthorizationManager extends AbstractTenantAuthorizationManager<RequestAuthorizationContext> {
@@ -21,6 +22,7 @@ public class RequestTenantAuthorizationManager extends AbstractTenantAuthorizati
 	}
 
 	@Override
+	@Nullable
 	protected String tenantId(RequestAuthorizationContext context) {
 		return context.getVariables().get("tenantId");
 	}

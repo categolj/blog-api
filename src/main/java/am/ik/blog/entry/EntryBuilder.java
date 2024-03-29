@@ -1,10 +1,5 @@
 package am.ik.blog.entry;
 
-import am.ik.blog.util.Tuple3;
-import am.ik.blog.util.Tuples;
-import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
-import org.springframework.core.io.Resource;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -17,17 +12,29 @@ import java.time.OffsetDateTime;
 import java.util.Objects;
 import java.util.Optional;
 
+import am.ik.blog.util.Tuple3;
+import am.ik.blog.util.Tuples;
+import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
+
+import org.springframework.core.io.Resource;
+import org.springframework.lang.Nullable;
+
 @JsonPOJOBuilder
 public class EntryBuilder {
 
+	@Nullable
 	private String content;
 
+	@Nullable
 	private Author created;
 
+	@Nullable
 	private Long entryId;
 
+	@Nullable
 	private FrontMatter frontMatter;
 
+	@Nullable
 	private Author updated;
 
 	public static EntryBuilder copyFrom(Entry entry) {

@@ -9,6 +9,8 @@ import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 
+import org.springframework.lang.Nullable;
+
 import static java.time.format.DateTimeFormatter.RFC_1123_DATE_TIME;
 
 @JsonDeserialize(builder = AuthorBuilder.class)
@@ -22,41 +24,45 @@ public class Author {
 
 	public static Author NULL_AUTHOR = new Author(null, null);
 
+	@Nullable
 	private final String name;
 
+	@Nullable
 	private final OffsetDateTime date;
 
-	public Author(String name, OffsetDateTime date) {
+	public Author(@Nullable String name, @Nullable OffsetDateTime date) {
 		this.name = name;
 		this.date = date;
 	}
 
+	@Nullable
 	public String getName() {
 		return name;
 	}
 
+	@Nullable
 	public OffsetDateTime getDate() {
 		return date;
 	}
 
-	public Author withName(String name) {
+	public Author withName(@Nullable String name) {
 		return new Author(name, this.date);
 	}
 
 	@JsonIgnore
-	public Author setNameIfAbsent(String name) {
+	public Author setNameIfAbsent(@Nullable String name) {
 		if (this.name != null) {
 			return this;
 		}
 		return this.withName(name);
 	}
 
-	public Author withDate(OffsetDateTime date) {
+	public Author withDate(@Nullable OffsetDateTime date) {
 		return new Author(this.name, date);
 	}
 
 	@JsonIgnore
-	public Author setDateIfAbsent(OffsetDateTime date) {
+	public Author setDateIfAbsent(@Nullable OffsetDateTime date) {
 		if (this.date != null) {
 			return this;
 		}

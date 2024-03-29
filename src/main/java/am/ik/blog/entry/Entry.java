@@ -1,18 +1,20 @@
 package am.ik.blog.entry;
 
-import am.ik.blog.category.Category;
-import am.ik.blog.tag.Tag;
+import java.time.OffsetDateTime;
+import java.time.temporal.ChronoUnit;
+import java.time.temporal.TemporalUnit;
+import java.util.Collections;
+import java.util.Objects;
+
 import am.ik.yavi.builder.ValidatorBuilder;
 import am.ik.yavi.core.Validator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
-import java.time.OffsetDateTime;
-import java.time.temporal.ChronoUnit;
-import java.time.temporal.TemporalUnit;
-import java.util.StringJoiner;
+import org.springframework.lang.Nullable;
 
 @JsonDeserialize(builder = EntryBuilder.class)
+@SuppressWarnings("JavaTimeDefaultTimeZone")
 public class Entry {
 
 	static public Validator<Entry> validator = ValidatorBuilder.<Entry>of()
@@ -33,12 +35,14 @@ public class Entry {
 
 	private final Author updated;
 
-	Entry(Long entryId, FrontMatter frontMatter, String content, Author created, Author updated) {
-		this.entryId = entryId;
-		this.frontMatter = frontMatter;
-		this.content = content;
-		this.created = created;
-		this.updated = updated;
+	Entry(@Nullable Long entryId, @Nullable FrontMatter frontMatter, @Nullable String content, @Nullable Author created,
+			@Nullable Author updated) {
+		this.entryId = Objects.requireNonNullElse(entryId, -1L);
+		this.frontMatter = Objects.requireNonNullElseGet(frontMatter,
+				() -> new FrontMatter("", Collections.emptyList(), Collections.emptyList()));
+		this.content = Objects.requireNonNullElse(content, "");
+		this.created = Objects.requireNonNullElse(created, Author.NULL_AUTHOR);
+		this.updated = Objects.requireNonNullElse(updated, Author.NULL_AUTHOR);
 	}
 
 	public static Long parseId(String fileName) {
@@ -90,9 +94,11 @@ public class Entry {
 	}
 
 	private boolean isOld(long amount, TemporalUnit unit) {
-		return this.getUpdated()
-			.getDate()
-			.plus(amount, unit) //
+		OffsetDateTime date = this.getUpdated().getDate();
+		if (date == null) {
+			return false;
+		}
+		return date.plus(amount, unit) //
 			.isBefore(OffsetDateTime.now());
 	}
 

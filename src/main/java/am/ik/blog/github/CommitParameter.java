@@ -3,19 +3,25 @@ package am.ik.blog.github;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 
+import org.springframework.lang.Nullable;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 
 public class CommitParameter {
 
+	@Nullable
 	private String sha;
 
+	@Nullable
 	private String path;
 
+	@Nullable
 	private String author;
 
+	@Nullable
 	private ZonedDateTime since;
 
+	@Nullable
 	private ZonedDateTime until;
 
 	public CommitParameter() {

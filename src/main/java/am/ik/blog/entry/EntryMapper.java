@@ -4,8 +4,10 @@ import java.io.UncheckedIOException;
 import java.sql.Array;
 import java.sql.Timestamp;
 import java.time.Instant;
+import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -30,6 +32,7 @@ import org.postgresql.util.PGobject;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.simple.JdbcClient;
+import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -41,7 +44,7 @@ public class EntryMapper {
 
 	private final JdbcClient jdbcClient;
 
-	private ObjectMapper objectMapper = null;
+	private ObjectMapper objectMapper;
 
 	private final SqlGenerator sqlGenerator;
 
@@ -57,13 +60,14 @@ public class EntryMapper {
 			return new EntryBuilder().withEntryId(entryId)
 				.withContent(rs.getString("content"))
 				.withFrontMatter(new FrontMatterBuilder().withTitle(rs.getString("title"))
-					.withCategories(categories == null ? null
+					.withCategories(categories == null ? Collections.emptyList()
 							: Arrays.stream((Object[]) categories.getArray())
 								.map(String.class::cast)
 								.map(Category::new)
 								.toList())
-					.withTags(tags == null ? null : this.objectMapper.readValue(tags, new TypeReference<>() {
-					}))
+					.withTags(tags == null ? Collections.emptyList()
+							: this.objectMapper.readValue(tags, new TypeReference<>() {
+							}))
 					.build())
 				.withCreated(new Author(rs.getString("created_by"),
 						createdDate == null ? null : createdDate.toInstant().atOffset(ZoneOffset.UTC)))
@@ -85,7 +89,7 @@ public class EntryMapper {
 	}
 
 	@Transactional(readOnly = true)
-	public Optional<Entry> findOne(Long entryId, String tenantId, boolean excludeContent) {
+	public Optional<Entry> findOne(Long entryId, @Nullable String tenantId, boolean excludeContent) {
 		final MapSqlParameterSource params = new MapSqlParameterSource().addValue("entryId", entryId)
 			.addValue("tenantId", tenantId)
 			.addValue("excludeContent", excludeContent);
@@ -95,7 +99,8 @@ public class EntryMapper {
 	}
 
 	@Transactional(readOnly = true)
-	public List<Entry> findAll(SearchCriteria searchCriteria, String tenantId, OffsetPageRequest pageRequest) {
+	public List<Entry> findAll(SearchCriteria searchCriteria, @Nullable String tenantId,
+			OffsetPageRequest pageRequest) {
 		final List<Long> ids = this.entryIds(searchCriteria, tenantId, pageRequest);
 		if (ids.isEmpty()) {
 			return List.of();
@@ -109,14 +114,15 @@ public class EntryMapper {
 	}
 
 	@Transactional(readOnly = true)
-	public OffsetPage<Entry> findPage(SearchCriteria searchCriteria, String tenantId, OffsetPageRequest pageRequest) {
+	public OffsetPage<Entry> findPage(SearchCriteria searchCriteria, @Nullable String tenantId,
+			OffsetPageRequest pageRequest) {
 		final List<Entry> content = this.findAll(searchCriteria, tenantId, pageRequest);
 		final long total = this.count(searchCriteria, tenantId);
 		return new OffsetPage<>(content, pageRequest.pageSize(), pageRequest.pageNumber(), total);
 	}
 
 	@Transactional(readOnly = true)
-	public CursorPage<Entry, Instant> findPage(SearchCriteria searchCriteria, String tenantId,
+	public CursorPage<Entry, Instant> findPage(SearchCriteria searchCriteria, @Nullable String tenantId,
 			CursorPageRequest<Instant> pageRequest) {
 		final Optional<Instant> cursor = pageRequest.cursorOptional();
 		final int pageSizePlus1 = pageRequest.pageSize() + 1;
@@ -130,11 +136,16 @@ public class EntryMapper {
 		final boolean hasPrevious = cursor.isPresent();
 		final boolean hasNext = contentPlus1.size() == pageSizePlus1;
 		final List<Entry> content = hasNext ? contentPlus1.subList(0, pageRequest.pageSize()) : contentPlus1;
-		return new CursorPage<>(content, pageRequest.pageSize(), entry -> entry.getUpdated().getDate().toInstant(),
-				hasPrevious, hasNext);
+		return new CursorPage<>(content, pageRequest.pageSize(), entry -> {
+			OffsetDateTime updated = entry.getUpdated().getDate();
+			if (updated == null) {
+				return null;
+			}
+			return updated.toInstant();
+		}, hasPrevious, hasNext);
 	}
 
-	public long count(SearchCriteria searchCriteria, String tenantId) {
+	public long count(SearchCriteria searchCriteria, @Nullable String tenantId) {
 		final MapSqlParameterSource params = searchCriteria.toParameterSource(this.keywordExtractor)
 			.addValue("tenantId", tenantId);
 		final String sql = this.sqlGenerator.generate(loadSqlAsString("am/ik/blog/entry/EntryMapper/count.sql"),
@@ -146,7 +157,7 @@ public class EntryMapper {
 		return Objects.<Long>requireNonNullElse(count, 0L);
 	}
 
-	public long nextId(String tenantId) {
+	public long nextId(@Nullable String tenantId) {
 		final MapSqlParameterSource params = new MapSqlParameterSource().addValue("tenantId", tenantId);
 		final String sql = this.sqlGenerator.generate(loadSqlAsString("am/ik/blog/entry/EntryMapper/nextId.sql"),
 				params.getValues(), params::addValue);
@@ -157,7 +168,7 @@ public class EntryMapper {
 	}
 
 	@Transactional
-	public int delete(Long entryId, String tenantId) {
+	public int delete(Long entryId, @Nullable String tenantId) {
 		final MapSqlParameterSource params = new MapSqlParameterSource().addValue("entryId", entryId)
 			.addValue("tenantId", tenantId);
 		final String sql = this.sqlGenerator.generate(loadSqlAsString("am/ik/blog/entry/EntryMapper/deleteEntry.sql"),
@@ -166,7 +177,7 @@ public class EntryMapper {
 	}
 
 	@Transactional
-	public Map<String, Integer> save(Entry entry, String tenantId) {
+	public Map<String, Integer> save(Entry entry, @Nullable String tenantId) {
 		Entry.validator.validate(entry).throwIfInvalid(ConstraintViolationsException::new);
 		final Map<String, Integer> result = new LinkedHashMap<>();
 		final FrontMatter frontMatter = entry.getFrontMatter();
@@ -177,6 +188,9 @@ public class EntryMapper {
 		final List<Tag> tags = frontMatter.getTags();
 		final List<String> keywords = this.keywordExtractor.extract(entry.getContent());
 		try {
+			Timestamp cratedDate = created.getDate() == null ? null : Timestamp.from(created.getDate().toInstant());
+			Timestamp lastModifiedDate = updated.getDate() == null ? null
+					: Timestamp.from(updated.getDate().toInstant());
 			final MapSqlParameterSource params = new MapSqlParameterSource().addValue("entryId", entryId)
 				.addValue("title", frontMatter.getTitle())
 				.addValue("tenantId", tenantId)
@@ -185,9 +199,9 @@ public class EntryMapper {
 				.addValue("tags", this.objectMapper.writeValueAsString(tags))
 				.addValue("keywords", String.join(",", keywords))
 				.addValue("createdBy", created.getName())
-				.addValue("createdDate", Timestamp.from(created.getDate().toInstant()))
+				.addValue("createdDate", cratedDate)
 				.addValue("lastModifiedBy", updated.getName())
-				.addValue("lastModifiedDate", Timestamp.from(updated.getDate().toInstant()));
+				.addValue("lastModifiedDate", lastModifiedDate);
 			final String upsertEntrySql = this.sqlGenerator.generate(
 					loadSqlAsString("am/ik/blog/entry/EntryMapper/upsertEntry.sql"), params.getValues(),
 					params::addValue);
@@ -202,7 +216,8 @@ public class EntryMapper {
 		}
 	}
 
-	private List<Long> entryIds(SearchCriteria searchCriteria, String tenantId, OffsetPageRequest pageRequest) {
+	private List<Long> entryIds(SearchCriteria searchCriteria, @Nullable String tenantId,
+			OffsetPageRequest pageRequest) {
 		final MapSqlParameterSource params = searchCriteria.toParameterSource(this.keywordExtractor)
 			.addValue("tenantId", tenantId);
 		final String sql = this.sqlGenerator.generate(loadSqlAsString("am/ik/blog/entry/EntryMapper/entryIds.sql"),

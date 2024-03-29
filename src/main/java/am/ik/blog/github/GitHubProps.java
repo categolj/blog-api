@@ -17,13 +17,13 @@ import static am.ik.yavi.constraint.charsequence.codepoints.AsciiCodePoints.ASCI
 @Component
 public class GitHubProps implements org.springframework.validation.Validator {
 
-	private String accessToken;
+	private String accessToken = "dummy";
 
-	private String webhookSecret;
+	private String webhookSecret = "dummy";
 
-	private String contentOwner;
+	private String contentOwner = "dummy";
 
-	private String contentRepo;
+	private String contentRepo = "dummy";
 
 	private Map<String, GitHubProps> tenants = Map.of();
 

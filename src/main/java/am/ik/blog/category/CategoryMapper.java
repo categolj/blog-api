@@ -3,6 +3,7 @@ package am.ik.blog.category;
 import org.mybatis.scripting.thymeleaf.SqlGenerator;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.simple.JdbcClient;
+import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Repository;
 
 import java.sql.Array;
@@ -23,7 +24,7 @@ public class CategoryMapper {
 		this.sqlGenerator = sqlGenerator;
 	}
 
-	public List<List<Category>> findAll(String tenantId) {
+	public List<List<Category>> findAll(@Nullable String tenantId) {
 		final MapSqlParameterSource params = new MapSqlParameterSource().addValue("tenantId", tenantId);
 		final String sql = this.sqlGenerator.generate(loadSqlAsString("am/ik/blog/category/CategoryMapper/findAll.sql"),
 				params.getValues(), params::addValue);

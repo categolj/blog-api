@@ -6,6 +6,7 @@ import org.mybatis.scripting.thymeleaf.SqlGenerator;
 
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.simple.JdbcClient;
+import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Repository;
 
 import static am.ik.blog.util.FileLoader.loadSqlAsString;
@@ -22,7 +23,7 @@ public class TagMapper {
 		this.sqlGenerator = sqlGenerator;
 	}
 
-	public List<TagAndCount> findOrderByTagNameAsc(String tenantId) {
+	public List<TagAndCount> findOrderByTagNameAsc(@Nullable String tenantId) {
 		final MapSqlParameterSource params = new MapSqlParameterSource().addValue("tenantId", tenantId);
 		final String sql = this.sqlGenerator.generate(
 				loadSqlAsString("am/ik/blog/tag/TagMapper/findOrderByTagNameAsc.sql"), params.getValues(),

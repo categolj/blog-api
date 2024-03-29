@@ -11,6 +11,7 @@ import org.springframework.util.IdGenerator;
 public class SystemConfig {
 
 	@Bean
+	@SuppressWarnings("JavaTimeDefaultTimeZone")
 	public Clock systemClock() {
 		return Clock.systemDefaultZone();
 	}

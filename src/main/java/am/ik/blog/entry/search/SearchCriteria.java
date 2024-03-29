@@ -5,6 +5,7 @@ import am.ik.blog.entry.keyword.KeywordExtractor;
 import am.ik.blog.tag.Tag;
 
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
+import org.springframework.lang.Nullable;
 import org.springframework.util.StringUtils;
 
 import java.util.List;
@@ -33,20 +34,25 @@ public class SearchCriteria {
 
 	private final boolean excludeLastModifiedDate;
 
+	@Nullable
 	private final String createdBy;
 
+	@Nullable
 	private final String lastModifiedBy;
 
+	@Nullable
 	private final Tag tag;
 
+	@Nullable
 	private final List<Category> categories;
 
+	@Nullable
 	private final String keyword;
 
 	SearchCriteria(boolean excludeEntryId, boolean excludeTitle, boolean excludeContent, boolean excludeCategories,
 			boolean excludeTags, boolean excludeCreatedBy, boolean excludeCreatedDate, boolean excludeLastModifiedBy,
-			boolean excludeLastModifiedDate, String createdBy, String lastModifiedBy, Tag tag,
-			List<Category> categories, String keyword) {
+			boolean excludeLastModifiedDate, @Nullable String createdBy, @Nullable String lastModifiedBy,
+			@Nullable Tag tag, @Nullable List<Category> categories, @Nullable String keyword) {
 		this.excludeEntryId = excludeEntryId;
 		this.excludeTitle = excludeTitle;
 		this.excludeContent = excludeContent;
@@ -71,22 +77,27 @@ public class SearchCriteria {
 		return SearchCriteria.builder().excludeContent();
 	}
 
+	@Nullable
 	public List<Category> getCategories() {
 		return categories;
 	}
 
+	@Nullable
 	public String getCreatedBy() {
 		return this.createdBy;
 	}
 
+	@Nullable
 	public String getKeyword() {
 		return this.keyword;
 	}
 
+	@Nullable
 	public String getLastModifiedBy() {
 		return this.lastModifiedBy;
 	}
 
+	@Nullable
 	public Tag getTag() {
 		return this.tag;
 	}
@@ -127,13 +138,9 @@ public class SearchCriteria {
 		return excludeLastModifiedDate;
 	}
 
-	boolean hasKeywords() {
-		return StringUtils.hasText(this.keyword);
-	}
-
 	public MapSqlParameterSource toParameterSource(KeywordExtractor keywordExtractor) {
 		final MapSqlParameterSource params = new MapSqlParameterSource();
-		if (this.hasKeywords()) {
+		if (StringUtils.hasText(this.keyword)) {
 			final List<String> keywords = keywordExtractor.extract(this.keyword);
 			params.addValue("keywordsCount", keywords.size());
 			for (int i = 0; i < keywords.size(); i++) {
@@ -182,8 +189,10 @@ public class SearchCriteria {
 
 	public static class SearchCriteriaBuilder {
 
+		@Nullable
 		private List<Category> categories;
 
+		@Nullable
 		private String createdBy;
 
 		private boolean excludeEntryId = false;
@@ -204,10 +213,13 @@ public class SearchCriteria {
 
 		private boolean excludeLastModifiedDate = false;
 
+		@Nullable
 		private String keyword;
 
+		@Nullable
 		private String lastModifiedBy;
 
+		@Nullable
 		private Tag tag;
 
 		SearchCriteriaBuilder() {
@@ -302,7 +314,7 @@ public class SearchCriteria {
 			return this;
 		}
 
-		public SearchCriteriaBuilder tag(String tag) {
+		public SearchCriteriaBuilder tag(@Nullable String tag) {
 			this.tag = (tag == null) ? null : new Tag(tag);
 			return this;
 		}

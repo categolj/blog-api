@@ -20,6 +20,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.lang.Nullable;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -70,9 +71,9 @@ public class WebhookController {
 		return this.processWebhook(payload, tenantId);
 	}
 
-	List<Map<String, Long>> processWebhook(String payload, String tenantId) {
+	List<Map<String, Long>> processWebhook(String payload, @Nullable String tenantId) {
 		final JsonNode node = this.node(payload);
-		final String[] repository = node.get("repository").get("full_name").asText().split("/");
+		final String[] repository = node.get("repository").get("full_name").asText().split("/", 2);
 		final String owner = repository[0];
 		final String repo = repository[1];
 		if (!node.has("commits")) {

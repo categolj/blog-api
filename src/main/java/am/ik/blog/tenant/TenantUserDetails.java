@@ -22,7 +22,7 @@ public record TenantUserDetails(String username, String password,
 		final String username = values[0];
 		final String password = values[1];
 		return new TenantUserDetails(username, password, Arrays.stream(values[2].split("\\|")).map(s -> {
-			final String[] p = s.split("=");
+			final String[] p = s.split("=", 2);
 			final String tenantId = p[0];
 			final String[] privileges = p[1].split(",");
 			return Tuples.of(tenantId, Arrays.stream(privileges).map(Privilege::valueOf).toList());

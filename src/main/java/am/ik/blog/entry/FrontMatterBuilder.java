@@ -9,6 +9,7 @@ import org.yaml.snakeyaml.Yaml;
 
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
+import java.util.Collections;
 import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -21,11 +22,11 @@ import static java.util.stream.Collectors.toList;
 @JsonPOJOBuilder
 public class FrontMatterBuilder {
 
-	private List<Category> categories;
+	private List<Category> categories = Collections.emptyList();
 
-	private List<Tag> tags;
+	private List<Tag> tags = Collections.emptyList();
 
-	private String title;
+	private String title = "";
 
 	public FrontMatter build() {
 		return new FrontMatter(title, categories, tags);
