@@ -92,13 +92,12 @@ class EntryRestControllerTest {
 		this.webTestClient.get()
 			.uri((tenantId == null ? "" : "/tenants/" + tenantId) + "/entries/100")
 			.headers(configureAuth(tenantId, username, password))
-			.headers(httpHeaders -> httpHeaders.setIfModifiedSince(this.entry100.getUpdated().getDate().toInstant()))
+			.headers(httpHeaders -> httpHeaders.setIfModifiedSince(this.entry100.getUpdated().date().toInstant()))
 			.exchange()
 			.expectStatus()
 			.isNotModified()
 			.expectHeader()
-			.lastModified(
-					this.entry100.getUpdated().getDate().toInstant().truncatedTo(ChronoUnit.SECONDS).toEpochMilli());
+			.lastModified(this.entry100.getUpdated().date().toInstant().truncatedTo(ChronoUnit.SECONDS).toEpochMilli());
 	}
 
 	@ParameterizedTest

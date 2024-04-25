@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.Objects;
 
 import am.ik.blog.config.NativeHints.RuntimeHints;
-import am.ik.blog.entry.AuthorBuilder;
 import am.ik.blog.entry.EntryBuilder;
 import am.ik.blog.entry.FrontMatterBuilder;
 import am.ik.blog.tenant.TenantUserProps;
@@ -30,7 +29,6 @@ public class NativeHints {
 				final List<Method> builderMethods = new ArrayList<>();
 				builderMethods.addAll(Arrays.asList(EntryBuilder.class.getDeclaredMethods()));
 				builderMethods.addAll(Arrays.asList(FrontMatterBuilder.class.getDeclaredMethods()));
-				builderMethods.addAll(Arrays.asList(AuthorBuilder.class.getDeclaredMethods()));
 				builderMethods.stream()
 					.filter(m -> m.getName().equals("build") || m.getName().startsWith("with"))
 					.forEach(method -> hints.reflection().registerMethod(method, ExecutableMode.INVOKE));

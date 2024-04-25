@@ -1,5 +1,7 @@
 package am.ik.blog.category;
 
-public record Category(String name) {
+import org.springframework.lang.NonNull;
+
+public record Category(@NonNull String name) {
 
 }

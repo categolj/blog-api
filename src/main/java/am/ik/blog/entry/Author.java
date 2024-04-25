@@ -1,49 +1,26 @@
 package am.ik.blog.entry;
 
-import am.ik.yavi.builder.ValidatorBuilder;
-import am.ik.yavi.core.Validator;
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
+
+import am.ik.yavi.builder.ValidatorBuilder;
+import am.ik.yavi.core.Validator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import org.springframework.lang.Nullable;
 
 import static java.time.format.DateTimeFormatter.RFC_1123_DATE_TIME;
 
-@JsonDeserialize(builder = AuthorBuilder.class)
-public class Author {
+public record Author(@Nullable String name, @Nullable OffsetDateTime date) {
 
 	public static Validator<Author> validator = ValidatorBuilder.<Author>of()
-		.constraint(Author::getName, "name", c -> c.notBlank().lessThanOrEqual(128))
-		.constraint(Author::getDate, "date",
+		.constraint(Author::name, "name", c -> c.notBlank().lessThanOrEqual(128))
+		.constraint(Author::date, "date",
 				c -> c.notNull().afterOrEqual(() -> OffsetDateTime.ofInstant(Instant.EPOCH, ZoneId.of("UTC"))))
 		.build();
 
 	public static Author NULL_AUTHOR = new Author(null, null);
-
-	@Nullable
-	private final String name;
-
-	@Nullable
-	private final OffsetDateTime date;
-
-	public Author(@Nullable String name, @Nullable OffsetDateTime date) {
-		this.name = name;
-		this.date = date;
-	}
-
-	@Nullable
-	public String getName() {
-		return name;
-	}
-
-	@Nullable
-	public OffsetDateTime getDate() {
-		return date;
-	}
 
 	public Author withName(@Nullable String name) {
 		return new Author(name, this.date);

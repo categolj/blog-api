@@ -11,6 +11,7 @@ import am.ik.yavi.core.Validator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
+import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
 
 @JsonDeserialize(builder = EntryBuilder.class)
@@ -49,6 +50,7 @@ public class Entry {
 		return Long.parseLong(fileName.replace(".md", "").replace(".markdown", ""));
 	}
 
+	@NonNull
 	public Long getEntryId() {
 		return entryId;
 	}
@@ -57,18 +59,22 @@ public class Entry {
 		return "%05d".formatted(entryId);
 	}
 
+	@NonNull
 	public FrontMatter getFrontMatter() {
 		return frontMatter;
 	}
 
+	@NonNull
 	public String getContent() {
 		return content;
 	}
 
+	@NonNull
 	public Author getCreated() {
 		return created;
 	}
 
+	@NonNull
 	public Author getUpdated() {
 		return updated;
 	}
@@ -94,7 +100,7 @@ public class Entry {
 	}
 
 	private boolean isOld(long amount, TemporalUnit unit) {
-		OffsetDateTime date = this.getUpdated().getDate();
+		OffsetDateTime date = this.getUpdated().date();
 		if (date == null) {
 			return false;
 		}
@@ -117,11 +123,11 @@ public class Entry {
 				---
 
 				%s
-				""".formatted(frontMatter.getTitle(),
-				frontMatter.getTags().stream().map(t -> "\"%s\"".formatted(t.name())).toList(),
-				frontMatter.getCategories().stream().map(c -> "\"%s\"".formatted(c.name())).toList(),
-				created.getDate() == null ? "" : "%ndate: %s".formatted(created.getDate()),
-				updated.getDate() == null ? "" : "%nupdated: %s".formatted(updated.getDate()), content);
+				""".formatted(frontMatter.title(),
+				frontMatter.tags().stream().map(t -> "\"%s\"".formatted(t.name())).toList(),
+				frontMatter.categories().stream().map(c -> "\"%s\"".formatted(c.name())).toList(),
+				created.date() == null ? "" : "%ndate: %s".formatted(created.date()),
+				updated.date() == null ? "" : "%nupdated: %s".formatted(updated.date()), content);
 	}
 
 }

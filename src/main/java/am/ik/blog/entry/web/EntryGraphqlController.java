@@ -67,8 +67,8 @@ public class EntryGraphqlController {
 		@JsonProperty
 		@Nullable
 		public String cursor() {
-			if (node.getUpdated() != null && node.getUpdated().getDate() != null) {
-				return DateTimeFormatter.ISO_DATE_TIME.format(node.getUpdated().getDate());
+			if (node.getUpdated() != null && node.getUpdated().date() != null) {
+				return DateTimeFormatter.ISO_DATE_TIME.format(node.getUpdated().date());
 			}
 			return null;
 		}

@@ -27,7 +27,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.mybatis.scripting.thymeleaf.SqlGenerator;
-import org.postgresql.util.PGobject;
 
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
@@ -137,7 +136,7 @@ public class EntryMapper {
 		final boolean hasNext = contentPlus1.size() == pageSizePlus1;
 		final List<Entry> content = hasNext ? contentPlus1.subList(0, pageRequest.pageSize()) : contentPlus1;
 		return new CursorPage<>(content, pageRequest.pageSize(), entry -> {
-			OffsetDateTime updated = entry.getUpdated().getDate();
+			OffsetDateTime updated = entry.getUpdated().date();
 			if (updated == null) {
 				return null;
 			}
@@ -184,23 +183,22 @@ public class EntryMapper {
 		final Author created = entry.getCreated();
 		final Author updated = entry.getUpdated();
 		final Long entryId = entry.getEntryId();
-		final List<Category> categories = frontMatter.getCategories();
-		final List<Tag> tags = frontMatter.getTags();
+		final List<Category> categories = frontMatter.categories();
+		final List<Tag> tags = frontMatter.tags();
 		final List<String> keywords = this.keywordExtractor.extract(entry.getContent());
 		try {
-			Timestamp cratedDate = created.getDate() == null ? null : Timestamp.from(created.getDate().toInstant());
-			Timestamp lastModifiedDate = updated.getDate() == null ? null
-					: Timestamp.from(updated.getDate().toInstant());
+			Timestamp cratedDate = created.date() == null ? null : Timestamp.from(created.date().toInstant());
+			Timestamp lastModifiedDate = updated.date() == null ? null : Timestamp.from(updated.date().toInstant());
 			final MapSqlParameterSource params = new MapSqlParameterSource().addValue("entryId", entryId)
-				.addValue("title", frontMatter.getTitle())
+				.addValue("title", frontMatter.title())
 				.addValue("tenantId", tenantId)
 				.addValue("content", entry.getContent())
 				.addValue("categories", categories.stream().map(Category::name).collect(joining(",")))
 				.addValue("tags", this.objectMapper.writeValueAsString(tags))
 				.addValue("keywords", String.join(",", keywords))
-				.addValue("createdBy", created.getName())
+				.addValue("createdBy", created.name())
 				.addValue("createdDate", cratedDate)
-				.addValue("lastModifiedBy", updated.getName())
+				.addValue("lastModifiedBy", updated.name())
 				.addValue("lastModifiedDate", lastModifiedDate);
 			final String upsertEntrySql = this.sqlGenerator.generate(
 					loadSqlAsString("am/ik/blog/entry/EntryMapper/upsertEntry.sql"), params.getValues(),

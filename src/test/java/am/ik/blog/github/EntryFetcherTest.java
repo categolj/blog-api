@@ -52,16 +52,16 @@ public class EntryFetcherTest {
 		assertThat(e.getEntryId()).isEqualTo(1L);
 		assertThat(e.getContent()).isEqualTo("This is my first blog post!");
 		assertThat(e.getCreated()).isNotNull();
-		assertThat(e.getCreated().getName()).isEqualTo("Toshiaki Maki");
-		assertThat(e.getCreated().getDate()).isEqualTo(OffsetDateTime.parse("2015-12-28T17:16:23Z"));
+		assertThat(e.getCreated().name()).isEqualTo("Toshiaki Maki");
+		assertThat(e.getCreated().date()).isEqualTo(OffsetDateTime.parse("2015-12-28T17:16:23Z"));
 		assertThat(e.getUpdated()).isNotNull();
-		assertThat(e.getUpdated().getName()).isEqualTo("Toshiaki Maki");
-		assertThat(e.getUpdated().getDate()).isEqualTo(OffsetDateTime.parse("2018-01-14T08:09:06Z"));
+		assertThat(e.getUpdated().name()).isEqualTo("Toshiaki Maki");
+		assertThat(e.getUpdated().date()).isEqualTo(OffsetDateTime.parse("2018-01-14T08:09:06Z"));
 		FrontMatter frontMatter = e.getFrontMatter();
 		assertThat(frontMatter).isNotNull();
-		assertThat(frontMatter.getTitle()).isEqualTo("First article");
-		assertThat(frontMatter.getCategories()).containsExactly(new Category("Demo"), new Category("Hello"));
-		assertThat(frontMatter.getTags()).containsExactly(new Tag("Demo"));
+		assertThat(frontMatter.title()).isEqualTo("First article");
+		assertThat(frontMatter.categories()).containsExactly(new Category("Demo"), new Category("Hello"));
+		assertThat(frontMatter.tags()).containsExactly(new Tag("Demo"));
 	}
 
 }

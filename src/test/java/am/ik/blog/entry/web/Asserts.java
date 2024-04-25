@@ -14,10 +14,9 @@ public class Asserts {
 	public static IsContentExcluded assertEntry99999(Entry entry) {
 		assertThat(entry).isNotNull();
 		assertThat(entry.getEntryId()).isEqualTo(99999L);
-		assertThat(entry.getFrontMatter().getTitle()).isEqualTo("Hello World!!");
-		assertThat(entry.getFrontMatter().getTags()).containsExactly(new Tag("test1"), new Tag("test2"),
-				new Tag("test3"));
-		assertThat(entry.getFrontMatter().getCategories()).containsExactly(new Category("x"), new Category("y"),
+		assertThat(entry.getFrontMatter().title()).isEqualTo("Hello World!!");
+		assertThat(entry.getFrontMatter().tags()).containsExactly(new Tag("test1"), new Tag("test2"), new Tag("test3"));
+		assertThat(entry.getFrontMatter().categories()).containsExactly(new Category("x"), new Category("y"),
 				new Category("z"));
 		return new IsContentExcluded(entry, "Hello!", OffsetDateTime.of(2017, 4, 1, 1, 0, 0, 0, ZoneOffset.ofHours(9)),
 				OffsetDateTime.of(2017, 4, 1, 2, 0, 0, 0, ZoneOffset.ofHours(9)));
@@ -26,9 +25,9 @@ public class Asserts {
 	public static IsContentExcluded assertEntry99998(Entry entry) {
 		assertThat(entry).isNotNull();
 		assertThat(entry.getEntryId()).isEqualTo(99998L);
-		assertThat(entry.getFrontMatter().getTitle()).isEqualTo("Test!!");
-		assertThat(entry.getFrontMatter().getTags()).containsExactly(new Tag("test1"), new Tag("test2"));
-		assertThat(entry.getFrontMatter().getCategories()).containsExactly(new Category("a"), new Category("b"),
+		assertThat(entry.getFrontMatter().title()).isEqualTo("Test!!");
+		assertThat(entry.getFrontMatter().tags()).containsExactly(new Tag("test1"), new Tag("test2"));
+		assertThat(entry.getFrontMatter().categories()).containsExactly(new Category("a"), new Category("b"),
 				new Category("c"));
 		return new IsContentExcluded(entry, "This is a test data.",
 				OffsetDateTime.of(2017, 4, 1, 0, 0, 0, 0, ZoneOffset.ofHours(9)),
@@ -38,9 +37,9 @@ public class Asserts {
 	public static IsContentExcluded assertEntry99997(Entry entry) {
 		assertThat(entry).isNotNull();
 		assertThat(entry.getEntryId()).isEqualTo(99997L);
-		assertThat(entry.getFrontMatter().getTitle()).isEqualTo("CategoLJ 4");
-		assertThat(entry.getFrontMatter().getTags()).containsExactly(new Tag("test1"), new Tag("test3"));
-		assertThat(entry.getFrontMatter().getCategories()).containsExactly(new Category("x"), new Category("y"));
+		assertThat(entry.getFrontMatter().title()).isEqualTo("CategoLJ 4");
+		assertThat(entry.getFrontMatter().tags()).containsExactly(new Tag("test1"), new Tag("test3"));
+		assertThat(entry.getFrontMatter().categories()).containsExactly(new Category("x"), new Category("y"));
 		return new IsContentExcluded(entry, "This is a test data.",
 				OffsetDateTime.of(2017, 3, 31, 0, 0, 0, 0, ZoneOffset.ofHours(9)),
 				OffsetDateTime.of(2017, 3, 31, 0, 0, 0, 0, ZoneOffset.ofHours(9)));

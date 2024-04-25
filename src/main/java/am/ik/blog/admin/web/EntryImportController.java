@@ -75,7 +75,7 @@ public class EntryImportController {
 			.filter(Optional::isPresent)
 			.map(Optional::get)
 			.peek(entry -> this.entryService.save(entry, tenantId))
-			.map(e -> e.getEntryId() + " " + e.getFrontMatter().getTitle())
+			.map(e -> e.getEntryId() + " " + e.getFrontMatter().title())
 			.toList();
 	}
 

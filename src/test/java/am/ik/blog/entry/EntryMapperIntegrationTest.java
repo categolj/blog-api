@@ -60,16 +60,16 @@ class EntryMapperIntegrationTest {
 		assertThat(found.getEntryId()).isEqualTo(99999L);
 		assertThat(found.getContent()).isEqualTo("Hello");
 		final FrontMatter frontMatter = found.getFrontMatter();
-		assertThat(frontMatter.getTitle()).isEqualTo("Hello");
-		assertThat(frontMatter.getTags()).hasSize(3);
-		assertThat(frontMatter.getTags()).containsExactly(new Tag("a"), new Tag("b"), new Tag("c"));
-		assertThat(frontMatter.getCategories()).hasSize(3);
-		assertThat(frontMatter.getCategories()).containsExactly(new Category("foo"), new Category("bar"),
+		assertThat(frontMatter.title()).isEqualTo("Hello");
+		assertThat(frontMatter.tags()).hasSize(3);
+		assertThat(frontMatter.tags()).containsExactly(new Tag("a"), new Tag("b"), new Tag("c"));
+		assertThat(frontMatter.categories()).hasSize(3);
+		assertThat(frontMatter.categories()).containsExactly(new Category("foo"), new Category("bar"),
 				new Category("hoge"));
-		assertThat(found.getCreated().getName()).isEqualTo("demo");
-		assertThat(found.getCreated().getDate()).isNotNull();
-		assertThat(found.getUpdated().getName()).isEqualTo("demo");
-		assertThat(found.getUpdated().getDate()).isNotNull();
+		assertThat(found.getCreated().name()).isEqualTo("demo");
+		assertThat(found.getCreated().date()).isNotNull();
+		assertThat(found.getUpdated().name()).isEqualTo("demo");
+		assertThat(found.getUpdated().date()).isNotNull();
 		final Optional<Entry> defaultOne = this.entryMapper.findOne(entry.getEntryId(),
 				tenantId == null ? "demo" : null, false);
 		assertThat(defaultOne.isEmpty()).isTrue();
@@ -89,16 +89,16 @@ class EntryMapperIntegrationTest {
 		assertThat(found.getEntryId()).isEqualTo(99999L);
 		assertThat(found.getContent()).isEqualTo("Hello");
 		final FrontMatter frontMatter = found.getFrontMatter();
-		assertThat(frontMatter.getTitle()).isEqualTo("Hello");
-		assertThat(frontMatter.getTags()).hasSize(3);
-		assertThat(frontMatter.getTags()).containsExactly(new Tag("a"), new Tag("b"), new Tag("c"));
-		assertThat(frontMatter.getCategories()).hasSize(3);
-		assertThat(frontMatter.getCategories()).containsExactly(new Category("foo"), new Category("bar"),
+		assertThat(frontMatter.title()).isEqualTo("Hello");
+		assertThat(frontMatter.tags()).hasSize(3);
+		assertThat(frontMatter.tags()).containsExactly(new Tag("a"), new Tag("b"), new Tag("c"));
+		assertThat(frontMatter.categories()).hasSize(3);
+		assertThat(frontMatter.categories()).containsExactly(new Category("foo"), new Category("bar"),
 				new Category("hoge"));
-		assertThat(found.getCreated().getName()).isEqualTo("demo");
-		assertThat(found.getCreated().getDate()).isNotNull();
-		assertThat(found.getUpdated().getName()).isEqualTo("demo");
-		assertThat(found.getUpdated().getDate()).isNotNull();
+		assertThat(found.getCreated().name()).isEqualTo("demo");
+		assertThat(found.getCreated().date()).isNotNull();
+		assertThat(found.getUpdated().name()).isEqualTo("demo");
+		assertThat(found.getUpdated().date()).isNotNull();
 	}
 
 	@ParameterizedTest

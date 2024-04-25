@@ -82,7 +82,7 @@ public class EntryRestController {
 	public ResponseEntity<Entry> getEntry(@PathVariable("entryId") Long entryId,
 			@RequestParam(defaultValue = "false") boolean excludeContent, NativeWebRequest webRequest) {
 		final Entry entry = this.getEntryForTenant(entryId, null, excludeContent);
-		OffsetDateTime updated = entry.getUpdated().getDate();
+		OffsetDateTime updated = entry.getUpdated().date();
 		if (updated != null) {
 			final long lastModifiedTimestamp = updated.toInstant().toEpochMilli();
 			if (webRequest.checkNotModified(lastModifiedTimestamp)) {
@@ -329,9 +329,7 @@ public class EntryRestController {
 			return true;
 		})
 			.map(Entry::getCreated)
-			.map(author -> request.createdOrNullAuthor()
-				.setNameIfAbsent(author.getName())
-				.setDateIfAbsent(author.getDate()))
+			.map(author -> request.createdOrNullAuthor().setNameIfAbsent(author.name()).setDateIfAbsent(author.date()))
 			.orElseGet(() -> request.createdOrNullAuthor().setNameIfAbsent(username).setDateIfAbsent(now));
 		final Author updated = request.updatedOrNullAuthor().setNameIfAbsent(username).setDateIfAbsent(now);
 		final Entry entry = new EntryBuilder().withEntryId(entryId)

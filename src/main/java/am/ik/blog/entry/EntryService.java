@@ -67,11 +67,11 @@ public class EntryService {
 						tenantId, new OffsetPageRequest(0, 10_0000));
 				for (Entry entry : entries) {
 					final ZipEntry zipEntry = new ZipEntry("content/%s.md".formatted(entry.formatId()));
-					OffsetDateTime created = entry.getCreated().getDate();
+					OffsetDateTime created = entry.getCreated().date();
 					if (created != null) {
 						zipEntry.setCreationTime(FileTime.from(created.toInstant()));
 					}
-					OffsetDateTime updated = entry.getUpdated().getDate();
+					OffsetDateTime updated = entry.getUpdated().date();
 					if (updated != null) {
 						zipEntry.setLastModifiedTime(FileTime.from(updated.toInstant()));
 					}
