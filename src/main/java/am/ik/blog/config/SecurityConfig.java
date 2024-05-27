@@ -6,6 +6,7 @@ import java.util.Objects;
 import java.util.stream.Stream;
 
 import am.ik.accesslogger.AccessLogger;
+import am.ik.accesslogger.AccessLoggerBuilder;
 import am.ik.blog.config.SecurityConfig.RuntimeHints;
 import am.ik.blog.security.CompositeUserDetailsService;
 import am.ik.blog.security.Privilege;
@@ -66,7 +67,10 @@ public class SecurityConfig {
 	@Bean
 	public AccessLogger accessLogger() {
 		final UriFilter uriFilter = new UriFilter();
-		return new AccessLogger(httpExchange -> uriFilter.test(httpExchange.getRequest().getUri().getPath()));
+		return AccessLoggerBuilder.accessLogger()
+			.filter(httpExchange -> uriFilter.test(httpExchange.getRequest().getUri().getPath()))
+			.addKeyValues(true)
+			.build();
 	}
 
 	@Bean
