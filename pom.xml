@@ -78,6 +78,11 @@
 			<scope>provided</scope>
 		</dependency>
 		<dependency>
+			<groupId>am.ik.spring.opentelemetry</groupId>
+			<artifactId>otel-logs-autoconfigure</artifactId>
+			<version>0.1.1</version>
+		</dependency>
+		<dependency>
 			<groupId>io.micrometer</groupId>
 			<artifactId>micrometer-tracing-bridge-otel</artifactId>
 		</dependency>
