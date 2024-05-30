@@ -24,9 +24,9 @@
 
 	<dependencies>
 		<dependency>
-			<groupId>co.elastic.logging</groupId>
-			<artifactId>logback-ecs-encoder</artifactId>
-			<version>1.6.0</version>
+			<groupId>am.ik.spring.ecs</groupId>
+			<artifactId>logback-ecs-encoder-autoconfigure</artifactId>
+			<version>0.1.2</version>
 		</dependency>
 		<dependency>
 			<groupId>am.ik.access-logger</groupId>
