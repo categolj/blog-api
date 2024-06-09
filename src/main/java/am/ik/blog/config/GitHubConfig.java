@@ -17,6 +17,7 @@ import am.ik.blog.github.Tree;
 import am.ik.blog.github.web.WebhookController;
 import am.ik.spring.http.client.RetryableClientHttpRequestInterceptor;
 import com.fasterxml.jackson.databind.JsonNode;
+import org.zalando.logbook.spring.LogbookClientHttpRequestInterceptor;
 
 import org.springframework.aot.hint.ExecutableMode;
 import org.springframework.aot.hint.RuntimeHintsRegistrar;
@@ -37,9 +38,11 @@ import org.springframework.web.service.invoker.HttpServiceProxyFactory;
 public class GitHubConfig {
 
 	@Bean
-	public RestTemplateCustomizer restTemplateCustomizer(GitHubProps props) {
+	public RestTemplateCustomizer restTemplateCustomizer(GitHubProps props,
+			LogbookClientHttpRequestInterceptor logbookClientHttpRequestInterceptor) {
 		return restTemplate -> {
-			restTemplate.setInterceptors(List.of(new RetryableClientHttpRequestInterceptor(props.getBackOff())));
+			restTemplate.setInterceptors(List.of(logbookClientHttpRequestInterceptor,
+					new RetryableClientHttpRequestInterceptor(props.getBackOff())));
 			restTemplate.setRequestFactory(new JdkClientHttpRequestFactory());
 		};
 	}

@@ -10,6 +10,8 @@ import org.springframework.boot.testcontainers.service.connection.ServiceConnect
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
+import org.zalando.logbook.Logbook;
+import org.zalando.logbook.spring.webflux.LogbookExchangeFilterFunction;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -41,6 +43,9 @@ class EntryRestControllerIntegrationTest {
 	@Autowired
 	JdbcTemplate jdbcTemplate;
 
+	@Autowired
+	Logbook logbook;
+
 	int port;
 
 	@Container
@@ -48,14 +53,15 @@ class EntryRestControllerIntegrationTest {
 	static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:14-alpine");
 
 	public EntryRestControllerIntegrationTest(@Value("${local.server.port}") int port) {
-		this.webTestClient = WebTestClient.bindToServer(new JdkClientHttpConnector())
-			.baseUrl("http://localhost:" + port)
-			.build();
 		this.port = port;
 	}
 
 	@BeforeEach
 	public void reset() {
+		this.webTestClient = WebTestClient.bindToServer(new JdkClientHttpConnector())
+			.baseUrl("http://localhost:" + this.port)
+			.filter(new LogbookExchangeFilterFunction(this.logbook))
+			.build();
 		jdbcTemplate.update(FileLoader.loadAsString("sql/delete-test-data.sql"));
 		jdbcTemplate.update(FileLoader.loadAsString("sql/insert-test-data.sql"));
 	}

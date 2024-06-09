@@ -5,8 +5,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Stream;
 
-import am.ik.accesslogger.AccessLogger;
-import am.ik.accesslogger.AccessLoggerBuilder;
 import am.ik.blog.config.SecurityConfig.RuntimeHints;
 import am.ik.blog.security.CompositeUserDetailsService;
 import am.ik.blog.security.Privilege;
@@ -20,9 +18,6 @@ import org.springframework.aop.Advisor;
 import org.springframework.aot.hint.ExecutableMode;
 import org.springframework.aot.hint.RuntimeHintsRegistrar;
 import org.springframework.beans.factory.config.BeanDefinition;
-import org.springframework.boot.actuate.autoconfigure.web.exchanges.HttpExchangesProperties;
-import org.springframework.boot.actuate.web.exchanges.HttpExchangeRepository;
-import org.springframework.boot.actuate.web.exchanges.servlet.HttpExchangesFilter;
 import org.springframework.boot.autoconfigure.security.SecurityProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -59,19 +54,10 @@ import static org.springframework.http.HttpMethod.POST;
 import static org.springframework.http.HttpMethod.PUT;
 
 @Configuration(proxyBeanMethods = false)
-@EnableConfigurationProperties({ TenantUserProps.class, HttpExchangesProperties.class })
+@EnableConfigurationProperties({ TenantUserProps.class })
 @ImportRuntimeHints(RuntimeHints.class)
 @EnableMethodSecurity(prePostEnabled = false)
 public class SecurityConfig {
-
-	@Bean
-	public AccessLogger accessLogger() {
-		final UriFilter uriFilter = new UriFilter();
-		return AccessLoggerBuilder.accessLogger()
-			.filter(httpExchange -> uriFilter.test(httpExchange.getRequest().getUri().getPath()))
-			.addKeyValues(true)
-			.build();
-	}
 
 	@Bean
 	@Role(BeanDefinition.ROLE_INFRASTRUCTURE)
@@ -81,8 +67,8 @@ public class SecurityConfig {
 	}
 
 	@Bean
-	public SecurityFilterChain securityFilterChain(HttpSecurity http, CompositeUserDetailsService userDetailsService,
-			HttpExchangeRepository repository, HttpExchangesProperties properties) throws Exception {
+	public SecurityFilterChain securityFilterChain(HttpSecurity http, CompositeUserDetailsService userDetailsService)
+			throws Exception {
 		final AuthorizationManager<RequestAuthorizationContext> listForTenant = new RequestTenantAuthorizationManager(
 				"entry", Privilege.LIST);
 		final AuthorizationManager<RequestAuthorizationContext> exportForTenant = new RequestTenantAuthorizationManager(
@@ -133,8 +119,6 @@ public class SecurityConfig {
 			.csrf(AbstractHttpConfigurer::disable) //
 			.cors(Customizer.withDefaults())
 			.sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-			.addFilterAfter(new HttpExchangesFilter(repository, properties.getRecording().getInclude()),
-					SecurityContextHolderAwareRequestFilter.class)
 			.build();
 	}
 

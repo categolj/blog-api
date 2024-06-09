@@ -11,12 +11,17 @@ import am.ik.webhook.WebhookVerifier;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
+import org.zalando.logbook.Logbook;
+import org.zalando.logbook.spring.webflux.LogbookExchangeFilterFunction;
 import reactor.core.publisher.Mono;
 
 import org.springframework.beans.factory.annotation.Value;
@@ -39,7 +44,7 @@ public class WebhookControllerTest {
 
 	private final ObjectMapper objectMapper;
 
-	private final WebTestClient webClient;
+	private WebTestClient webClient;
 
 	@Container
 	@ServiceConnection
@@ -51,10 +56,21 @@ public class WebhookControllerTest {
 	@MockBean
 	EntryMapper entryRepository;
 
+	@Autowired
+	Logbook logbook;
+
+	int port;
+
 	public WebhookControllerTest(ObjectMapper objectMapper, @Value("${local.server.port}") int port) {
 		this.objectMapper = objectMapper;
+		this.port = port;
+	}
+
+	@BeforeEach
+	void setUp() {
 		this.webClient = WebTestClient.bindToServer(new JdkClientHttpConnector())
-			.baseUrl("http://localhost:" + port)
+			.baseUrl("http://localhost:" + this.port)
+			.filter(new LogbookExchangeFilterFunction(this.logbook))
 			.build();
 	}
 

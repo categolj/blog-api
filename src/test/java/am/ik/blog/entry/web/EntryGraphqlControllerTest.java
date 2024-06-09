@@ -8,6 +8,8 @@ import org.junit.jupiter.api.Test;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
+import org.zalando.logbook.Logbook;
+import org.zalando.logbook.spring.webflux.LogbookExchangeFilterFunction;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -30,7 +32,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @AutoConfigureJsonTesters
 class EntryGraphqlControllerTest {
 
-	final HttpGraphQlTester tester;
+	HttpGraphQlTester tester;
 
 	@Autowired
 	JdbcTemplate jdbcTemplate;
@@ -38,21 +40,29 @@ class EntryGraphqlControllerTest {
 	@Autowired
 	JacksonTester<JsonNode> json;
 
+	@Autowired
+	Logbook logbook;
+
 	@Container
 	@ServiceConnection
 	static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:14-alpine");
 
+	int port;
+
 	EntryGraphqlControllerTest(@Value("${local.server.port}") int port) {
-		this.tester = HttpGraphQlTester
-			.builder(WebTestClient.bindToServer().baseUrl("http://localhost:" + port + "/graphql"))
-			.build();
-		;
+		this.port = port;
 	}
 
 	@BeforeEach
 	public void reset() {
 		jdbcTemplate.update(FileLoader.loadAsString("sql/delete-test-data.sql"));
 		jdbcTemplate.update(FileLoader.loadAsString("sql/insert-test-data.sql"));
+		this.tester = HttpGraphQlTester
+			.builder(WebTestClient.bindToServer()
+				.baseUrl("http://localhost:" + this.port + "/graphql")
+				.filter(new LogbookExchangeFilterFunction(this.logbook)))
+			.build();
+		;
 	}
 
 	@Test

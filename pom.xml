@@ -29,9 +29,9 @@
 			<version>0.1.3</version>
 		</dependency>
 		<dependency>
-			<groupId>am.ik.access-logger</groupId>
-			<artifactId>access-logger</artifactId>
-			<version>0.3.2</version>
+			<groupId>am.ik.spring.logbook</groupId>
+			<artifactId>access-logger-logbook</artifactId>
+			<version>0.1.2</version>
 		</dependency>
 		<dependency>
 			<groupId>am.ik.pagination</groupId>
@@ -214,6 +214,11 @@
 				</exclusion>
 			</exclusions>
 			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.zalando</groupId>
+			<artifactId>logbook-spring-webflux</artifactId>
+			<version>3.9.0</version>
 		</dependency>
 	</dependencies>
 

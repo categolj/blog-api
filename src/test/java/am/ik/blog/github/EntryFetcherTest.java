@@ -5,9 +5,14 @@ import am.ik.blog.config.GitHubConfig;
 import am.ik.blog.entry.Entry;
 import am.ik.blog.entry.FrontMatter;
 import am.ik.blog.tag.Tag;
+import am.ik.spring.logbook.AccessLoggerLogbookAutoConfiguration;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.zalando.logbook.autoconfigure.LogbookAutoConfiguration;
+
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
+import org.springframework.boot.autoconfigure.jackson.JacksonAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.web.client.RestClientTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.core.io.ClassPathResource;
@@ -21,9 +26,10 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@RestClientTest(properties = { "logging.level.am.ik.spring.http.client.RetryableClientHttpRequestInterceptor=DEBUG",
-		"blog.github.retry-interval=5ms", "blog.github.retry-max-elapsed-time=40ms",
+@RestClientTest(properties = { "blog.github.retry-interval=5ms", "blog.github.retry-max-elapsed-time=40ms",
 		"blog.github.tenants.xyz.access-token=foo" })
+@ImportAutoConfiguration({ JacksonAutoConfiguration.class, AccessLoggerLogbookAutoConfiguration.class,
+		LogbookAutoConfiguration.class })
 @Import({ GitHubConfig.class, GitHubProps.class, EntryFetcher.class })
 public class EntryFetcherTest {
 
