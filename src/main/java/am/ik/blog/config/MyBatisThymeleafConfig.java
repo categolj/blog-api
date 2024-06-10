@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Objects;
 
 import am.ik.blog.config.MyBatisThymeleafConfig.RuntimeHints;
+import jakarta.annotation.Nullable;
 import org.mybatis.scripting.thymeleaf.SqlGenerator;
 import org.mybatis.scripting.thymeleaf.SqlGeneratorConfig;
 import org.mybatis.scripting.thymeleaf.expression.Likes;
@@ -38,7 +39,7 @@ public class MyBatisThymeleafConfig {
 	public static class RuntimeHints implements RuntimeHintsRegistrar {
 
 		@Override
-		public void registerHints(org.springframework.aot.hint.RuntimeHints hints, ClassLoader classLoader) {
+		public void registerHints(org.springframework.aot.hint.RuntimeHints hints, @Nullable ClassLoader classLoader) {
 			try {
 				hints.reflection()
 					.registerMethod(

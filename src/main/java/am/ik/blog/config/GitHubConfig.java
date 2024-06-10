@@ -17,6 +17,7 @@ import am.ik.blog.github.Tree;
 import am.ik.blog.github.web.WebhookController;
 import am.ik.spring.http.client.RetryableClientHttpRequestInterceptor;
 import com.fasterxml.jackson.databind.JsonNode;
+import jakarta.annotation.Nullable;
 import org.zalando.logbook.spring.LogbookClientHttpRequestInterceptor;
 
 import org.springframework.aot.hint.ExecutableMode;
@@ -92,7 +93,7 @@ public class GitHubConfig {
 	static class RuntimeHints implements RuntimeHintsRegistrar {
 
 		@Override
-		public void registerHints(org.springframework.aot.hint.RuntimeHints hints, ClassLoader classLoader) {
+		public void registerHints(org.springframework.aot.hint.RuntimeHints hints, @Nullable ClassLoader classLoader) {
 			hints.reflection()
 				.registerMethod(
 						Objects

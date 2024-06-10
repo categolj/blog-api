@@ -13,6 +13,7 @@ import am.ik.blog.tenant.RequestTenantAuthorizationManager;
 import am.ik.blog.tenant.TenantUserDetails;
 import am.ik.blog.tenant.TenantUserDetailsService;
 import am.ik.blog.tenant.TenantUserProps;
+import jakarta.annotation.Nullable;
 
 import org.springframework.aop.Advisor;
 import org.springframework.aot.hint.ExecutableMode;
@@ -169,7 +170,7 @@ public class SecurityConfig {
 	public static class RuntimeHints implements RuntimeHintsRegistrar {
 
 		@Override
-		public void registerHints(org.springframework.aot.hint.RuntimeHints hints, ClassLoader classLoader) {
+		public void registerHints(org.springframework.aot.hint.RuntimeHints hints, @Nullable ClassLoader classLoader) {
 			hints.reflection()
 				.registerMethod(
 						Objects.requireNonNull(

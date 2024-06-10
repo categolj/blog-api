@@ -10,6 +10,7 @@ import am.ik.blog.config.NativeHints.RuntimeHints;
 import am.ik.blog.entry.EntryBuilder;
 import am.ik.blog.entry.FrontMatterBuilder;
 import am.ik.blog.tenant.TenantUserProps;
+import jakarta.annotation.Nullable;
 
 import org.springframework.aot.hint.ExecutableMode;
 import org.springframework.aot.hint.RuntimeHintsRegistrar;
@@ -24,7 +25,7 @@ public class NativeHints {
 	public static class RuntimeHints implements RuntimeHintsRegistrar {
 
 		@Override
-		public void registerHints(org.springframework.aot.hint.RuntimeHints hints, ClassLoader classLoader) {
+		public void registerHints(org.springframework.aot.hint.RuntimeHints hints, @Nullable ClassLoader classLoader) {
 			try {
 				final List<Method> builderMethods = new ArrayList<>();
 				builderMethods.addAll(Arrays.asList(EntryBuilder.class.getDeclaredMethods()));
