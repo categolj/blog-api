@@ -97,6 +97,11 @@
 			</exclusions>
 		</dependency>
 		<dependency>
+			<groupId>io.opentelemetry.contrib</groupId>
+			<artifactId>opentelemetry-samplers</artifactId>
+			<version>1.36.0-alpha</version>
+		</dependency>
+		<dependency>
 			<groupId>net.ttddyy.observation</groupId>
 			<artifactId>datasource-micrometer-spring-boot</artifactId>
 			<version>1.0.3</version>
