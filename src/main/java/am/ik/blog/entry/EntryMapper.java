@@ -185,7 +185,6 @@ public class EntryMapper {
 		final Long entryId = entry.getEntryId();
 		final List<Category> categories = frontMatter.categories();
 		final List<Tag> tags = frontMatter.tags();
-		final List<String> keywords = this.keywordExtractor.extract(entry.getContent());
 		try {
 			Timestamp cratedDate = created.date() == null ? null : Timestamp.from(created.date().toInstant());
 			Timestamp lastModifiedDate = updated.date() == null ? null : Timestamp.from(updated.date().toInstant());
@@ -195,7 +194,6 @@ public class EntryMapper {
 				.addValue("content", entry.getContent())
 				.addValue("categories", categories.stream().map(Category::name).collect(joining(",")))
 				.addValue("tags", this.objectMapper.writeValueAsString(tags))
-				.addValue("keywords", String.join(",", keywords))
 				.addValue("createdBy", created.name())
 				.addValue("createdDate", cratedDate)
 				.addValue("lastModifiedBy", updated.name())

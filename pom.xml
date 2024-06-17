@@ -139,11 +139,6 @@
 			<artifactId>snakeyaml</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>com.atilika.kuromoji</groupId>
-			<artifactId>kuromoji-ipadic</artifactId>
-			<version>0.9.0</version>
-		</dependency>
-		<dependency>
 			<groupId>am.ik.spring</groupId>
 			<artifactId>retryable-client-http-request-interceptor</artifactId>
 			<version>0.5.1</version>

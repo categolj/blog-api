@@ -56,7 +56,6 @@ public class NativeHints {
 				throw new RuntimeException(e);
 			}
 			hints.resources().registerPattern("org/flywaydb/core/internal/*");
-			hints.resources().registerPattern("com/atilika/kuromoji/ipadic/*.bin");
 		}
 
 	}

@@ -1,14 +1,15 @@
 package am.ik.blog.entry.search;
 
+import java.util.List;
+
 import am.ik.blog.category.Category;
 import am.ik.blog.entry.keyword.KeywordExtractor;
 import am.ik.blog.tag.Tag;
+import org.mybatis.scripting.thymeleaf.expression.Likes;
 
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.lang.Nullable;
 import org.springframework.util.StringUtils;
-
-import java.util.List;
 
 public class SearchCriteria {
 
@@ -48,6 +49,8 @@ public class SearchCriteria {
 
 	@Nullable
 	private final String keyword;
+
+	private static Likes likes = Likes.newBuilder().build();
 
 	SearchCriteria(boolean excludeEntryId, boolean excludeTitle, boolean excludeContent, boolean excludeCategories,
 			boolean excludeTags, boolean excludeCreatedBy, boolean excludeCreatedDate, boolean excludeLastModifiedBy,
@@ -144,7 +147,7 @@ public class SearchCriteria {
 			final List<String> keywords = keywordExtractor.extract(this.keyword);
 			params.addValue("keywordsCount", keywords.size());
 			for (int i = 0; i < keywords.size(); i++) {
-				params.addValue("keywords[%d]".formatted(i), keywords.get(i));
+				params.addValue("keywords[%d]".formatted(i), "%%%s%%".formatted(likes.escapeWildcard(keywords.get(i))));
 			}
 		}
 		else {

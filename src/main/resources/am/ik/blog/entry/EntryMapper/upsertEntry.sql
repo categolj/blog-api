@@ -1,4 +1,4 @@
-INSERT INTO entry (entry_id, tenant_id, title, content, categories, tags, keywords, created_by, created_date,
+INSERT INTO entry (entry_id, tenant_id, title, content, categories, tags, created_by, created_date,
                    last_modified_by,
                    last_modified_date)
 VALUES (/*[# mb:p="entryId"]*/ 999 /*[/]*/,
@@ -15,7 +15,6 @@ VALUES (/*[# mb:p="entryId"]*/ 999 /*[/]*/,
       "name": "Programming"
     }
   ]' /*[/]*/ ::jsonb,
-                               STRING_TO_ARRAY(/*[# mb:p="keywords"]*/ 'Hello,World' /*[/]*/, ','),
            /*[# mb:p="createdBy"]*/'Toshiaki Maki' /*[/]*/,
            /*[# mb:p="createdDate"]*/'2017-03-31 00:00:00' /*[/]*/,
            /*[# mb:p="lastModifiedBy"]*/'Toshiaki Maki' /*[/]*/,
@@ -33,7 +32,6 @@ ON CONFLICT ON CONSTRAINT entry_pkey DO UPDATE SET title              = /*[# mb:
                                                        "name": "Programming"
                                                      }
                                                    ]' /*[/]*/ ::jsonb,
-                                                   keywords           = STRING_TO_ARRAY(/*[# mb:p="keywords"]*/ 'Hello,World' /*[/]*/, ','),
                                                    created_by         = /*[# mb:p="createdBy"]*/ 'Toshiaki Maki' /*[/]*/,
                                                    created_date       = /*[# mb:p="createdDate"]*/'2017-03-31 00:00:00' /*[/]*/,
                                                    last_modified_by   = /*[# mb:p="lastModifiedBy"]*/ 'Toshiaki Maki' /*[/]*/,

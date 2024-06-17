@@ -3,7 +3,7 @@ FROM entry AS e
 WHERE 1 = 1
 /*[# th:if="${keywordsCount > 0}"]*/
 /*[# th:each="i : ${#numbers.sequence(0, keywordsCount - 1)}"]*/
-  AND e.keywords @> ARRAY [ /*[# mb:p="keywords[${i}]"]*/ 'JAVA' /*[/]*/ ]::character varying[]
+  AND e.content ILIKE /*[# mb:p="keywords[${i}]"]*/ '%Java%' /*[/]*/
 /*[/]*/
 /*[/]*/
 /*[# th:if="${createdBy} != null"]*/
