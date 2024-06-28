@@ -2,7 +2,7 @@ SELECT DISTINCT e.entry_id, e.last_modified_date
 FROM entry AS e
 WHERE 1 = 1
 /*[# th:if="${keywordsCount > 0}"]*/
-  /*+ BitmapScan(entry entry_content_trgm_idx) */
+  /*+ BitmapScan(e entry_content_trgm_idx) */
 /*[# th:each="i : ${#numbers.sequence(0, keywordsCount - 1)}"]*/
   AND e.content ILIKE /*[# mb:p="keywords[${i}]"]*/ '%Java%' /*[/]*/
 /*[/]*/
