@@ -35,6 +35,7 @@ import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
+import static am.ik.blog.util.FileLoader.loadAsString;
 import static am.ik.blog.util.FileLoader.loadSqlAsString;
 import static java.util.stream.Collectors.joining;
 
@@ -129,7 +130,7 @@ public class EntryMapper {
 			.addValue("tenantId", tenantId)
 			.addValue("cursor", cursor.map(Timestamp::from).orElse(null));
 		final String sql = "%s LIMIT %d"
-			.formatted(this.sqlGenerator.generate(loadSqlAsString("am/ik/blog/entry/EntryMapper/findAllCursorNext.sql"),
+			.formatted(this.sqlGenerator.generate(loadAsString("am/ik/blog/entry/EntryMapper/findAllCursorNext.sql"),
 					params.getValues(), params::addValue), pageSizePlus1);
 		final List<Entry> contentPlus1 = this.jdbcClient.sql(sql).paramSource(params).query(this.rowMapper).list();
 		final boolean hasPrevious = cursor.isPresent();
@@ -147,7 +148,7 @@ public class EntryMapper {
 	public long count(SearchCriteria searchCriteria, @Nullable String tenantId) {
 		final MapSqlParameterSource params = searchCriteria.toParameterSource(this.keywordExtractor)
 			.addValue("tenantId", tenantId);
-		final String sql = this.sqlGenerator.generate(loadSqlAsString("am/ik/blog/entry/EntryMapper/count.sql"),
+		final String sql = this.sqlGenerator.generate(loadAsString("am/ik/blog/entry/EntryMapper/count.sql"),
 				params.getValues(), params::addValue);
 		final Long count = this.jdbcClient.sql(sql) //
 			.paramSource(params) //
@@ -216,7 +217,7 @@ public class EntryMapper {
 			OffsetPageRequest pageRequest) {
 		final MapSqlParameterSource params = searchCriteria.toParameterSource(this.keywordExtractor)
 			.addValue("tenantId", tenantId);
-		final String sql = this.sqlGenerator.generate(loadSqlAsString("am/ik/blog/entry/EntryMapper/entryIds.sql"),
+		final String sql = this.sqlGenerator.generate(loadAsString("am/ik/blog/entry/EntryMapper/entryIds.sql"),
 				params.getValues(), params::addValue)
 				+ " LIMIT %d OFFSET %d".formatted(pageRequest.pageSize(), pageRequest.offset());
 		return this.jdbcClient.sql(sql) //

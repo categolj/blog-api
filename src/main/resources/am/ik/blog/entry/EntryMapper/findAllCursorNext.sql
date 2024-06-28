@@ -1,3 +1,4 @@
+/*+ BitmapScan(e entry_content_trgm_idx) */
 SELECT
 /*[# th:if="!${excludeEntryId}"]*/
     e.entry_id,
@@ -38,7 +39,6 @@ SELECT
 FROM entry AS e
 WHERE e.last_modified_date < COALESCE( /*[# mb:p="cursor"]*/ NULL /*[/]*/ , 'infinity'::timestamptz)
 /*[# th:if="${keywordsCount > 0}"]*/
-  /*+ BitmapScan(e entry_content_trgm_idx) */
 /*[# th:each="i : ${#numbers.sequence(0, keywordsCount - 1)}"]*/
   AND e.content ILIKE /*[# mb:p="keywords[${i}]"]*/ '%Java%' /*[/]*/
 /*[/]*/

@@ -1,8 +1,8 @@
+/*+ BitmapScan(e entry_content_trgm_idx) */
 SELECT COUNT(e.entry_id) as count
 FROM entry AS e
 WHERE 1 = 1
 /*[# th:if="${keywordsCount > 0}"]*/
-  /*+ BitmapScan(e entry_content_trgm_idx) */
 /*[# th:each="i : ${#numbers.sequence(0, keywordsCount - 1)}"]*/
   AND e.content ILIKE /*[# mb:p="keywords[${i}]"]*/ '%Java%' /*[/]*/
 /*[/]*/

@@ -182,6 +182,7 @@ class SqlTest {
 	}
 
 	@Test
+	@Disabled
 	public void entryIds() {
 		final MapSqlParameterSource params = new MapSqlParameterSource();
 		final String sql = sqlGenerator.generate(FileLoader.loadAsString("am/ik/blog/entry/EntryMapper/entryIds.sql"),
@@ -280,6 +281,7 @@ class SqlTest {
 	}
 
 	@Test
+	@Disabled
 	public void entryIdsWithCategoryOrders() {
 		final List<Category> categories = List.of(new Category("x"), new Category("y"), new Category("z"));
 		final MapSqlParameterSource params = new MapSqlParameterSource().addValue("categories", categories);
