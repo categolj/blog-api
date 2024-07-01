@@ -12,6 +12,7 @@ import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Supplier;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -21,12 +22,15 @@ import am.ik.pagination.CursorPageRequest;
 import am.ik.pagination.OffsetPage;
 import am.ik.pagination.OffsetPageRequest;
 import am.ik.yavi.core.ConstraintViolationsException;
+import io.micrometer.tracing.Span;
+import io.micrometer.tracing.Tracer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 @Service
 public class EntryService {
@@ -35,8 +39,14 @@ public class EntryService {
 
 	private final EntryMapper entryMapper;
 
-	public EntryService(EntryMapper entryMapper) {
+	private final Tracer tracer;
+
+	public EntryService(EntryMapper entryMapper, Optional<Tracer> tracer) {
 		this.entryMapper = entryMapper;
+		this.tracer = tracer.orElseGet(() -> {
+			log.warn("Tracer is not found. NOOP trace is used instead.");
+			return Tracer.NOOP; /* for test */
+		});
 	}
 
 	public Long nextId(@Nullable String tenantId) {
@@ -45,7 +55,24 @@ public class EntryService {
 
 	public CursorPage<Entry, Instant> findPage(SearchCriteria criteria, @Nullable String tenantId,
 			CursorPageRequest<Instant> pageRequest) {
-		return this.entryMapper.findPage(criteria, tenantId, pageRequest);
+		Supplier<CursorPage<Entry, Instant>> supplier = () -> this.entryMapper.findPage(criteria, tenantId,
+				pageRequest);
+		if (StringUtils.hasText(criteria.getKeyword())) {
+			Supplier<CursorPage<Entry, Instant>> findPage = supplier;
+			supplier = () -> {
+				Span newSpan = this.tracer.nextSpan().name("searchEntries");
+				newSpan.tag("keyword", criteria.getKeyword());
+				CursorPage<Entry, Instant> page;
+				try (Tracer.SpanInScope ignored = this.tracer.withSpan(newSpan.start())) {
+					page = findPage.get();
+				}
+				finally {
+					newSpan.end();
+				}
+				return page;
+			};
+		}
+		return supplier.get();
 	}
 
 	public OffsetPage<Entry> findPage(SearchCriteria criteria, @Nullable String tenantId,
