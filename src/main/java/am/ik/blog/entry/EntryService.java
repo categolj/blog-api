@@ -22,8 +22,8 @@ import am.ik.pagination.CursorPageRequest;
 import am.ik.pagination.OffsetPage;
 import am.ik.pagination.OffsetPageRequest;
 import am.ik.yavi.core.ConstraintViolationsException;
-import io.micrometer.tracing.Span;
-import io.micrometer.tracing.Tracer;
+import io.micrometer.observation.Observation;
+import io.micrometer.observation.ObservationRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,13 +39,13 @@ public class EntryService {
 
 	private final EntryMapper entryMapper;
 
-	private final Tracer tracer;
+	public final ObservationRegistry observationRegistry;
 
-	public EntryService(EntryMapper entryMapper, Optional<Tracer> tracer) {
+	public EntryService(EntryMapper entryMapper, Optional<ObservationRegistry> observationRegistry) {
 		this.entryMapper = entryMapper;
-		this.tracer = tracer.orElseGet(() -> {
-			log.warn("Tracer is not found. NOOP trace is used instead.");
-			return Tracer.NOOP; /* for test */
+		this.observationRegistry = observationRegistry.orElseGet(() -> {
+			log.warn("ObservationRegistry is not found. NOOP ObservationRegistry is used instead.");
+			return ObservationRegistry.NOOP; /* for test */
 		});
 	}
 
@@ -59,18 +59,9 @@ public class EntryService {
 				pageRequest);
 		if (StringUtils.hasText(criteria.getKeyword())) {
 			Supplier<CursorPage<Entry, Instant>> findPage = supplier;
-			supplier = () -> {
-				Span newSpan = this.tracer.nextSpan().name("searchEntries");
-				newSpan.tag("keyword", criteria.getKeyword());
-				CursorPage<Entry, Instant> page;
-				try (Tracer.SpanInScope ignored = this.tracer.withSpan(newSpan.start())) {
-					page = findPage.get();
-				}
-				finally {
-					newSpan.end();
-				}
-				return page;
-			};
+			supplier = () -> Observation.createNotStarted("searchEntries", this.observationRegistry)
+				.highCardinalityKeyValue("keyword", criteria.getKeyword())
+				.observe(findPage);
 		}
 		return supplier.get();
 	}

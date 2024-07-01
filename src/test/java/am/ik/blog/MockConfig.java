@@ -8,6 +8,7 @@ import java.util.Optional;
 
 import am.ik.blog.entry.EntryMapper;
 import am.ik.blog.entry.EntryService;
+import io.micrometer.observation.ObservationRegistry;
 import io.micrometer.tracing.Tracer;
 
 import org.springframework.boot.test.context.TestConfiguration;
@@ -17,8 +18,8 @@ import org.springframework.context.annotation.Bean;
 public class MockConfig {
 
 	@Bean
-	public EntryService entryService(EntryMapper entryMapper, Optional<Tracer> tracer) {
-		return new EntryService(entryMapper, tracer);
+	public EntryService entryService(EntryMapper entryMapper, Optional<ObservationRegistry> observationRegistry) {
+		return new EntryService(entryMapper, observationRegistry);
 	}
 
 	@Bean
