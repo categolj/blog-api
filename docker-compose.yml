@@ -1,16 +1,63 @@
-version: "2"
+version: '3'
 services:
-  postgresql:
-    image: bitnami/postgresql:15
+  otelcol:
+    image: otel/opentelemetry-collector-contrib:0.103.1
+    restart: on-failure
+    volumes:
+    - ./docker/otel-collector.yaml:/etc/otelcol-contrib/config.yaml
+    ports:
+    - '4317:4317'
+    - '4318:4318'
+    extra_hosts:
+    - 'host.docker.internal:host-gateway'
+  clickhouse:
+    image: clickhouse/clickhouse-server:23.7
+    restart: on-failure
+    environment:
+      CLICKHOUSE_DB: uptrace
+    healthcheck:
+      test: [ 'CMD', 'wget', '--spider', '-q', 'localhost:8123/ping' ]
+      interval: 1s
+      timeout: 1s
+      retries: 30
+    volumes:
+    - ch_data:/var/lib/clickhouse
+  postgres:
+    image: postgres:16-alpine
+    labels:
+      org.springframework.boot.ignore: true
+    restart: on-failure
+    environment:
+      PGDATA: /var/lib/postgresql/data/pgdata
+      POSTGRES_USER: uptrace
+      POSTGRES_PASSWORD: uptrace
+      POSTGRES_DB: uptrace
+    healthcheck:
+      test: [ 'CMD-SHELL', 'pg_isready -U uptrace -d uptrace' ]
+      interval: 1s
+      timeout: 1s
+      retries: 30
+    volumes:
+    - 'pg_data:/var/lib/postgresql/data/pgdata'
+  uptrace:
+    image: 'uptrace/uptrace:1.7.6'
+    restart: on-failure
+    volumes:
+    - ./docker/uptrace.yml:/etc/uptrace/uptrace.yml
+    ports:
+    - '14317:14317'
+    - '14318:14318'
+  blog-db:
+    image: 'bitnami/postgresql:16'
     labels:
       org.springframework.boot.service-connection: postgres
+    restart: on-failure
     ports:
-    - 5432:5432
+    - '5432:5432'
     environment:
       POSTGRES_DB: blog
       POSTGRES_USER: blog
       POSTGRES_PASSWORD: blog
-  zipkin:
-    image: openzipkin/zipkin-slim
-    ports:
-    - 9411:9411
+volumes:
+  ch_data:
+  pg_data:
