@@ -1,4 +1,6 @@
+/*[# th:if="${keywordsCount > 0}"]*/
 /*+ BitmapScan(e entry_content_trgm_idx) */
+/*[/]*/
 SELECT
 /*[# th:if="!${excludeEntryId}"]*/
     e.entry_id,

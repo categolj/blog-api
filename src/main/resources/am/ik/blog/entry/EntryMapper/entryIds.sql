@@ -1,4 +1,6 @@
+/*[# th:if="${keywordsCount > 0}"]*/
 /*+ BitmapScan(e entry_content_trgm_idx) */
+/*[/]*/
 SELECT DISTINCT e.entry_id, e.last_modified_date
 FROM entry AS e
 WHERE 1 = 1
