@@ -3,9 +3,7 @@ package am.ik.blog.entry.keyword;
 import java.util.Arrays;
 import java.util.List;
 
-import org.springframework.stereotype.Component;
-
-@Component
+@Deprecated(forRemoval = true)
 public class SimpleKeywordExtractor implements KeywordExtractor {
 
 	@Override

@@ -41,9 +41,7 @@ SELECT
 FROM entry AS e
 WHERE e.last_modified_date < COALESCE( /*[# mb:p="cursor"]*/ NULL /*[/]*/ , 'infinity'::timestamptz)
 /*[# th:if="${keywordsCount > 0}"]*/
-/*[# th:each="i : ${#numbers.sequence(0, keywordsCount - 1)}"]*/
-  AND e.content ILIKE /*[# mb:p="keywords[${i}]"]*/ '%Java%' /*[/]*/
-/*[/]*/
+/*[# th:if="${keywordQuery}"][# th:utext="${keywordQuery}"][/][/]*/
 /*[/]*/
 /*[# th:if="${createdBy} != null"]*/
   AND e.created_by = /*[# mb:p="createdBy"]*/ 'Toshiaki Maki' /*[/]*/

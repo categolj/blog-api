@@ -155,6 +155,11 @@ class EntryMapperIntegrationTest {
 		assertThat(search3).hasSize(2);
 		assertThat(search3.get(0).getEntryId()).isEqualTo(99994L);
 		assertThat(search3.get(1).getEntryId()).isEqualTo(99993L);
+
+		final List<Entry> search4 = this.entryMapper.findAll(SearchCriteria.builder().keyword("Spring -Boot").build(),
+				tenantId, new OffsetPageRequest(0, 100));
+		assertThat(search4).hasSize(1);
+		assertThat(search4.get(0).getEntryId()).isEqualTo(99994L);
 	}
 
 	@ParameterizedTest

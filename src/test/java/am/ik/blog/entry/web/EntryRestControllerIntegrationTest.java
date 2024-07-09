@@ -105,15 +105,45 @@ class EntryRestControllerIntegrationTest {
 	@Test
 	void searchByKeyword() {
 		this.webTestClient.get()
-			.uri("/entries?query=test data")
+			.uri("/entries?query=test data&cursor=")
 			.exchange()
 			.expectBody(EntryPage.class)
 			.consumeWith(result -> {
 				final EntryPage entryPage = result.getResponseBody();
 				assertThat(entryPage).isNotNull();
-				assertThat(entryPage.getTotalElements()).isEqualTo(2);
+				assertThat(entryPage.getContent()).hasSize(2);
 				assertEntry99998(entryPage.getContent().get(0)).assertThatContentIsNotSet();
 				assertEntry99997(entryPage.getContent().get(1)).assertThatContentIsNotSet();
+			});
+	}
+
+	@Test
+	void searchByKeywordOr() {
+		this.webTestClient.get()
+			.uri("/entries?query=test or hello&cursor=")
+			.exchange()
+			.expectBody(EntryPage.class)
+			.consumeWith(result -> {
+				final EntryPage entryPage = result.getResponseBody();
+				assertThat(entryPage).isNotNull();
+				assertThat(entryPage.getContent()).hasSize(3);
+				assertEntry99999(entryPage.getContent().get(0)).assertThatContentIsNotSet();
+				assertEntry99998(entryPage.getContent().get(1)).assertThatContentIsNotSet();
+				assertEntry99997(entryPage.getContent().get(2)).assertThatContentIsNotSet();
+			});
+	}
+
+	@Test
+	void searchByKeywordNot() {
+		this.webTestClient.get()
+			.uri("/entries?query=-test&cursor=")
+			.exchange()
+			.expectBody(EntryPage.class)
+			.consumeWith(result -> {
+				final EntryPage entryPage = result.getResponseBody();
+				assertThat(entryPage).isNotNull();
+				assertThat(entryPage.getContent()).hasSize(1);
+				assertEntry99999(entryPage.getContent().get(0)).assertThatContentIsNotSet();
 			});
 	}
 

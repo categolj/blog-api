@@ -15,7 +15,7 @@ import java.util.Objects;
 import java.util.Optional;
 
 import am.ik.blog.category.Category;
-import am.ik.blog.entry.keyword.KeywordExtractor;
+import am.ik.blog.entry.keyword.KeywordParser;
 import am.ik.blog.entry.search.SearchCriteria;
 import am.ik.blog.tag.Tag;
 import am.ik.pagination.CursorPage;
@@ -48,7 +48,7 @@ public class EntryMapper {
 
 	private final SqlGenerator sqlGenerator;
 
-	private final KeywordExtractor keywordExtractor;
+	private final KeywordParser keywordParser;
 
 	private final RowMapper<Entry> rowMapper = (rs, rowNum) -> {
 		final long entryId = rs.getLong("entry_id");
@@ -81,11 +81,11 @@ public class EntryMapper {
 	};
 
 	public EntryMapper(JdbcClient jdbcClient, ObjectMapper objectMapper, SqlGenerator sqlGenerator,
-			KeywordExtractor keywordExtractor) {
+			KeywordParser keywordParser) {
 		this.jdbcClient = jdbcClient;
 		this.objectMapper = objectMapper;
 		this.sqlGenerator = sqlGenerator;
-		this.keywordExtractor = keywordExtractor;
+		this.keywordParser = keywordParser;
 	}
 
 	@Transactional(readOnly = true)
@@ -126,7 +126,7 @@ public class EntryMapper {
 			CursorPageRequest<Instant> pageRequest) {
 		final Optional<Instant> cursor = pageRequest.cursorOptional();
 		final int pageSizePlus1 = pageRequest.pageSize() + 1;
-		final MapSqlParameterSource params = searchCriteria.toParameterSource(this.keywordExtractor)
+		final MapSqlParameterSource params = searchCriteria.toParameterSource(this.keywordParser)
 			.addValue("tenantId", tenantId)
 			.addValue("cursor", cursor.map(Timestamp::from).orElse(null));
 		final String sql = "%s LIMIT %d"
@@ -146,7 +146,7 @@ public class EntryMapper {
 	}
 
 	public long count(SearchCriteria searchCriteria, @Nullable String tenantId) {
-		final MapSqlParameterSource params = searchCriteria.toParameterSource(this.keywordExtractor)
+		final MapSqlParameterSource params = searchCriteria.toParameterSource(this.keywordParser)
 			.addValue("tenantId", tenantId);
 		final String sql = this.sqlGenerator.generate(loadAsString("am/ik/blog/entry/EntryMapper/count.sql"),
 				params.getValues(), params::addValue);
@@ -215,7 +215,7 @@ public class EntryMapper {
 
 	private List<Long> entryIds(SearchCriteria searchCriteria, @Nullable String tenantId,
 			OffsetPageRequest pageRequest) {
-		final MapSqlParameterSource params = searchCriteria.toParameterSource(this.keywordExtractor)
+		final MapSqlParameterSource params = searchCriteria.toParameterSource(this.keywordParser)
 			.addValue("tenantId", tenantId);
 		final String sql = this.sqlGenerator.generate(loadAsString("am/ik/blog/entry/EntryMapper/entryIds.sql"),
 				params.getValues(), params::addValue)

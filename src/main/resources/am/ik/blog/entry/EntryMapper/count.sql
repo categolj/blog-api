@@ -5,9 +5,7 @@ SELECT COUNT(e.entry_id) as count
 FROM entry AS e
 WHERE 1 = 1
 /*[# th:if="${keywordsCount > 0}"]*/
-/*[# th:each="i : ${#numbers.sequence(0, keywordsCount - 1)}"]*/
-  AND e.content ILIKE /*[# mb:p="keywords[${i}]"]*/ '%Java%' /*[/]*/
-/*[/]*/
+/*[# th:if="${keywordQuery}"][# th:utext="${keywordQuery}"][/][/]*/
 /*[/]*/
 /*[# th:if="${createdBy} != null"]*/
   AND e.created_by = /*[# mb:p="createdBy"]*/ 'Toshiaki Maki' /*[/]*/

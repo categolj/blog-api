@@ -5,9 +5,7 @@ SELECT DISTINCT e.entry_id, e.last_modified_date
 FROM entry AS e
 WHERE 1 = 1
 /*[# th:if="${keywordsCount > 0}"]*/
-/*[# th:each="i : ${#numbers.sequence(0, keywordsCount - 1)}"]*/
-  AND e.content ILIKE /*[# mb:p="keywords[${i}]"]*/ '%Java%' /*[/]*/
-/*[/]*/
+/*[# th:if="${keywordQuery}"][# th:utext="${keywordQuery}"][/][/]*/
 /*[/]*/
 /*[# th:if="${createdBy} != null"]*/
   AND e.created_by = /*[# mb:p="createdBy"]*/ 'Toshiaki Maki' /*[/]*/

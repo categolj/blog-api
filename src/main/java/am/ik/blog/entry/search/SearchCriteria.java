@@ -3,7 +3,7 @@ package am.ik.blog.entry.search;
 import java.util.List;
 
 import am.ik.blog.category.Category;
-import am.ik.blog.entry.keyword.KeywordExtractor;
+import am.ik.blog.entry.keyword.KeywordParser;
 import am.ik.blog.tag.Tag;
 import org.mybatis.scripting.thymeleaf.expression.Likes;
 
@@ -141,14 +141,13 @@ public class SearchCriteria {
 		return excludeLastModifiedDate;
 	}
 
-	public MapSqlParameterSource toParameterSource(KeywordExtractor keywordExtractor) {
+	public MapSqlParameterSource toParameterSource(KeywordParser keywordParser) {
 		final MapSqlParameterSource params = new MapSqlParameterSource();
 		if (StringUtils.hasText(this.keyword)) {
-			final List<String> keywords = keywordExtractor.extract(this.keyword);
-			params.addValue("keywordsCount", keywords.size());
-			for (int i = 0; i < keywords.size(); i++) {
-				params.addValue("keywords[%d]".formatted(i), "%%%s%%".formatted(likes.escapeWildcard(keywords.get(i))));
-			}
+			KeywordParser.QueryAndParams queryAndParams = keywordParser.convert(this.keyword);
+			params.addValue("keywordsCount", queryAndParams.params().size());
+			params.addValue("keywordQuery", "AND " + queryAndParams.query());
+			queryAndParams.params().forEach((k, v) -> params.addValue(k, "%%%s%%".formatted(likes.escapeWildcard(v))));
 		}
 		else {
 			params.addValue("keywordsCount", 0);
