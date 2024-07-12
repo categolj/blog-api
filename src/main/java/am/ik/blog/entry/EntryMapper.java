@@ -2,7 +2,6 @@ package am.ik.blog.entry;
 
 import java.io.UncheckedIOException;
 import java.sql.Array;
-import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
@@ -52,8 +51,8 @@ public class EntryMapper {
 
 	private final RowMapper<Entry> rowMapper = (rs, rowNum) -> {
 		final long entryId = rs.getLong("entry_id");
-		final Timestamp createdDate = rs.getTimestamp("created_date");
-		final Timestamp lastModifiedDate = rs.getTimestamp("last_modified_date");
+		final OffsetDateTime createdDate = rs.getObject("created_date", OffsetDateTime.class);
+		final OffsetDateTime lastModifiedDate = rs.getObject("last_modified_date", OffsetDateTime.class);
 		final Array categories = rs.getArray("categories");
 		final String tags = rs.getString("tags");
 		try {
@@ -69,10 +68,8 @@ public class EntryMapper {
 							: this.objectMapper.readValue(tags, new TypeReference<>() {
 							}))
 					.build())
-				.withCreated(new Author(rs.getString("created_by"),
-						createdDate == null ? null : createdDate.toInstant().atOffset(ZoneOffset.UTC)))
-				.withUpdated(new Author(rs.getString("last_modified_by"),
-						lastModifiedDate == null ? null : lastModifiedDate.toInstant().atOffset(ZoneOffset.UTC)))
+				.withCreated(new Author(rs.getString("created_by"), createdDate))
+				.withUpdated(new Author(rs.getString("last_modified_by"), lastModifiedDate))
 				.build();
 		}
 		catch (JsonProcessingException e) {
@@ -128,7 +125,7 @@ public class EntryMapper {
 		final int pageSizePlus1 = pageRequest.pageSize() + 1;
 		final MapSqlParameterSource params = searchCriteria.toParameterSource(this.keywordParser)
 			.addValue("tenantId", tenantId)
-			.addValue("cursor", cursor.map(Timestamp::from).orElse(null));
+			.addValue("cursor", cursor.map(instant -> instant.atOffset(ZoneOffset.UTC)).orElse(null));
 		final String sql = "%s LIMIT %d"
 			.formatted(this.sqlGenerator.generate(loadAsString("am/ik/blog/entry/EntryMapper/findAllCursorNext.sql"),
 					params.getValues(), params::addValue), pageSizePlus1);
@@ -187,8 +184,6 @@ public class EntryMapper {
 		final List<Category> categories = frontMatter.categories();
 		final List<Tag> tags = frontMatter.tags();
 		try {
-			Timestamp cratedDate = created.date() == null ? null : Timestamp.from(created.date().toInstant());
-			Timestamp lastModifiedDate = updated.date() == null ? null : Timestamp.from(updated.date().toInstant());
 			final MapSqlParameterSource params = new MapSqlParameterSource().addValue("entryId", entryId)
 				.addValue("title", frontMatter.title())
 				.addValue("tenantId", tenantId)
@@ -196,9 +191,9 @@ public class EntryMapper {
 				.addValue("categories", categories.stream().map(Category::name).collect(joining(",")))
 				.addValue("tags", this.objectMapper.writeValueAsString(tags))
 				.addValue("createdBy", created.name())
-				.addValue("createdDate", cratedDate)
+				.addValue("createdDate", created.date())
 				.addValue("lastModifiedBy", updated.name())
-				.addValue("lastModifiedDate", lastModifiedDate);
+				.addValue("lastModifiedDate", updated.date());
 			final String upsertEntrySql = this.sqlGenerator.generate(
 					loadSqlAsString("am/ik/blog/entry/EntryMapper/upsertEntry.sql"), params.getValues(),
 					params::addValue);

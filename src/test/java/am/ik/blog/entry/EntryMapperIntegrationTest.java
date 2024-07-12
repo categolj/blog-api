@@ -67,9 +67,9 @@ class EntryMapperIntegrationTest {
 		assertThat(frontMatter.categories()).containsExactly(new Category("foo"), new Category("bar"),
 				new Category("hoge"));
 		assertThat(found.getCreated().name()).isEqualTo("demo");
-		assertThat(found.getCreated().date()).isNotNull();
+		assertThat(found.getCreated().date()).isEqualTo(entry.getCreated().date());
 		assertThat(found.getUpdated().name()).isEqualTo("demo");
-		assertThat(found.getUpdated().date()).isNotNull();
+		assertThat(found.getUpdated().date()).isEqualTo(entry.getUpdated().date());
 		final Optional<Entry> defaultOne = this.entryMapper.findOne(entry.getEntryId(),
 				tenantId == null ? "demo" : null, false);
 		assertThat(defaultOne.isEmpty()).isTrue();
@@ -96,9 +96,9 @@ class EntryMapperIntegrationTest {
 		assertThat(frontMatter.categories()).containsExactly(new Category("foo"), new Category("bar"),
 				new Category("hoge"));
 		assertThat(found.getCreated().name()).isEqualTo("demo");
-		assertThat(found.getCreated().date()).isNotNull();
+		assertThat(found.getCreated().date()).isEqualTo(entry.getCreated().date());
 		assertThat(found.getUpdated().name()).isEqualTo("demo");
-		assertThat(found.getUpdated().date()).isNotNull();
+		assertThat(found.getUpdated().date()).isEqualTo(entry.getUpdated().date());
 	}
 
 	@ParameterizedTest
