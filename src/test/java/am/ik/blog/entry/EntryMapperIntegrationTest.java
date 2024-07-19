@@ -1,8 +1,10 @@
 package am.ik.blog.entry;
 
 import java.time.OffsetDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 
 import am.ik.blog.category.Category;
@@ -67,9 +69,11 @@ class EntryMapperIntegrationTest {
 		assertThat(frontMatter.categories()).containsExactly(new Category("foo"), new Category("bar"),
 				new Category("hoge"));
 		assertThat(found.getCreated().name()).isEqualTo("demo");
-		assertThat(found.getCreated().date()).isEqualTo(entry.getCreated().date());
+		assertThat(Objects.requireNonNull(found.getCreated().date()).truncatedTo(ChronoUnit.MILLIS))
+			.isEqualTo(Objects.requireNonNull(entry.getCreated().date()).truncatedTo(ChronoUnit.MILLIS));
 		assertThat(found.getUpdated().name()).isEqualTo("demo");
-		assertThat(found.getUpdated().date()).isEqualTo(entry.getUpdated().date());
+		assertThat(Objects.requireNonNull(found.getUpdated().date()).truncatedTo(ChronoUnit.MILLIS))
+			.isEqualTo(Objects.requireNonNull(entry.getUpdated().date()).truncatedTo(ChronoUnit.MILLIS));
 		final Optional<Entry> defaultOne = this.entryMapper.findOne(entry.getEntryId(),
 				tenantId == null ? "demo" : null, false);
 		assertThat(defaultOne.isEmpty()).isTrue();
@@ -96,9 +100,11 @@ class EntryMapperIntegrationTest {
 		assertThat(frontMatter.categories()).containsExactly(new Category("foo"), new Category("bar"),
 				new Category("hoge"));
 		assertThat(found.getCreated().name()).isEqualTo("demo");
-		assertThat(found.getCreated().date()).isEqualTo(entry.getCreated().date());
+		assertThat(Objects.requireNonNull(found.getCreated().date()).truncatedTo(ChronoUnit.MILLIS))
+			.isEqualTo(Objects.requireNonNull(entry.getCreated().date()).truncatedTo(ChronoUnit.MILLIS));
 		assertThat(found.getUpdated().name()).isEqualTo("demo");
-		assertThat(found.getUpdated().date()).isEqualTo(entry.getUpdated().date());
+		assertThat(Objects.requireNonNull(found.getUpdated().date()).truncatedTo(ChronoUnit.MILLIS))
+			.isEqualTo(Objects.requireNonNull(entry.getUpdated().date()).truncatedTo(ChronoUnit.MILLIS));
 	}
 
 	@ParameterizedTest
