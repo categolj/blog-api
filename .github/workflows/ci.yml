@@ -33,7 +33,7 @@ jobs:
       with:
         name: build-artifacts
         path: target
-  build_jvm_image:
+  build-jvm-image:
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -76,7 +76,7 @@ jobs:
       with:
         name: image
         path: image.yaml
-  build_native_image:
+  build-native-image:
     if: github.ref == 'refs/heads/skip'
     runs-on: ubuntu-latest
     permissions:
@@ -122,24 +122,24 @@ jobs:
         path: image_native.yaml
   save-image:
     if: github.ref == 'refs/heads/main'
-    needs: [ build_jvm_image ]
+    needs: [ build-jvm-image ]
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
     - name: Checkout repository
       uses: actions/checkout@v2
-      with:
-        token: ${{ secrets.GITHUB_TOKEN }}
-        persist-credentials: false
     - name: git config
       run: |
         git config --global user.name "github-actions[bot]"
         git config --global user.email "github-actions[bot]@users.noreply.github.com"
+        git remote set-url origin https://github-actions:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}
     - name: Ensure images branch exists
       run: |
         if ! git ls-remote --exit-code --heads origin images; then
           git checkout --orphan images
           git reset --hard
-          git commit --allow-empty -m "Initial commit on images branch"
+          git commit --allow-empty -m ":robot: Initial commit on images branch"
           git push origin images
         fi
     - name: Checkout images branch
@@ -152,7 +152,7 @@ jobs:
     - name: Commit and push changes
       run: |
         git add -A
-        git commit -m "Add Docker image digest for ${GITHUB_SHA}"
+        git commit -m ":robot: Add Docker image digest for ${GITHUB_SHA}"
         git push origin images
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
