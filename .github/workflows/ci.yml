@@ -73,11 +73,6 @@ jobs:
         image: $(docker inspect --format='{{index .RepoDigests 0}}' ghcr.io/${{ github.repository }}:jvm_${GITHUB_SHA})
         git_revision: ${GITHUB_SHA}
         EOF
-    - name: Remove Docker Tag
-      uses: rafalkk/remove-dockertag-action@v1
-      with:
-        tag_name: jvm_${{ github.sha }}
-        github_token: ${{ secrets.GITHUB_TOKEN }}
     - name: Upload artifact
       if: github.ref == 'refs/heads/main'
       uses: actions/upload-artifact@v2
@@ -122,11 +117,6 @@ jobs:
         image: $(docker inspect --format='{{index .RepoDigests 0}}' ghcr.io/${{ github.repository }}:native_${GITHUB_SHA})
         git_revision: ${GITHUB_SHA}
         EOF
-    - name: Remove Docker Tag
-      uses: rafalkk/remove-dockertag-action@v1
-      with:
-        tag_name: native_${{ github.sha }}
-        github_token: ${{ secrets.GITHUB_TOKEN }}
     - name: Upload artifact
       uses: actions/upload-artifact@v2
       with:
