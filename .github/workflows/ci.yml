@@ -27,7 +27,7 @@ jobs:
     - name: mvn test
       env:
         _JAVA_OPTIONS: -Djava.net.preferIPv4Stack=true
-      run: echo ./mvnw -V --no-transfer-progress test
+      run: ./mvnw -V --no-transfer-progress test
     - name: Upload build artifacts
       uses: actions/upload-artifact@v2
       with:
