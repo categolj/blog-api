@@ -76,7 +76,7 @@ jobs:
     - name: Remove Docker Tag
       uses: rafalkk/remove-dockertag-action@v1
       with:
-        tag_name: jvm_${{ env.GITHUB_SHA }}
+        tag_name: jvm_${{ github.sha }}
         github_token: ${{ secrets.GITHUB_TOKEN }}
     - name: Upload artifact
       if: github.ref == 'refs/heads/main'
@@ -125,7 +125,7 @@ jobs:
     - name: Remove Docker Tag
       uses: rafalkk/remove-dockertag-action@v1
       with:
-        tag_name: native_${{ env.GITHUB_SHA }}
+        tag_name: native_${{ github.sha }}
         github_token: ${{ secrets.GITHUB_TOKEN }}
     - name: Upload artifact
       uses: actions/upload-artifact@v2
