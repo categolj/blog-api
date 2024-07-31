@@ -6,14 +6,14 @@ on:
     paths:
     - src/**
     - pom.xml
-    - .github/workflows/ci.yml
+    - .github/workflows/*
   pull_request:
     branches:
     - main
     paths:
     - src/**
     - pom.xml
-    - .github/workflows/ci.yml
+    - .github/workflows/*
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -52,7 +52,7 @@ jobs:
         name: build-artifacts
         path: target
     - name: build image
-      run: ./mvnw -V --no-transfer-progress spring-boot:build-image -DskipTests -Dspring-boot.build-image.imageName=ghcr.io/${{ github.repository }}:jvm
+      run: ./mvnw -V --no-transfer-progress spring-boot:build-image -DskipTests -Dspring-boot.build-image.imageName=ghcr.io/${{ github.repository }}:jvm_${GITHUB_SHA}
     - name: Login to GitHub Container Registry
       if: github.ref == 'refs/heads/main'
       uses: docker/login-action@v3
@@ -62,14 +62,22 @@ jobs:
         password: ${{ secrets.GITHUB_TOKEN }}
     - name: docker push
       if: github.ref == 'refs/heads/main'
-      run: docker push ghcr.io/${{ github.repository }}:jvm
+      run: |
+        docker push ghcr.io/${{ github.repository }}:jvm_${GITHUB_SHA}
+        docker tag ghcr.io/${{ github.repository }}:jvm_${GITHUB_SHA} ghcr.io/${{ github.repository }}:jvm
+        docker push ghcr.io/${{ github.repository }}:jvm
     - name: Generate digest
       if: github.ref == 'refs/heads/main'
       run: |
         cat <<EOF > image.yaml
-        image: $(docker inspect --format='{{index .RepoDigests 0}}' ghcr.io/${{ github.repository }}:jvm)
+        image: $(docker inspect --format='{{index .RepoDigests 0}}' ghcr.io/${{ github.repository }}:jvm_${GITHUB_SHA})
         git_revision: ${GITHUB_SHA}
         EOF
+    - name: Remove Docker Tag
+      uses: rafalkk/remove-dockertag-action@v1
+      with:
+        tag_name: jvm_${{ env.GITHUB_SHA }}
+        github_token: ${{ secrets.GITHUB_TOKEN }}
     - name: Upload artifact
       if: github.ref == 'refs/heads/main'
       uses: actions/upload-artifact@v2
@@ -96,7 +104,7 @@ jobs:
         name: build-artifacts
         path: target
     - name: build image
-      run: ./mvnw -V --no-transfer-progress -Pnative clean spring-boot:build-image -DskipTests -Dspring-boot.build-image.imageName=ghcr.io/${{ github.repository }}:native
+      run: ./mvnw -V --no-transfer-progress -Pnative spring-boot:build-image -DskipTests -Dspring-boot.build-image.imageName=ghcr.io/${{ github.repository }}:native_${GITHUB_SHA}
     - name: Login to GitHub Container Registry
       uses: docker/login-action@v3
       with:
@@ -105,17 +113,21 @@ jobs:
         password: ${{ secrets.GITHUB_TOKEN }}
     - name: docker push
       run: |
+        docker push ghcr.io/${{ github.repository }}:native_${GITHUB_SHA}
+        docker tag ghcr.io/${{ github.repository }}:native_${GITHUB_SHA} ghcr.io/${{ github.repository }}:native
         docker push ghcr.io/${{ github.repository }}:native
-        docker inspect --format='{{index .RepoDigests 0}}' ghcr.io/${{ github.repository }}:native
     - name: Generate digest
-      if: github.ref == 'refs/heads/main'
       run: |
         cat <<EOF > image_native.yaml
-        image: $(docker inspect --format='{{index .RepoDigests 0}}' ghcr.io/${{ github.repository }}:native)
+        image: $(docker inspect --format='{{index .RepoDigests 0}}' ghcr.io/${{ github.repository }}:native_${GITHUB_SHA})
         git_revision: ${GITHUB_SHA}
         EOF
+    - name: Remove Docker Tag
+      uses: rafalkk/remove-dockertag-action@v1
+      with:
+        tag_name: native_${{ env.GITHUB_SHA }}
+        github_token: ${{ secrets.GITHUB_TOKEN }}
     - name: Upload artifact
-      if: github.ref == 'refs/heads/main'
       uses: actions/upload-artifact@v2
       with:
         name: image
@@ -156,5 +168,3 @@ jobs:
         git add -A
         git commit -m ":robot: Add Docker image digest for ${GITHUB_SHA}"
         git push origin images
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
