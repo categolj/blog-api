@@ -80,7 +80,7 @@ jobs:
         name: image
         path: image.yaml
   build-native-image:
-    if: github.ref == 'refs/heads/skip'
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -98,8 +98,26 @@ jobs:
       with:
         name: build-artifacts
         path: target
-    - name: build image
-      run: ./mvnw -V --no-transfer-progress -Pnative spring-boot:build-image -DskipTests -Dspring-boot.build-image.imageName=ghcr.io/${{ github.repository }}:native_${GITHUB_SHA}
+    - name: native image
+      run: ./mvnw -V --no-transfer-progress -Pnative native:compile -DskipTests
+    - name: Install Pack
+      uses: buildpacks/github-actions/setup-pack@v5.7.3
+    - name: Pack Build
+      if: github.ref == 'refs/heads/main'
+      run: |
+        mkdir -p pack
+        mv ./target/${GITHUB_REPOSITORY#${GITHUB_REPOSITORY_OWNER}/} ./pack
+        cat <<EOF > pack/Procfile
+        web: ./${GITHUB_REPOSITORY#${GITHUB_REPOSITORY_OWNER}/}
+        EOF
+        pack build ghcr.io/${{ github.repository }}:native_${GITHUB_SHA} \
+          --env BP_OCI_SOURCE=https://github.com/${GITHUB_REPOSITORY} \
+          --env BP_OCI_REVISION=${GITHUB_SHA} \
+          --gid 1002 \
+          --builder paketobuildpacks/builder-jammy-tiny \
+          --buildpack gcr.io/paketo-buildpacks/image-labels \
+          --buildpack gcr.io/paketo-buildpacks/procfile \
+          --path pack
     - name: Login to GitHub Container Registry
       uses: docker/login-action@v3
       with:
@@ -122,39 +140,15 @@ jobs:
       with:
         name: image
         path: image_native.yaml
-  save-image:
+  save-image-jvm:
     if: github.ref == 'refs/heads/main'
-    needs: [ build-jvm-image ]
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    steps:
-    - name: Checkout repository
-      uses: actions/checkout@v2
-    - name: git config
-      run: |
-        git config --global user.name "github-actions[bot]"
-        git config --global user.email "github-actions[bot]@users.noreply.github.com"
-        git remote set-url origin https://github-actions:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}
-    - name: Ensure images branch exists
-      run: |
-        if ! git ls-remote --exit-code --heads origin images; then
-          git checkout --orphan images
-          git reset --hard
-          git commit --allow-empty -m ":robot: Initial commit on images branch"
-          git push origin images
-        fi
-    - name: Checkout images branch
-      run: |
-        git fetch origin
-        git checkout images
-    - name: Download artifact
-      uses: actions/download-artifact@v2
-      with:
-        name: image
-        path: .
-    - name: Commit and push changes
-      run: |
-        git add -A
-        git commit -m ":robot: Add Docker image digest for ${GITHUB_SHA}"
-        git push origin images
+    needs: build-jvm-image
+    uses: ./.github/workflows/save-images.yaml
+    with:
+      target: image.yaml
+  save-image-native:
+    if: github.ref == 'refs/heads/main'
+    needs: build-native-image
+    uses: ./.github/workflows/save-images.yaml
+    with:
+      target: image_native.yaml
