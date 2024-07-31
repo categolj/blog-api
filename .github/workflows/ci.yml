@@ -52,7 +52,7 @@ jobs:
     - name: build image (JVM)
       run: |
         ./mvnw -V --no-transfer-progress spring-boot:build-image -DskipTests -Dspring-boot.build-image.imageName=ghcr.io/categolj/blog-api:jvm
-        docker inspect --format='{{index .RepoDigests 0}}' ghcr.io/categolj/blog-api:jvm
+        docker inspect ghcr.io/categolj/blog-api:jvm
     - name: docker push (JVM)
       if: github.ref == 'refs/heads/main'
       env:
