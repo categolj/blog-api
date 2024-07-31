@@ -33,7 +33,6 @@ jobs:
       with:
         name: build-artifacts
         path: target
-
   build_jvm_image:
     runs-on: ubuntu-latest
     permissions:
@@ -53,19 +52,17 @@ jobs:
         name: build-artifacts
         path: target
     - name: build image (JVM)
-      run: |
-        ./mvnw -V --no-transfer-progress spring-boot:build-image -DskipTests -Dspring-boot.build-image.imageName=ghcr.io/${{ github.repository }}:jvm
+      run: ./mvnw -V --no-transfer-progress spring-boot:build-image -DskipTests -Dspring-boot.build-image.imageName=ghcr.io/${{ github.repository }}:jvm
+    - name: Login to GitHub Container Registry
+      if: github.ref == 'refs/heads/main'
+      uses: docker/login-action@v3
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
     - name: docker push (JVM)
       if: github.ref == 'refs/heads/main'
-      env:
-        DOCKER_USERNAME: ${{ github.actor }}
-        DOCKER_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
-        DOCKER_REGISTRY: ghcr.io
       run: |
-        mkdir -p ~/.docker
-        cat <<EOF > ~/.docker/config.json
-        {"auths":{"${DOCKER_REGISTRY}":{"username":"${DOCKER_USERNAME}","password":"${DOCKER_PASSWORD}"}}}
-        EOF
         docker push ghcr.io/${{ github.repository }}:jvm
         docker inspect --format='{{index .RepoDigests 0}}' ghcr.io/${{ github.repository }}:jvm
   build_native_image:
@@ -89,16 +86,13 @@ jobs:
         path: target
     - name: build image (Native)
       run: ./mvnw -V --no-transfer-progress -Pnative clean spring-boot:build-image -DskipTests -Dspring-boot.build-image.imageName=ghcr.io/${{ github.repository }}:native
+    - name: Login to GitHub Container Registry
+      uses: docker/login-action@v3
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
     - name: docker push (Native)
-      env:
-        DOCKER_USERNAME: ${{ github.actor }}
-        DOCKER_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
-        DOCKER_REGISTRY: ghcr.io
       run: |
-        set -e
-        mkdir -p ~/.docker
-        cat <<EOF > ~/.docker/config.json
-        {"auths":{"${DOCKER_REGISTRY}":{"username":"${DOCKER_USERNAME}","password":"${DOCKER_PASSWORD}"}}}
-        EOF
         docker push ghcr.io/${{ github.repository }}:native
         docker inspect --format='{{index .RepoDigests 0}}' ghcr.io/${{ github.repository }}:native
