@@ -28,14 +28,12 @@ jobs:
     with:
       image_file: image_native.yaml
   save-image-jvm:
-    if: github.ref == 'refs/heads/main'
     needs: build-jvm-image
     uses: making/workflows/.github/workflows/save-images.yaml@main
     with:
-      target: image.yaml
+      image_file: image.yaml
   save-image-native:
-    if: github.ref == 'refs/heads/main'
     needs: build-native-image
     uses: making/workflows/.github/workflows/save-images.yaml@main
     with:
-      target: image_native.yaml
+      image_file: image_native.yaml
