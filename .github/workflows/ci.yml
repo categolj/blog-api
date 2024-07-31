@@ -51,21 +51,20 @@ jobs:
         path: target
     - name: build image (JVM)
       run: |
-        ./mvnw -V --no-transfer-progress spring-boot:build-image -DskipTests -Dspring-boot.build-image.imageName=ghcr.io/categolj/blog-api:jvm
-        docker inspect ghcr.io/categolj/blog-api:jvm
+        ./mvnw -V --no-transfer-progress spring-boot:build-image -DskipTests -Dspring-boot.build-image.imageName=ghcr.io/${{ github.repository }}:jvm
     - name: docker push (JVM)
       if: github.ref == 'refs/heads/main'
       env:
-        DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
-        DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
-        DOCKER_REGISTRY: ${{ secrets.DOCKER_REGISTRY }}
+        DOCKER_USERNAME: ${{ github.actor }}
+        DOCKER_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
+        DOCKER_REGISTRY: ghcr.io
       run: |
         mkdir -p ~/.docker
         cat <<EOF > ~/.docker/config.json
         {"auths":{"${DOCKER_REGISTRY}":{"username":"${DOCKER_USERNAME}","password":"${DOCKER_PASSWORD}"}}}
         EOF
-        docker push ghcr.io/categolj/blog-api:jvm
-
+        docker push ghcr.io/${{ github.repository }}:jvm
+        docker inspect --format='{{index .RepoDigests 0}}' ghcr.io/${{ github.repository }}:jvm
   build_native_image:
     if: github.ref == 'refs/heads/skip'
     runs-on: ubuntu-latest
@@ -83,16 +82,16 @@ jobs:
         name: build-artifacts
         path: target
     - name: build image (Native)
-      run: ./mvnw -V --no-transfer-progress -Pnative clean spring-boot:build-image -DskipTests -Dspring-boot.build-image.imageName=ghcr.io/categolj/blog-api:native
+      run: ./mvnw -V --no-transfer-progress -Pnative clean spring-boot:build-image -DskipTests -Dspring-boot.build-image.imageName=ghcr.io/${{ github.repository }}:native
     - name: docker push (Native)
       env:
-        DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
-        DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
-        DOCKER_REGISTRY: ${{ secrets.DOCKER_REGISTRY }}
+        DOCKER_USERNAME: ${{ github.actor }}
+        DOCKER_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
+        DOCKER_REGISTRY: ghcr.io
       run: |
         set -e
         mkdir -p ~/.docker
         cat <<EOF > ~/.docker/config.json
         {"auths":{"${DOCKER_REGISTRY}":{"username":"${DOCKER_USERNAME}","password":"${DOCKER_PASSWORD}"}}}
         EOF
-        docker push ghcr.io/categolj/blog-api:native
+        docker push ghcr.io/${{ github.repository }}:native
