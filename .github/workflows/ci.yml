@@ -51,7 +51,7 @@ jobs:
       with:
         name: build-artifacts
         path: target
-    - name: build image (JVM)
+    - name: build image
       run: ./mvnw -V --no-transfer-progress spring-boot:build-image -DskipTests -Dspring-boot.build-image.imageName=ghcr.io/${{ github.repository }}:jvm
     - name: Login to GitHub Container Registry
       if: github.ref == 'refs/heads/main'
@@ -60,11 +60,22 @@ jobs:
         registry: ghcr.io
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
-    - name: docker push (JVM)
+    - name: docker push
+      if: github.ref == 'refs/heads/main'
+      run: docker push ghcr.io/${{ github.repository }}:jvm
+    - name: Generate digest
       if: github.ref == 'refs/heads/main'
       run: |
-        docker push ghcr.io/${{ github.repository }}:jvm
-        docker inspect --format='{{index .RepoDigests 0}}' ghcr.io/${{ github.repository }}:jvm
+        cat <<EOF > image.yaml
+        image: $(docker inspect --format='{{index .RepoDigests 0}}' ghcr.io/${{ github.repository }}:jvm)
+        git_revision: ${GITHUB_SHA}
+        EOF
+    - name: Upload artifact
+      if: github.ref == 'refs/heads/main'
+      uses: actions/upload-artifact@v2
+      with:
+        name: image
+        path: image.yaml
   build_native_image:
     if: github.ref == 'refs/heads/skip'
     runs-on: ubuntu-latest
@@ -84,7 +95,7 @@ jobs:
       with:
         name: build-artifacts
         path: target
-    - name: build image (Native)
+    - name: build image
       run: ./mvnw -V --no-transfer-progress -Pnative clean spring-boot:build-image -DskipTests -Dspring-boot.build-image.imageName=ghcr.io/${{ github.repository }}:native
     - name: Login to GitHub Container Registry
       uses: docker/login-action@v3
@@ -92,7 +103,56 @@ jobs:
         registry: ghcr.io
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
-    - name: docker push (Native)
+    - name: docker push
       run: |
         docker push ghcr.io/${{ github.repository }}:native
         docker inspect --format='{{index .RepoDigests 0}}' ghcr.io/${{ github.repository }}:native
+    - name: Generate digest
+      if: github.ref == 'refs/heads/main'
+      run: |
+        cat <<EOF > image_native.yaml
+        image: $(docker inspect --format='{{index .RepoDigests 0}}' ghcr.io/${{ github.repository }}:native)
+        git_revision: ${GITHUB_SHA}
+        EOF
+    - name: Upload artifact
+      if: github.ref == 'refs/heads/main'
+      uses: actions/upload-artifact@v2
+      with:
+        name: image
+        path: image_native.yaml
+  save-image:
+    if: github.ref == 'refs/heads/main'
+    needs: [ build_jvm_image ]
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        persist-credentials: false
+    - name: Ensure images branch exists
+      run: |
+        if ! git ls-remote --exit-code --heads origin images; then
+          git checkout --orphan images
+          git reset --hard
+          git commit --allow-empty -m "Initial commit on images branch"
+          git push origin images
+        fi
+    - name: Checkout images branch
+      run: git checkout images
+    - name: Download artifact
+      uses: actions/download-artifact@v2
+      with:
+        name: image
+        path: .
+    - name: Copy digest file to repository
+      run: |
+    - name: Commit and push changes
+      run: |
+        git config --global user.name "github-actions[bot]"
+        git config --global user.email "github-actions[bot]@users.noreply.github.com"
+        git add -A
+        git commit -m "Add Docker image digest for ${GITHUB_SHA}"
+        git push origin images
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
