@@ -15,7 +15,7 @@ on:
     - pom.xml
     - .github/workflows/ci.yml
 jobs:
-  build:
+  test:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
@@ -23,84 +23,69 @@ jobs:
       with:
         java-version: '21'
         distribution: 'graalvm'
-    - uses: actions/cache@v1
-      with:
-        path: ~/.m2/repository
-        key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
-        restore-keys: |
-          ${{ runner.os }}-maven-
+        cache: 'maven'
     - name: mvn test
       env:
         _JAVA_OPTIONS: -Djava.net.preferIPv4Stack=true
-      run: |
-        set -e
-        ./mvnw -V --no-transfer-progress test
+      run: ./mvnw -V --no-transfer-progress test
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v2
+      with:
+        name: build-artifacts
+        path: target
+
+  build_jvm_image:
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+    - uses: actions/checkout@v2
+    - uses: graalvm/setup-graalvm@v1
+      with:
+        java-version: '21'
+        distribution: 'graalvm'
+        cache: 'maven'
+    - name: Download build artifacts
+      uses: actions/download-artifact@v2
+      with:
+        name: build-artifacts
+        path: target
     - name: build image (JVM)
       run: |
-        set -e
         ./mvnw -V --no-transfer-progress spring-boot:build-image -DskipTests -Dspring-boot.build-image.imageName=ghcr.io/categolj/blog-api:jvm
-    - name: build image (Native)
-      if: github.ref == 'refs/heads/deprecated'
-      run: |
-        set -e
-        ./mvnw -V --no-transfer-progress -Pnative clean spring-boot:build-image -DskipTests -Dspring-boot.build-image.imageName=ghcr.io/categolj/blog-api:native
-    - name: docker push
+        docker inspect --format='{{index .RepoDigests 0}}' ghcr.io/categolj/blog-api:jvm
+    - name: docker push (JVM)
       if: github.ref == 'refs/heads/main'
       env:
         DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
         DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
         DOCKER_REGISTRY: ${{ secrets.DOCKER_REGISTRY }}
       run: |
-        set -e
         mkdir -p ~/.docker
         cat <<EOF > ~/.docker/config.json
         {"auths":{"${DOCKER_REGISTRY}":{"username":"${DOCKER_USERNAME}","password":"${DOCKER_PASSWORD}"}}}
         EOF
-        #! docker push ghcr.io/categolj/blog-api:native
         docker push ghcr.io/categolj/blog-api:jvm
-        #! docker tag ghcr.io/categolj/blog-api:native ghcr.io/categolj/blog-api:latest
-        #! docker push ghcr.io/categolj/blog-api:latest
-    - name: mvn deploy
-      if: github.ref == 'refs/heads/deprecated'
-      env:
-        SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
-        SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
-      run: |
-        set -e
-        BOOT_VERSION=$(grep '<version>' pom.xml | head -n 1 | sed -e 's|<version>||g' -e 's|</version>||g' -e 's|<.*>||g' | xargs echo)
-        cat > settings.xml <<EOF
-        <settings>
-          <servers>
-            <server>
-               <id>sonatype-snapshots</id>
-               <username>${SONATYPE_USERNAME}</username>
-               <password>${SONATYPE_PASSWORD}</password>
-            </server>
-          </servers>
-        </settings>
-        EOF
-        sed -i 's|</project>|<distributionManagement><repository><id>sonatype-snapshots</id><name>sonatype-snapshots</name><url>https://oss.sonatype.org/content/repositories/snapshots</url></repository></distributionManagement></project>|' pom.xml
-        ./mvnw -V package -s settings.xml -P native,mostly-static -DskipTests=true -Dspring-boot.version=${BOOT_VERSION}
-        ./mvnw -V deploy:deploy-file -DskipTests -Pnative -s settings.xml -DrepositoryId=sonatype-snapshots -Durl=https://oss.sonatype.org/content/repositories/snapshots
-    - name: download-kp-cli
-      if: github.ref == 'refs/heads/deprecated'
-      env:
-        KP_VERSION: 0.4.2
-      run: |
-        set -e
-        wget -q https://github.com/vmware-tanzu/kpack-cli/releases/download/v${KP_VERSION}/kp-linux-${KP_VERSION} -O kp
-        chmod +x ./kp
-    - name: kubeconfig
-      if: github.ref == 'refs/heads/deprecated'
-      uses: azure/k8s-set-context@v1
+
+  build_native_image:
+    if: github.ref == 'refs/heads/skip'
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+    - uses: actions/checkout@v2
+    - uses: graalvm/setup-graalvm@v1
       with:
-        method: kubeconfig
-        kubeconfig: ${{ secrets.KPACK_KUBECONFIG }}
-    - name: build-image
-      if: github.ref == 'refs/heads/deprecated'
+        java-version: '21'
+        distribution: 'graalvm'
+        cache: 'maven'
+    - name: Download build artifacts
+      uses: actions/download-artifact@v2
+      with:
+        name: build-artifacts
+        path: target
+    - name: build image (Native)
+      run: ./mvnw -V --no-transfer-progress -Pnative clean spring-boot:build-image -DskipTests -Dspring-boot.build-image.imageName=ghcr.io/categolj/blog-api:native
+    - name: docker push (Native)
       env:
-        APP_NAME: blog-api
-        GOOGLE_APPLICATION_CREDENTIALS_JSON: ${{ secrets.KPACK_GOOGLE_APPLICATION_CREDENTIALS }}
         DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
         DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
         DOCKER_REGISTRY: ${{ secrets.DOCKER_REGISTRY }}
@@ -110,16 +95,4 @@ jobs:
         cat <<EOF > ~/.docker/config.json
         {"auths":{"${DOCKER_REGISTRY}":{"username":"${DOCKER_USERNAME}","password":"${DOCKER_PASSWORD}"}}}
         EOF
-        VERSION=$(grep '<version>' pom.xml | head -n 2 | tail -n 1 | sed -e 's|<version>||g' -e 's|</version>||g' | xargs echo)
-        LATEST_SNAPSHOT=$(curl -s https://oss.sonatype.org/content/repositories/snapshots/am/ik/blog/${APP_NAME}/${VERSION}/maven-metadata.xml | grep value | uniq | sed -e 's|<value>||g' -e 's|</value>||g' -e 's|<.*>||g' | xargs echo)
-        IMAGE_NAME=${DOCKER_REGISTRY}:${VERSION}
-        echo ${GOOGLE_APPLICATION_CREDENTIALS_JSON} | base64 -d > key.json
-        export GOOGLE_APPLICATION_CREDENTIALS=$PWD/key.json
-        set -x
-        ./kp image save ${APP_NAME} \
-          -n categolj \
-          --tag ${IMAGE_NAME} \
-          --wait \
-          --env BP_JVM_VERSION=17 \
-          --blob https://oss.sonatype.org/content/repositories/snapshots/am/ik/blog/${APP_NAME}/${VERSION}/${APP_NAME}-${LATEST_SNAPSHOT}.zip
-        ./kp build list ${APP_NAME} -n categolj
+        docker push ghcr.io/categolj/blog-api:native
