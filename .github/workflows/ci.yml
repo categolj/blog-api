@@ -36,6 +36,8 @@ jobs:
 
   build_jvm_image:
     runs-on: ubuntu-latest
+    permissions:
+      packages: write
     needs: test
     steps:
     - uses: actions/checkout@v2
@@ -68,6 +70,8 @@ jobs:
   build_native_image:
     if: github.ref == 'refs/heads/skip'
     runs-on: ubuntu-latest
+    permissions:
+      packages: write
     needs: test
     steps:
     - uses: actions/checkout@v2
@@ -95,3 +99,4 @@ jobs:
         {"auths":{"${DOCKER_REGISTRY}":{"username":"${DOCKER_USERNAME}","password":"${DOCKER_PASSWORD}"}}}
         EOF
         docker push ghcr.io/${{ github.repository }}:native
+        docker inspect --format='{{index .RepoDigests 0}}' ghcr.io/${{ github.repository }}:native
