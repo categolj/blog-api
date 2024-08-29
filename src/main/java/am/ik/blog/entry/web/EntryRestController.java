@@ -129,9 +129,10 @@ public class EntryRestController {
 	public OffsetPage<Entry> getEntries(@RequestParam(required = false) String query,
 			@RequestParam(required = false) String tag, @RequestParam(required = false) List<String> categories,
 			@RequestParam(required = false) String createdBy, @RequestParam(required = false) String updatedBy,
+			@RequestParam(required = false) List<Long> entryIds,
 			@RequestParam(defaultValue = "true") boolean excludeContent,
 			@Parameter(hidden = true) OffsetPageRequest pageRequest) {
-		return this.getEntriesForTenant(null, query, tag, categories, createdBy, updatedBy, excludeContent,
+		return this.getEntriesForTenant(null, query, tag, categories, createdBy, updatedBy, entryIds, excludeContent,
 				pageRequest);
 	}
 
@@ -146,7 +147,7 @@ public class EntryRestController {
 			@Nullable @PathVariable(name = "tenantId", required = false) String tenantId,
 			@RequestParam(required = false) String query, @RequestParam(required = false) String tag,
 			@RequestParam(required = false) List<String> categories, @RequestParam(required = false) String createdBy,
-			@RequestParam(required = false) String updatedBy,
+			@RequestParam(required = false) String updatedBy, @RequestParam(required = false) List<Long> entryIds,
 			@RequestParam(defaultValue = "true") boolean excludeContent,
 			@Parameter(hidden = true) OffsetPageRequest pageRequest) {
 		final SearchCriteria searchCriteria = SearchCriteria.builder()
@@ -155,6 +156,7 @@ public class EntryRestController {
 			.stringCategories(categories)
 			.createdBy(createdBy)
 			.lastModifiedBy(updatedBy)
+			.entryIds(entryIds)
 			.excludeContent(excludeContent)
 			.build();
 		return this.entryService.findPage(searchCriteria, tenantId, pageRequest);
@@ -169,10 +171,11 @@ public class EntryRestController {
 	public CursorPage<Entry, Instant> getEntriesByCursor(@RequestParam(required = false) String query,
 			@RequestParam(required = false) String tag, @RequestParam(required = false) List<String> categories,
 			@RequestParam(required = false) String createdBy, @RequestParam(required = false) String updatedBy,
+			@RequestParam(required = false) List<Long> entryIds,
 			@RequestParam(defaultValue = "true") boolean excludeContent,
 			@Parameter(hidden = true) CursorPageRequest<Instant> pageRequest) {
-		return this.getEntriesForTenantByCursor(null, query, tag, categories, createdBy, updatedBy, excludeContent,
-				pageRequest);
+		return this.getEntriesForTenantByCursor(null, query, tag, categories, createdBy, updatedBy, entryIds,
+				excludeContent, pageRequest);
 	}
 
 	@GetMapping(path = "/tenants/{tenantId}/entries", params = "cursor", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -185,7 +188,7 @@ public class EntryRestController {
 			@Nullable @PathVariable(name = "tenantId", required = false) String tenantId,
 			@RequestParam(required = false) String query, @RequestParam(required = false) String tag,
 			@RequestParam(required = false) List<String> categories, @RequestParam(required = false) String createdBy,
-			@RequestParam(required = false) String updatedBy,
+			@RequestParam(required = false) String updatedBy, @RequestParam(required = false) List<Long> entryIds,
 			@RequestParam(defaultValue = "true") boolean excludeContent,
 			@Parameter(hidden = true) CursorPageRequest<Instant> pageRequest) {
 		final SearchCriteria searchCriteria = SearchCriteria.builder()
@@ -194,6 +197,7 @@ public class EntryRestController {
 			.stringCategories(categories)
 			.createdBy(createdBy)
 			.lastModifiedBy(updatedBy)
+			.entryIds(entryIds)
 			.excludeContent(excludeContent)
 			.build();
 		return this.entryService.findPage(searchCriteria, tenantId, pageRequest);

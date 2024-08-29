@@ -33,6 +33,7 @@ import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.CollectionUtils;
 
 import static am.ik.blog.util.FileLoader.loadAsString;
 import static am.ik.blog.util.FileLoader.loadSqlAsString;
@@ -210,6 +211,9 @@ public class EntryMapper {
 
 	private List<Long> entryIds(SearchCriteria searchCriteria, @Nullable String tenantId,
 			OffsetPageRequest pageRequest) {
+		if (!CollectionUtils.isEmpty(searchCriteria.entryIds())) {
+			return searchCriteria.entryIds();
+		}
 		final MapSqlParameterSource params = searchCriteria.toParameterSource(this.keywordParser)
 			.addValue("tenantId", tenantId);
 		final String sql = this.sqlGenerator.generate(loadAsString("am/ik/blog/entry/EntryMapper/entryIds.sql"),

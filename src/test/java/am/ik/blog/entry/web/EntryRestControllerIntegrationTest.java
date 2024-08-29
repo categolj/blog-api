@@ -1,11 +1,15 @@
 package am.ik.blog.entry.web;
 
+import java.util.List;
+import java.util.StringJoiner;
+
 import am.ik.blog.entry.Entry;
 import am.ik.blog.util.FileLoader;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
@@ -15,15 +19,13 @@ import org.zalando.logbook.spring.webflux.LogbookExchangeFilterFunction;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.client.reactive.JdkClientHttpConnector;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.TestConstructor;
 import org.springframework.test.web.reactive.server.WebTestClient;
-
-import java.util.List;
-import java.util.StringJoiner;
 
 import static am.ik.blog.entry.web.Asserts.assertEntry99997;
 import static am.ik.blog.entry.web.Asserts.assertEntry99998;
@@ -169,6 +171,22 @@ class EntryRestControllerIntegrationTest {
 				final EntryPage entryPage = result.getResponseBody();
 				assertThat(entryPage).isNotNull();
 				assertThat(entryPage.getTotalElements()).isEqualTo(2);
+				assertEntry99999(entryPage.getContent().get(0)).assertThatContentIsNotSet();
+				assertEntry99997(entryPage.getContent().get(1)).assertThatContentIsNotSet();
+			});
+	}
+
+	@ParameterizedTest
+	@ValueSource(strings = { "", "&cursor=" })
+	void searchByEntryIds(String additionalParam) {
+		this.webTestClient.get()
+			.uri("/entries?entryIds=99999,99997" + additionalParam)
+			.exchange()
+			.expectBody(EntryPage.class)
+			.consumeWith(result -> {
+				final EntryPage entryPage = result.getResponseBody();
+				assertThat(entryPage).isNotNull();
+				assertThat(entryPage.getContent()).hasSize(2);
 				assertEntry99999(entryPage.getContent().get(0)).assertThatContentIsNotSet();
 				assertEntry99997(entryPage.getContent().get(1)).assertThatContentIsNotSet();
 			});

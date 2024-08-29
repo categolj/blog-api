@@ -201,6 +201,11 @@ public class SearchCriteria {
 				+ '\'' + ", tag=" + tag + ", categories=" + categories + ", keyword='" + keyword + '\'' + '}';
 	}
 
+	@Nullable
+	public List<Long> entryIds() {
+		return entryIds;
+	}
+
 	public static class SearchCriteriaBuilder {
 
 		@Nullable
