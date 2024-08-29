@@ -1,6 +1,7 @@
 package am.ik.blog.entry.search;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import am.ik.blog.category.Category;
 import am.ik.blog.entry.keyword.KeywordParser;
@@ -50,12 +51,16 @@ public class SearchCriteria {
 	@Nullable
 	private final String keyword;
 
+	@Nullable
+	private final List<Long> entryIds;
+
 	private static Likes likes = Likes.newBuilder().build();
 
 	SearchCriteria(boolean excludeEntryId, boolean excludeTitle, boolean excludeContent, boolean excludeCategories,
 			boolean excludeTags, boolean excludeCreatedBy, boolean excludeCreatedDate, boolean excludeLastModifiedBy,
 			boolean excludeLastModifiedDate, @Nullable String createdBy, @Nullable String lastModifiedBy,
-			@Nullable Tag tag, @Nullable List<Category> categories, @Nullable String keyword) {
+			@Nullable Tag tag, @Nullable List<Category> categories, @Nullable String keyword,
+			@Nullable List<Long> entryIds) {
 		this.excludeEntryId = excludeEntryId;
 		this.excludeTitle = excludeTitle;
 		this.excludeContent = excludeContent;
@@ -70,6 +75,7 @@ public class SearchCriteria {
 		this.tag = tag;
 		this.categories = categories;
 		this.keyword = keyword;
+		this.entryIds = entryIds;
 	}
 
 	public static SearchCriteriaBuilder builder() {
@@ -167,6 +173,12 @@ public class SearchCriteria {
 				params.addValue("categories[%d]".formatted(i), categories.get(i).name());
 			}
 		}
+		if (this.entryIds != null) {
+			params.addValue("entryIds", this.entryIds);
+			for (int i = 0; i < entryIds.size(); i++) {
+				params.addValue("entryIds[%d]".formatted(i), entryIds.get(i));
+			}
+		}
 		params.addValue("excludeEntryId", this.excludeEntryId);
 		params.addValue("excludeTitle", this.excludeTitle);
 		params.addValue("excludeContent", this.excludeContent);
@@ -224,13 +236,16 @@ public class SearchCriteria {
 		@Nullable
 		private Tag tag;
 
+		@Nullable
+		private List<Long> entryIds;
+
 		SearchCriteriaBuilder() {
 		}
 
 		public SearchCriteria build() {
 			return new SearchCriteria(excludeEntryId, excludeTitle, excludeContent, excludeCategories, excludeTags,
 					excludeCreatedBy, excludeCreatedDate, excludeLastModifiedBy, excludeLastModifiedDate, createdBy,
-					lastModifiedBy, tag, categories, keyword);
+					lastModifiedBy, tag, categories, keyword, entryIds);
 		}
 
 		public SearchCriteriaBuilder categories(List<Category> categories) {
@@ -318,6 +333,11 @@ public class SearchCriteria {
 
 		public SearchCriteriaBuilder tag(@Nullable String tag) {
 			this.tag = (tag == null) ? null : new Tag(tag);
+			return this;
+		}
+
+		public SearchCriteriaBuilder entryIds(@Nullable List<Long> entryIds) {
+			this.entryIds = entryIds;
 			return this;
 		}
 

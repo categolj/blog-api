@@ -1,6 +1,6 @@
 type Query {
     getEntry(entryId: ID!, tenantId: String): Entry
-    getEntries(first: Int!, after: String, tenantId: String, query: String, tag: String, categories: [String], createdBy: String, updatedBy: String): EntryConnection
+    getEntries(first: Int, after: String, tenantId: String, query: String, tag: String, categories: [String], createdBy: String, updatedBy: String, entryIds: [ID]): EntryConnection
 }
 
 type Entry {

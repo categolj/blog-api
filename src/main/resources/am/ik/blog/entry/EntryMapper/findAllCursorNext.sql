@@ -62,6 +62,9 @@ WHERE e.last_modified_date < COALESCE( /*[# mb:p="cursor"]*/ NULL /*[/]*/ , 'inf
   AND e.tenant_id = /*[# mb:p="tenantId"]*/ '_'
 /*[/]*/
 /*[/]*/
+/*[# th:if="${not #arrays.isEmpty(entryIds)}"]*/
+  AND e.entry_id IN ( /*[# mb:p="entryIds"]*/ 1 /*[/]*/)
+/*[/]*/
 /*[# th:unless="${tenantId}"][# th:utext="|  AND e.tenant_id = '_'|"][/][/]*/
 ORDER BY e.last_modified_date DESC
 /*[# th:if="${limit}"]*/

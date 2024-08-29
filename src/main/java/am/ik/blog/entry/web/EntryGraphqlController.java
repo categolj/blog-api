@@ -17,6 +17,7 @@ import org.springframework.graphql.data.method.annotation.Argument;
 import org.springframework.graphql.data.method.annotation.QueryMapping;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Controller;
+import org.springframework.util.CollectionUtils;
 
 @Controller
 public class EntryGraphqlController {
@@ -36,17 +37,20 @@ public class EntryGraphqlController {
 
 	@QueryMapping
 	public EntryConnection getEntries(@Argument Integer first, @Argument Optional<String> after,
-			@Argument String tenantId, @Argument String query, @Argument String tag, @Argument List<String> categories,
-			@Argument String createdBy, @Argument String updatedBy, DataFetchingFieldSelectionSet selections) {
+			@Argument List<Long> entryIds, @Argument String tenantId, @Argument String query, @Argument String tag,
+			@Argument List<String> categories, @Argument String createdBy, @Argument String updatedBy,
+			DataFetchingFieldSelectionSet selections) {
+		final int pageSize = first == null ? (CollectionUtils.isEmpty(entryIds) ? 20 : entryIds.size()) : first;
 		@SuppressWarnings("NullAway")
 		final CursorPageRequest<Instant> pageRequest = new CursorPageRequest<>(after.map(Instant::parse).orElse(null),
-				first, CursorPageRequest.Navigation.NEXT);
+				pageSize, CursorPageRequest.Navigation.NEXT);
 		final SearchCriteria searchCriteria = SearchCriteria.builder()
 			.keyword(query) //
 			.tag(tag) //
 			.stringCategories(categories) //
 			.createdBy(createdBy) //
 			.lastModifiedBy(updatedBy) //
+			.entryIds(entryIds) //
 			.excludeEntryId(!selections.contains("edges/node/entryId")) //
 			.excludeTitle(!selections.contains("edges/node/frontMatter/title")) //
 			.excludeContent(!selections.contains("edges/node/content")) //

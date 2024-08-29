@@ -1,5 +1,7 @@
 package am.ik.blog.entry.web;
 
+import java.util.List;
+
 import am.ik.blog.entry.Entry;
 import am.ik.blog.util.FileLoader;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -126,6 +128,38 @@ class EntryGraphqlControllerTest {
 				  } ],
 				  "pageInfo" : {
 				    "endCursor" : "2017-04-01T00:00:00Z"
+				  }
+				}
+				""");
+	}
+
+	@Test
+	void getEntriesWithEntryIds() throws Exception {
+		final JsonNode node = this.tester.documentName("getEntriesWithOnlyEntryIdAndTitleAndCursor")
+			.variable("entryIds", List.of(99999, 99997))
+			.execute()
+			.path("getEntries")
+			.entity(JsonNode.class)
+			.get();
+		assertThat(json.write(node)).isEqualToJson("""
+				{
+				  "edges" : [ {
+				    "node" : {
+				      "entryId" : "99999",
+				      "frontMatter" : {
+				        "title" : "Hello World!!"
+				      }
+				    }
+				  }, {
+				    "node" : {
+				      "entryId" : "99997",
+				      "frontMatter" : {
+				        "title" : "CategoLJ 4"
+				      }
+				    }
+				  } ],
+				  "pageInfo" : {
+				    "endCursor" : "2017-03-31T00:00:00Z"
 				  }
 				}
 				""");
