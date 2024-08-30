@@ -49,8 +49,9 @@ public class WebConfig implements WebMvcConfigurer {
 
 	@Override
 	public void addArgumentResolvers(List<HandlerMethodArgumentResolver> resolvers) {
-		resolvers.add(new OffsetPageRequestHandlerMethodArgumentResolver());
-		resolvers.add(new CursorPageRequestHandlerMethodArgumentResolver<>(Instant::parse));
+		resolvers.add(new OffsetPageRequestHandlerMethodArgumentResolver(props -> props.withSizeMax(1024)));
+		resolvers.add(
+				new CursorPageRequestHandlerMethodArgumentResolver<>(Instant::parse, props -> props.withSizeMax(1024)));
 	}
 
 }
