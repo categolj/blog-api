@@ -1,8 +1,10 @@
 receivers:
   otlp:
     protocols:
-      grpc: { }
-      http: { }
+      grpc:
+        endpoint: 0.0.0.0:4317
+      http:
+        endpoint: 0.0.0.0:4318
   prometheus:
     config:
       scrape_configs:
@@ -17,27 +19,28 @@ processors:
     timeout: 10s
 
 exporters:
-  otlp/uptrace:
-    endpoint: http://uptrace:14317
-    tls: { insecure: true }
-    headers: { 'uptrace-dsn': 'http://project1_secret_token@localhost:14318?grpc=14317' }
-  prometheusremotewrite/uptrace:
-    endpoint: 'http://uptrace:14318/api/v1/prometheus/write'
+  otlphttp/zipkin:
+    endpoint: http://zipkin:9411
     tls:
       insecure: true
-    headers: { 'uptrace-dsn': 'http://project1_secret_token@localhost:14318?grpc=14317' }
+  otlphttp/lognroll:
+    endpoint: http://lognroll:4318
+    tls:
+      insecure: true
+    headers:
+      Authorization: Bearer changeme
 
 service:
   pipelines:
     traces:
       receivers: [ otlp ]
       processors: [ batch ]
-      exporters: [ otlp/uptrace ]
-    metrics:
-      receivers: [ otlp, prometheus ]
-      processors: [ batch ]
-      exporters: [ otlp/uptrace ]
+      exporters: [ otlphttp/zipkin ]
+    #    metrics:
+    #      receivers: [ otlp, prometheus ]
+    #      processors: [ batch ]
+    #      exporters: [ otlp/prometheus ]
     logs:
       receivers: [ otlp ]
       processors: [ batch ]
-      exporters: [ otlp/uptrace ]
+      exporters: [ otlphttp/lognroll ]
