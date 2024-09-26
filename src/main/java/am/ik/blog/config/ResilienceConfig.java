@@ -31,7 +31,7 @@ public class ResilienceConfig {
 			entryAddedEvent.getAddedEntry()
 				.getEventPublisher()
 				.onEvent(event -> log(event,
-						"name={}\tevent_type={}\tattempt={}\tlast_throwable_type={}\tlast_throwable_message=\"{}\"",
+						"name={} event_type={} attempt={} last_throwable_type={} last_throwable_message=\"{}\"",
 						event.getName(), event.getEventType(), event.getNumberOfRetryAttempts(),
 						event.getLastThrowable().getClass(),
 						Objects.requireNonNullElse(event.getLastThrowable().getMessage(), "")));
