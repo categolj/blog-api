@@ -31,3 +31,4 @@ build/
 .vscode/
 secret-*
 /src/main/resources/application-default.properties
+template.md

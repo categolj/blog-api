@@ -22,6 +22,7 @@ import am.ik.pagination.CursorPageRequest;
 import am.ik.pagination.OffsetPage;
 import am.ik.pagination.OffsetPageRequest;
 import am.ik.yavi.core.ConstraintViolationsException;
+import io.github.resilience4j.retry.annotation.Retry;
 import io.micrometer.observation.Observation;
 import io.micrometer.observation.ObservationRegistry;
 import org.slf4j.Logger;
@@ -53,6 +54,7 @@ public class EntryService {
 		return this.entryMapper.nextId(tenantId);
 	}
 
+	@Retry(name = "blog-db")
 	public CursorPage<Entry, Instant> findPage(SearchCriteria criteria, @Nullable String tenantId,
 			CursorPageRequest<Instant> pageRequest) {
 		Supplier<CursorPage<Entry, Instant>> supplier = () -> this.entryMapper.findPage(criteria, tenantId,
@@ -66,11 +68,13 @@ public class EntryService {
 		return supplier.get();
 	}
 
+	@Retry(name = "blog-db")
 	public OffsetPage<Entry> findPage(SearchCriteria criteria, @Nullable String tenantId,
 			OffsetPageRequest pageRequest) {
 		return this.entryMapper.findPage(criteria, tenantId, pageRequest);
 	}
 
+	@Retry(name = "blog-db")
 	public Optional<Entry> findOne(Long entryId, @Nullable String tenantId, boolean excludeContent) {
 		return this.entryMapper.findOne(entryId, tenantId, excludeContent);
 	}
@@ -131,6 +135,7 @@ public class EntryService {
 		}
 	}
 
+	@Retry(name = "blog-db")
 	public List<Entry> findAll(SearchCriteria criteria, @Nullable String tenantId, OffsetPageRequest pageRequest) {
 		return this.entryMapper.findAll(criteria, tenantId, pageRequest);
 	}
