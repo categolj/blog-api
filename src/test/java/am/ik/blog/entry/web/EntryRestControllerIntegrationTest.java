@@ -4,6 +4,9 @@ import java.util.List;
 import java.util.StringJoiner;
 
 import am.ik.blog.entry.Entry;
+import am.ik.blog.github.Fixtures;
+import am.ik.blog.proto.CursorPageEntryInstant;
+import am.ik.blog.proto.ProtoUtils;
 import am.ik.blog.util.FileLoader;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import org.junit.jupiter.api.BeforeEach;
@@ -75,6 +78,17 @@ class EntryRestControllerIntegrationTest {
 	}
 
 	@Test
+	void responseEntryAsProtobuf() throws Exception {
+		this.webTestClient.get()
+			.uri("/entries/99999")
+			.header(HttpHeaders.ACCEPT, MediaType.APPLICATION_PROTOBUF_VALUE)
+			.exchange()
+			.expectBody(am.ik.blog.proto.Entry.class)
+			.consumeWith(result -> assertThat(result.getResponseBody())
+				.isEqualTo(ProtoUtils.toProto(Fixtures.entry99999())));
+	}
+
+	@Test
 	void responsePage() {
 		this.webTestClient.get().uri("/entries").exchange().expectBody(EntryPage.class).consumeWith(result -> {
 			final EntryPage entryPage = result.getResponseBody();
@@ -143,6 +157,22 @@ class EntryRestControllerIntegrationTest {
 				assertThat(entryPage).isNotNull();
 				assertThat(entryPage.getContent()).hasSize(1);
 				assertEntry99999(entryPage.getContent().get(0)).assertThatContentIsNotSet();
+			});
+	}
+
+	@Test
+	void searchByKeywordNotAsProtobuf() {
+		this.webTestClient.get()
+			.uri("/entries?query=-test&cursor=")
+			.header(HttpHeaders.ACCEPT, MediaType.APPLICATION_PROTOBUF_VALUE)
+			.exchange()
+			.expectBody(CursorPageEntryInstant.class)
+			.consumeWith(result -> {
+				final CursorPageEntryInstant entryPage = result.getResponseBody();
+				assertThat(entryPage).isNotNull();
+				assertThat(entryPage.getContentList()).hasSize(1);
+				assertThat(entryPage.getContent(0))
+					.isEqualTo(ProtoUtils.toProto(Fixtures.entry99999()).toBuilder().clearContent().build());
 			});
 	}
 

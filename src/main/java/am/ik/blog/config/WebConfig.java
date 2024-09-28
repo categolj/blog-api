@@ -11,6 +11,7 @@ import am.ik.webhook.spring.WebhookVerifierRequestBodyAdvice;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.converter.protobuf.ProtobufHttpMessageConverter;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
@@ -52,6 +53,11 @@ public class WebConfig implements WebMvcConfigurer {
 		resolvers.add(new OffsetPageRequestHandlerMethodArgumentResolver(props -> props.withSizeMax(1024)));
 		resolvers.add(
 				new CursorPageRequestHandlerMethodArgumentResolver<>(Instant::parse, props -> props.withSizeMax(1024)));
+	}
+
+	@Bean
+	public ProtobufHttpMessageConverter protobufHttpMessageConverter() {
+		return new ProtobufHttpMessageConverter();
 	}
 
 }

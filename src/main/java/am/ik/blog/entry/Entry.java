@@ -1,5 +1,6 @@
 package am.ik.blog.entry;
 
+import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalUnit;
@@ -128,6 +129,15 @@ public class Entry {
 				frontMatter.categories().stream().map(c -> "\"%s\"".formatted(c.name())).toList(),
 				created.date() == null ? "" : "%ndate: %s".formatted(created.date()),
 				updated.date() == null ? "" : "%nupdated: %s".formatted(updated.date()), content);
+	}
+
+	@Nullable
+	public Instant toCursor() {
+		OffsetDateTime updated = this.getUpdated().date();
+		if (updated == null) {
+			return null;
+		}
+		return updated.toInstant();
 	}
 
 }

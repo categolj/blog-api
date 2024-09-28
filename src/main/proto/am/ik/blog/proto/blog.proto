@@ -1,0 +1,99 @@
+syntax = "proto3";
+
+package am.ik.blog.proto;
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/struct.proto";
+
+option java_multiple_files = true;
+option java_package = "am.ik.blog.proto";
+option java_outer_classname = "BlogProto";
+
+// Represents an error response
+message ProblemDetail {
+  string type = 1;
+  string title = 2;
+  int32 status = 3;
+  string detail = 4;
+  string instance = 5;
+  google.protobuf.Struct properties = 6;
+}
+
+// Information about the author of an entry
+message Author {
+  string name = 1;
+  google.protobuf.Timestamp date = 2;
+}
+
+// Information about a category
+message Category {
+  string name = 1;
+}
+
+// Information about a tag
+message Tag {
+  string name = 1;
+  string version = 2;
+}
+
+// Information about a tag along with its count
+message TagAndCount {
+  string name = 1;
+  string version = 2;
+  int32 count = 3;
+}
+
+// Metadata of an entry
+message FrontMatter {
+  string title = 1;
+  repeated Category categories = 2;
+  repeated Tag tags = 3;
+}
+
+// Request message for creating or updating an entry
+message EntryRequest {
+  string content = 1;
+  FrontMatter frontMatter = 2;
+  Author created = 3;
+  Author updated = 4;
+}
+
+// Information about an entry
+message Entry {
+  int64 entryId = 1;
+  FrontMatter frontMatter = 2;
+  string content = 3;
+  Author created = 4;
+  Author updated = 5;
+}
+
+// Offset-based pagination of entries
+message OffsetPageEntry {
+  repeated Entry content = 1;
+  int32 size = 2;
+  int32 number = 3;
+  int64 totalElements = 4;
+}
+
+// Cursor-based pagination of entries
+message CursorPageEntryInstant {
+  repeated Entry content = 1;
+  int32 size = 2;
+  bool hasPrevious = 3;
+  bool hasNext = 4;
+}
+
+// Response message containing a list of category groups (multi-dimensional array)
+message CategoriesResponse {
+  repeated CategoryList category_groups = 1;
+}
+
+// A list of categories
+message CategoryList {
+  repeated Category categories = 1;
+}
+
+// Response message containing a list of tags along with their counts
+message TagsResponse {
+  repeated TagAndCount tags = 1;
+}

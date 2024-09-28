@@ -134,13 +134,7 @@ public class EntryMapper {
 		final boolean hasPrevious = cursor.isPresent();
 		final boolean hasNext = contentPlus1.size() == pageSizePlus1;
 		final List<Entry> content = hasNext ? contentPlus1.subList(0, pageRequest.pageSize()) : contentPlus1;
-		return new CursorPage<>(content, pageRequest.pageSize(), entry -> {
-			OffsetDateTime updated = entry.getUpdated().date();
-			if (updated == null) {
-				return null;
-			}
-			return updated.toInstant();
-		}, hasPrevious, hasNext);
+		return new CursorPage<>(content, pageRequest.pageSize(), Entry::toCursor, hasPrevious, hasNext);
 	}
 
 	public long count(SearchCriteria searchCriteria, @Nullable String tenantId) {

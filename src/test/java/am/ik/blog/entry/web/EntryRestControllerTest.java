@@ -1,10 +1,27 @@
 package am.ik.blog.entry.web;
 
+import java.time.Instant;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
+import java.time.temporal.ChronoUnit;
+import java.util.List;
+import java.util.Optional;
+import java.util.function.Consumer;
+
 import am.ik.blog.MockConfig;
 import am.ik.blog.config.SecurityConfig;
 import am.ik.blog.config.WebConfig;
-import am.ik.blog.entry.*;
+import am.ik.blog.entry.Author;
+import am.ik.blog.entry.Entry;
+import am.ik.blog.entry.EntryBuilder;
+import am.ik.blog.entry.EntryMapper;
+import am.ik.blog.entry.FrontMatterBuilder;
 import am.ik.blog.github.GitHubProps;
+import am.ik.blog.proto.CursorPageEntryInstant;
+import am.ik.blog.proto.OffsetPageEntry;
+import am.ik.blog.proto.ProtoUtils;
+import am.ik.pagination.CursorPage;
+import am.ik.pagination.CursorPageRequest;
 import am.ik.pagination.OffsetPage;
 import am.ik.pagination.OffsetPageRequest;
 import org.junit.jupiter.api.Test;
@@ -12,6 +29,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentMatchers;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -20,13 +38,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.reactive.server.WebTestClient;
 
-import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
-import java.time.temporal.ChronoUnit;
-import java.util.List;
-import java.util.Optional;
-import java.util.function.Consumer;
-
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 
@@ -86,6 +98,21 @@ class EntryRestControllerTest {
 	}
 
 	@ParameterizedTest
+	@CsvSource({ ",,", "demo,user,password", "demo,foo,bar", "demo,admin,changeme" })
+	void getEntry_200_protobuf(String tenantId, String username, String password) throws Exception {
+		given(this.entryMapper.findOne(100L, tenantId, false)).willReturn(Optional.of(this.entry100));
+		this.webTestClient.get()
+			.uri((tenantId == null ? "" : "/tenants/" + tenantId) + "/entries/100")
+			.headers(configureAuth(tenantId, username, password))
+			.header(HttpHeaders.ACCEPT, MediaType.APPLICATION_PROTOBUF_VALUE)
+			.exchange()
+			.expectStatus()
+			.isOk()
+			.expectBody(am.ik.blog.proto.Entry.class)
+			.consumeWith(r -> assertThat(r.getResponseBody()).isEqualTo(ProtoUtils.toProto(this.entry100)));
+	}
+
+	@ParameterizedTest
 	@CsvSource({ ",," })
 	void getEntry_304(String tenantId, String username, String password) {
 		given(this.entryMapper.findOne(100L, tenantId, false)).willReturn(Optional.of(this.entry100));
@@ -138,6 +165,40 @@ class EntryRestControllerTest {
 			.isEqualTo("Hello Blog!")
 			.jsonPath("$.content[1].frontMatter.title")
 			.isEqualTo("Blog");
+	}
+
+	@ParameterizedTest
+	@CsvSource({ ",,", "demo,user,password", "demo,foo,bar", "demo,admin,changeme" })
+	void getEntries_200_protobuf(String tenantId, String username, String password) throws Exception {
+		OffsetPage<Entry> page = new OffsetPage<>(List.of(this.entry100, this.entry200), 2, 0, 2);
+		given(this.entryMapper.findPage(any(), any(), ArgumentMatchers.<OffsetPageRequest>any())).willReturn(page);
+		this.webTestClient.get()
+			.uri((tenantId == null ? "" : "/tenants/" + tenantId) + "/entries")
+			.headers(configureAuth(tenantId, username, password))
+			.header(HttpHeaders.ACCEPT, MediaType.APPLICATION_PROTOBUF_VALUE)
+			.exchange()
+			.expectStatus()
+			.isOk()
+			.expectBody(OffsetPageEntry.class)
+			.consumeWith(r -> assertThat(r.getResponseBody()).isEqualTo(ProtoUtils.toProto(page)));
+	}
+
+	@ParameterizedTest
+	@CsvSource({ ",,", "demo,user,password", "demo,foo,bar", "demo,admin,changeme" })
+	void getEntries_200_protobuf_cursor(String tenantId, String username, String password) throws Exception {
+		CursorPage<Entry, Instant> page = new CursorPage<>(List.of(this.entry100, this.entry200), 2, Entry::toCursor,
+				false, false);
+		given(this.entryMapper.findPage(any(), any(), ArgumentMatchers.<CursorPageRequest<Instant>>any()))
+			.willReturn(page);
+		this.webTestClient.get()
+			.uri((tenantId == null ? "" : "/tenants/" + tenantId) + "/entries?cursor=")
+			.headers(configureAuth(tenantId, username, password))
+			.header(HttpHeaders.ACCEPT, MediaType.APPLICATION_PROTOBUF_VALUE)
+			.exchange()
+			.expectStatus()
+			.isOk()
+			.expectBody(CursorPageEntryInstant.class)
+			.consumeWith(r -> assertThat(r.getResponseBody()).isEqualTo(ProtoUtils.toProto(page)));
 	}
 
 	@Test

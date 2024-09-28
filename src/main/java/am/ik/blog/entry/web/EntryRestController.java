@@ -13,6 +13,7 @@ import java.time.ZoneId;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Function;
 
 import am.ik.blog.category.Category;
 import am.ik.blog.entry.Author;
@@ -21,6 +22,9 @@ import am.ik.blog.entry.EntryBuilder;
 import am.ik.blog.entry.EntryService;
 import am.ik.blog.entry.FrontMatter;
 import am.ik.blog.entry.search.SearchCriteria;
+import am.ik.blog.proto.CursorPageEntryInstant;
+import am.ik.blog.proto.OffsetPageEntry;
+import am.ik.blog.proto.ProtoUtils;
 import am.ik.blog.tag.Tag;
 import am.ik.pagination.CursorPage;
 import am.ik.pagination.CursorPageRequest;
@@ -76,12 +80,8 @@ public class EntryRestController {
 		this.clock = clock;
 	}
 
-	@GetMapping(path = "/entries/{entryId:\\d+}")
-	@Parameters({ @Parameter(name = HttpHeaders.IF_MODIFIED_SINCE, in = ParameterIn.HEADER,
-			schema = @Schema(type = "string")) })
-	public ResponseEntity<Entry> getEntry(@PathVariable("entryId") Long entryId,
-			@RequestParam(defaultValue = "false") boolean excludeContent, NativeWebRequest webRequest) {
-		final Entry entry = this.getEntryForTenant(entryId, null, excludeContent);
+	private static <T> ResponseEntity<T> checkNotModified(Entry entry, NativeWebRequest webRequest,
+			Function<Entry, T> mapper) {
 		OffsetDateTime updated = entry.getUpdated().date();
 		if (updated != null) {
 			final long lastModifiedTimestamp = updated.toInstant().toEpochMilli();
@@ -91,16 +91,45 @@ public class EntryRestController {
 					.build();
 			}
 		}
-		return ResponseEntity.ok().cacheControl(CacheControl.maxAge(Duration.ofHours(1))).body(entry);
+		return ResponseEntity.ok().cacheControl(CacheControl.maxAge(Duration.ofHours(1))).body(mapper.apply(entry));
+	}
+
+	@GetMapping(path = "/entries/{entryId:\\d+}")
+	@Parameters({ @Parameter(name = HttpHeaders.IF_MODIFIED_SINCE, in = ParameterIn.HEADER,
+			schema = @Schema(type = "string")) })
+	public ResponseEntity<Entry> getEntry(@PathVariable("entryId") Long entryId,
+			@RequestParam(defaultValue = "false") boolean excludeContent, NativeWebRequest webRequest) {
+		return this.getEntryForTenant(entryId, null, excludeContent, webRequest);
 	}
 
 	@GetMapping(path = "/tenants/{tenantId}/entries/{entryId:\\d+}")
-	public Entry getEntryForTenant(@PathVariable("entryId") Long entryId,
+	public ResponseEntity<Entry> getEntryForTenant(@PathVariable("entryId") Long entryId,
 			@Nullable @PathVariable(name = "tenantId", required = false) String tenantId,
-			@RequestParam(defaultValue = "false") boolean excludeContent) {
+			@RequestParam(defaultValue = "false") boolean excludeContent, NativeWebRequest webRequest) {
 		final Optional<Entry> entry = this.entryService.findOne(entryId, tenantId, excludeContent);
-		return entry.orElseThrow(() -> new ResponseStatusException(NOT_FOUND,
-				String.format("The requested entry is not found (entryId = %d)", entryId)));
+		return checkNotModified(
+				entry.orElseThrow(() -> new ResponseStatusException(NOT_FOUND,
+						String.format("The requested entry is not found (entryId = %d)", entryId))),
+				webRequest, Function.identity());
+	}
+
+	@GetMapping(path = "/entries/{entryId:\\d+}", produces = MediaType.APPLICATION_PROTOBUF_VALUE)
+	@Parameters({ @Parameter(name = HttpHeaders.IF_MODIFIED_SINCE, in = ParameterIn.HEADER,
+			schema = @Schema(type = "string")) })
+	public ResponseEntity<am.ik.blog.proto.Entry> getEntryAsProtobuf(@PathVariable("entryId") Long entryId,
+			@RequestParam(defaultValue = "false") boolean excludeContent, NativeWebRequest webRequest) {
+		return this.getEntryAsProtobufForTenant(entryId, null, excludeContent, webRequest);
+	}
+
+	@GetMapping(path = "/tenants/{tenantId}/entries/{entryId:\\d+}", produces = MediaType.APPLICATION_PROTOBUF_VALUE)
+	public ResponseEntity<am.ik.blog.proto.Entry> getEntryAsProtobufForTenant(@PathVariable("entryId") Long entryId,
+			@Nullable @PathVariable(name = "tenantId", required = false) String tenantId,
+			@RequestParam(defaultValue = "false") boolean excludeContent, NativeWebRequest webRequest) {
+		final Optional<Entry> entry = this.entryService.findOne(entryId, tenantId, excludeContent);
+		return checkNotModified(
+				entry.orElseThrow(() -> new ResponseStatusException(NOT_FOUND,
+						String.format("The requested entry is not found (entryId = %d)", entryId))),
+				webRequest, ProtoUtils::toProto);
 	}
 
 	@GetMapping(path = "/entries/{entryId:\\d+}.md", produces = MediaType.TEXT_MARKDOWN_VALUE)
@@ -113,7 +142,9 @@ public class EntryRestController {
 	public ResponseEntity<String> getEntryAsMarkdownForTenant(@PathVariable("entryId") Long entryId,
 			@Nullable @PathVariable(name = "tenantId", required = false) String tenantId,
 			@RequestParam(defaultValue = "false") boolean excludeContent) {
-		final Entry entry = this.getEntryForTenant(entryId, tenantId, excludeContent);
+		final Entry entry = this.entryService.findOne(entryId, tenantId, excludeContent)
+			.orElseThrow(() -> new ResponseStatusException(NOT_FOUND,
+					String.format("The requested entry is not found (entryId = %d)", entryId)));
 		return ResponseEntity.ok()
 			.header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=%s.md".formatted(entry.formatId()))
 			.body(entry.toMarkdown());
@@ -134,6 +165,23 @@ public class EntryRestController {
 			@Parameter(hidden = true) OffsetPageRequest pageRequest) {
 		return this.getEntriesForTenant(null, query, tag, categories, createdBy, updatedBy, entryIds, excludeContent,
 				pageRequest);
+	}
+
+	@GetMapping(path = "/entries", produces = MediaType.APPLICATION_PROTOBUF_VALUE)
+	@Parameters({
+			@Parameter(name = "page",
+					schema = @Schema(implementation = Integer.class, defaultValue = "0",
+							requiredMode = RequiredMode.NOT_REQUIRED)),
+			@Parameter(name = "size", schema = @Schema(implementation = Integer.class, defaultValue = "20",
+					requiredMode = RequiredMode.NOT_REQUIRED)) })
+	public OffsetPageEntry getEntriesAsProtobuf(@RequestParam(required = false) String query,
+			@RequestParam(required = false) String tag, @RequestParam(required = false) List<String> categories,
+			@RequestParam(required = false) String createdBy, @RequestParam(required = false) String updatedBy,
+			@RequestParam(required = false) List<Long> entryIds,
+			@RequestParam(defaultValue = "true") boolean excludeContent,
+			@Parameter(hidden = true) OffsetPageRequest pageRequest) {
+		return this.getEntriesAsProtobufForTenant(null, query, tag, categories, createdBy, updatedBy, entryIds,
+				excludeContent, pageRequest);
 	}
 
 	@GetMapping(path = "/tenants/{tenantId}/entries", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -160,6 +208,24 @@ public class EntryRestController {
 			.excludeContent(excludeContent)
 			.build();
 		return this.entryService.findPage(searchCriteria, tenantId, pageRequest);
+	}
+
+	@GetMapping(path = "/tenants/{tenantId}/entries", produces = MediaType.APPLICATION_PROTOBUF_VALUE)
+	@Parameters({
+			@Parameter(name = "page",
+					schema = @Schema(implementation = Integer.class, defaultValue = "0",
+							requiredMode = RequiredMode.NOT_REQUIRED)),
+			@Parameter(name = "size", schema = @Schema(implementation = Integer.class, defaultValue = "20",
+					requiredMode = RequiredMode.NOT_REQUIRED)) })
+	public OffsetPageEntry getEntriesAsProtobufForTenant(
+			@Nullable @PathVariable(name = "tenantId", required = false) String tenantId,
+			@RequestParam(required = false) String query, @RequestParam(required = false) String tag,
+			@RequestParam(required = false) List<String> categories, @RequestParam(required = false) String createdBy,
+			@RequestParam(required = false) String updatedBy, @RequestParam(required = false) List<Long> entryIds,
+			@RequestParam(defaultValue = "true") boolean excludeContent,
+			@Parameter(hidden = true) OffsetPageRequest pageRequest) {
+		return ProtoUtils.toProto(this.getEntriesForTenant(tenantId, query, tag, categories, createdBy, updatedBy,
+				entryIds, excludeContent, pageRequest));
 	}
 
 	@GetMapping(path = "/entries", params = "cursor", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -201,6 +267,40 @@ public class EntryRestController {
 			.excludeContent(excludeContent)
 			.build();
 		return this.entryService.findPage(searchCriteria, tenantId, pageRequest);
+	}
+
+	@GetMapping(path = "/entries", params = "cursor", produces = MediaType.APPLICATION_PROTOBUF_VALUE)
+	@Parameters({
+			@Parameter(name = "cursor",
+					schema = @Schema(implementation = Instant.class, requiredMode = RequiredMode.NOT_REQUIRED)),
+			@Parameter(name = "size", schema = @Schema(implementation = Integer.class, defaultValue = "20",
+					requiredMode = RequiredMode.NOT_REQUIRED)) })
+	public CursorPageEntryInstant getEntriesAsProtobufByCursor(@RequestParam(required = false) String query,
+			@RequestParam(required = false) String tag, @RequestParam(required = false) List<String> categories,
+			@RequestParam(required = false) String createdBy, @RequestParam(required = false) String updatedBy,
+			@RequestParam(required = false) List<Long> entryIds,
+			@RequestParam(defaultValue = "true") boolean excludeContent,
+			@Parameter(hidden = true) CursorPageRequest<Instant> pageRequest) {
+		return this.getEntriesAsProtobufForTenantByCursor(null, query, tag, categories, createdBy, updatedBy, entryIds,
+				excludeContent, pageRequest);
+	}
+
+	@GetMapping(path = "/tenants/{tenantId}/entries", params = "cursor",
+			produces = MediaType.APPLICATION_PROTOBUF_VALUE)
+	@Parameters({
+			@Parameter(name = "cursor",
+					schema = @Schema(implementation = Instant.class, requiredMode = RequiredMode.NOT_REQUIRED)),
+			@Parameter(name = "size", schema = @Schema(implementation = Integer.class, defaultValue = "20",
+					requiredMode = RequiredMode.NOT_REQUIRED)) })
+	public CursorPageEntryInstant getEntriesAsProtobufForTenantByCursor(
+			@Nullable @PathVariable(name = "tenantId", required = false) String tenantId,
+			@RequestParam(required = false) String query, @RequestParam(required = false) String tag,
+			@RequestParam(required = false) List<String> categories, @RequestParam(required = false) String createdBy,
+			@RequestParam(required = false) String updatedBy, @RequestParam(required = false) List<Long> entryIds,
+			@RequestParam(defaultValue = "true") boolean excludeContent,
+			@Parameter(hidden = true) CursorPageRequest<Instant> pageRequest) {
+		return ProtoUtils.toProto(this.getEntriesForTenantByCursor(tenantId, query, tag, categories, createdBy,
+				updatedBy, entryIds, excludeContent, pageRequest));
 	}
 
 	@DeleteMapping(path = "/entries/{entryId:\\d+}")
