@@ -12,6 +12,7 @@ final public class ProtoUtils {
 
 	public static Entry toProto(am.ik.blog.entry.Entry entry) {
 		return Entry.newBuilder()
+			.setEntryId(entry.getEntryId())
 			.setFrontMatter(toProto(entry.getFrontMatter()))
 			.setContent(entry.getContent())
 			.setCreated(toProto(entry.getCreated()))
