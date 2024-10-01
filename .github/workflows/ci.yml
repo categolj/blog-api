@@ -21,21 +21,25 @@ jobs:
     needs: test
     uses: making/workflows/.github/workflows/build-docker-image-maven-jvm.yaml@main
     with:
+      image_name: image_jvm
       image_file: image.yaml
       download_target: false
   build-native-image:
     needs: test
     uses: making/workflows/.github/workflows/build-docker-image-maven-native.yaml@main
     with:
+      image_name: image_native
       image_file: image_native.yaml
       download_target: false
   save-image-jvm:
     needs: build-jvm-image
     uses: making/workflows/.github/workflows/save-images.yaml@main
     with:
+      image_name: image_jvm
       image_file: image.yaml
   save-image-native:
     needs: build-native-image
     uses: making/workflows/.github/workflows/save-images.yaml@main
     with:
+      image_name: image_native
       image_file: image_native.yaml
