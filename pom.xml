@@ -107,7 +107,7 @@
 		<dependency>
 			<groupId>io.opentelemetry.contrib</groupId>
 			<artifactId>opentelemetry-samplers</artifactId>
-			<version>1.39.0-alpha</version>
+			<version>1.40.0-alpha</version>
 		</dependency>
 		<dependency>
 			<groupId>net.ttddyy.observation</groupId>
