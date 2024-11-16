@@ -17,6 +17,8 @@ import static am.ik.yavi.constraint.charsequence.codepoints.AsciiCodePoints.ASCI
 @Component
 public class GitHubProps implements org.springframework.validation.Validator {
 
+	private String apiUrl = "https://api.github.com";
+
 	private String accessToken = "dummy";
 
 	private String webhookSecret = "dummy";
@@ -36,6 +38,7 @@ public class GitHubProps implements org.springframework.validation.Validator {
 	private Duration readTimeout = Duration.ofSeconds(5);
 
 	private final Validator validator = Validator.forInstanceOf(GitHubProps.class, ValidatorBuilder.<GitHubProps>of()
+		.constraint(GitHubProps::getApiUrl, "apiUrl", c -> c.notBlank().url())
 		.constraint(GitHubProps::getAccessToken, "accessToken", c -> c.codePoints(ASCII_PRINTABLE_CHARS).asWhiteList())
 		.constraint(GitHubProps::getWebhookSecret, "webhookSecret",
 				c -> c.codePoints(ASCII_PRINTABLE_CHARS).asWhiteList())
@@ -50,6 +53,14 @@ public class GitHubProps implements org.springframework.validation.Validator {
 		.constraintOnObject(GitHubProps::getConnectTimeout, "connectTimeout", c -> c.notNull())
 		.build()
 		.toBiConsumer(Errors::rejectValue));
+
+	public String getApiUrl() {
+		return apiUrl;
+	}
+
+	public void setApiUrl(String apiUrl) {
+		this.apiUrl = apiUrl;
+	}
 
 	public String getAccessToken() {
 		return accessToken;

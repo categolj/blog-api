@@ -51,7 +51,7 @@ public class GitHubConfig {
 	@Bean
 	public GitHubClient gitHubClient(GitHubProps props, RestTemplateBuilder restTemplateBuilder) {
 		final RestTemplate restTemplate = restTemplateBuilder //
-			.rootUri("https://api.github.com") //
+			.rootUri(props.getApiUrl()) //
 			.setConnectTimeout(props.getConnectTimeout()) //
 			.setReadTimeout(props.getReadTimeout()) //
 			.defaultHeader(HttpHeaders.AUTHORIZATION, "token %s".formatted(props.getAccessToken())) //
@@ -66,7 +66,7 @@ public class GitHubConfig {
 		return props.getTenants().entrySet().stream().collect(Collectors.toUnmodifiableMap(Entry::getKey, e -> {
 			final GitHubProps tenantProps = e.getValue();
 			final RestTemplate restTemplate = restTemplateBuilder //
-				.rootUri("https://api.github.com") //
+				.rootUri(props.getApiUrl()) //
 				.setConnectTimeout(tenantProps.getConnectTimeout()) //
 				.setReadTimeout(tenantProps.getReadTimeout()) //
 				.defaultHeader(HttpHeaders.AUTHORIZATION, "token %s".formatted(tenantProps.getAccessToken())) //
