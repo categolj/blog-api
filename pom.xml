@@ -87,11 +87,6 @@
 			<artifactId>spring-boot-starter-web</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-validation</artifactId>
-			<scope>provided</scope>
-		</dependency>
-		<dependency>
 			<groupId>am.ik.spring.opentelemetry</groupId>
 			<artifactId>otel-logs-autoconfigure</artifactId>
 			<version>0.2.2</version>
