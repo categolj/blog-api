@@ -16,17 +16,17 @@ on:
     - .github/workflows/*
 jobs:
   unit-test:
-    uses: categolj/worklows/.github/workflows/unit-test.yaml@main
+    uses: categolj/workflows/.github/workflows/unit-test.yaml@main
   build-oci-image-jvm-amd64:
     needs: unit-test
-    uses: categolj/worklows/.github/workflows/build-oci-image-jvm.yaml@main
+    uses: categolj/workflows/.github/workflows/build-oci-image-jvm.yaml@main
     with:
       image_name: jvm_amd64
       image_file: jvm_amd64.yaml
       runs_on: ubuntu-latest
   build-oci-image-jvm-aarch64:
     needs: unit-test
-    uses: categolj/worklows/.github/workflows/build-oci-image-jvm.yaml@main
+    uses: categolj/workflows/.github/workflows/build-oci-image-jvm.yaml@main
     with:
       image_name: jvm_aarch64
       image_file: jvm_aarch64.yaml
@@ -35,18 +35,18 @@ jobs:
     needs:
     - build-oci-image-jvm-amd64
     - build-oci-image-jvm-aarch64
-    uses: categolj/worklows/.github/workflows/push-multi-arch-image.yaml@main
+    uses: categolj/workflows/.github/workflows/push-multi-arch-image.yaml@main
     with:
       prefix: jvm
   save-image-jvm-amd64:
     needs: build-oci-image-jvm-amd64
-    uses: categolj/worklows/.github/workflows/save-images.yaml@main
+    uses: categolj/workflows/.github/workflows/save-images.yaml@main
     with:
       image_name: jvm_amd64
       image_file: jvm_amd64.yaml
   save-image-jvm-aarch64:
     needs: build-oci-image-jvm-aarch64
-    uses: categolj/worklows/.github/workflows/save-images.yaml@main
+    uses: categolj/workflows/.github/workflows/save-images.yaml@main
     with:
       image_name: jvm_aarch64
       image_file: jvm_aarch64.yaml
