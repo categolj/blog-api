@@ -15,31 +15,38 @@ on:
     - pom.xml
     - .github/workflows/*
 jobs:
-  test:
-    uses: making/workflows/.github/workflows/maven-unit-test.yaml@main
-  build-jvm-image:
-    needs: test
-    uses: making/workflows/.github/workflows/build-docker-image-maven-jvm.yaml@main
+  unit-test:
+    uses: making/workflows/.github/workflows/unit-test.yaml@main
+  build-oci-image-jvm-amd64:
+    needs: unit-test
+    uses: making/workflows/.github/workflows/build-oci-image-jvm.yaml@main
     with:
-      image_name: image_jvm
-      image_file: image.yaml
-      download_target: false
-  build-native-image:
-    needs: test
-    uses: making/workflows/.github/workflows/build-docker-image-maven-native.yaml@main
+      image_name: jvm_amd64
+      image_file: jvm_amd64.yaml
+      runs_on: ubuntu-latest
+  build-oci-image-jvm-aarch64:
+    needs: unit-test
+    uses: making/workflows/.github/workflows/build-oci-image-jvm.yaml@main
     with:
-      image_name: image_native
-      image_file: image_native.yaml
-      download_target: false
-  save-image-jvm:
-    needs: build-jvm-image
+      image_name: jvm_aarch64
+      image_file: jvm_aarch64.yaml
+      runs_on: ARM64
+  push-multi-arch-image-jvm:
+    needs:
+    - build-oci-image-jvm-amd64
+    - build-oci-image-jvm-aarch64
+    uses: making/workflows/.github/workflows/push-multi-arch-image.yaml@main
+    with:
+      prefix: jvm
+  save-image-jvm-amd64:
+    needs: build-oci-image-jvm-amd64
     uses: making/workflows/.github/workflows/save-images.yaml@main
     with:
-      image_name: image_jvm
-      image_file: image.yaml
-  save-image-native:
-    needs: build-native-image
+      image_name: jvm_amd64
+      image_file: jvm_amd64.yaml
+  save-image-jvm-aarch64:
+    needs: build-oci-image-jvm-aarch64
     uses: making/workflows/.github/workflows/save-images.yaml@main
     with:
-      image_name: image_native
-      image_file: image_native.yaml
+      image_name: jvm_aarch64
+      image_file: jvm_aarch64.yaml
