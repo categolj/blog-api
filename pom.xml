@@ -84,7 +84,7 @@
 		<dependency>
 			<groupId>am.ik.spring.opentelemetry</groupId>
 			<artifactId>otel-logs-autoconfigure</artifactId>
-			<version>0.2.2</version>
+			<version>0.3.0</version>
 		</dependency>
 		<dependency>
 			<groupId>io.micrometer</groupId>
