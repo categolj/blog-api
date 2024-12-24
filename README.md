@@ -29,10 +29,15 @@ docker-compose up
 Run the app
 
 ```
-java -jar target/blog-api-5.0.0-SNAPSHOT.jar 
+java -jar target/blog-api-5.0.0-SNAPSHOT.jar --spring.profiles.active=otel
 ```
 
 > or `./mvnw spring-boot:run` makes automatically docker compose up 
+
+> [!NOTE]
+> * For traces: Go to Zipkin http://localhost:9411
+> * For logs: Go to Lognroll http://localhost:14318 (user: empty, password: `changeme`)
+
 
 Download a blog entry template
 

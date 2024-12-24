@@ -13,12 +13,10 @@ receivers:
         static_configs:
         - targets: [ 'host.docker.internal:8080' ]
         metrics_path: /actuator/prometheus
-processors:
-  batch:
-    send_batch_size: 10000
-    timeout: 10s
 
 exporters:
+  debug:
+    verbosity: detailed
   otlphttp/zipkin:
     endpoint: http://zipkin:9411
     tls:
@@ -33,14 +31,12 @@ exporters:
 service:
   pipelines:
     traces:
-      receivers: [ otlp ]
-      processors: [ batch ]
-      exporters: [ otlphttp/zipkin ]
-    #    metrics:
-    #      receivers: [ otlp, prometheus ]
-    #      processors: [ batch ]
-    #      exporters: [ otlp/prometheus ]
+      receivers:
+      - otlp
+      exporters:
+      - otlphttp/zipkin
     logs:
-      receivers: [ otlp ]
-      processors: [ batch ]
-      exporters: [ otlphttp/lognroll ]
+      receivers:
+      - otlp
+      exporters:
+      - otlphttp/lognroll

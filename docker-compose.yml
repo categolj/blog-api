@@ -1,7 +1,6 @@
-version: '3'
 services:
   otelcol:
-    image: otel/opentelemetry-collector-contrib:0.109.0
+    image: otel/opentelemetry-collector-contrib
     restart: on-failure
     volumes:
     - ./docker/otel-collector.yaml:/etc/otelcol-contrib/config.yaml
@@ -31,6 +30,3 @@ services:
       POSTGRES_DB: blog
       POSTGRES_USER: blog
       POSTGRES_PASSWORD: blog
-volumes:
-  ch_data:
-  pg_data:
