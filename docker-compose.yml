@@ -10,7 +10,7 @@ services:
     extra_hosts:
     - 'host.docker.internal:host-gateway'
   lognroll:
-    image: ghcr.io/making/lognroll:native
+    image: ghcr.io/categolj/lognroll:native
     ports:
     - '14318:4318'
   zipkin:
