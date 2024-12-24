@@ -3,6 +3,7 @@ package am.ik.blog.github.web;
 import java.util.Map;
 import java.util.Optional;
 
+import am.ik.blog.TestContainersConfig;
 import am.ik.blog.entry.Entry;
 import am.ik.blog.entry.EntryMapper;
 import am.ik.blog.github.EntryFetcher;
@@ -16,17 +17,14 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
-import org.testcontainers.containers.PostgreSQLContainer;
-import org.testcontainers.junit.jupiter.Container;
+import org.springframework.context.annotation.Import;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.zalando.logbook.Logbook;
 import org.zalando.logbook.spring.webflux.LogbookExchangeFilterFunction;
-import reactor.core.publisher.Mono;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.http.client.reactive.JdkClientHttpConnector;
 import org.springframework.test.context.TestConstructor;
@@ -40,20 +38,17 @@ import static org.mockito.BDDMockito.given;
 				"blog.github.tenants.xyz.webhook-secret=abc" })
 @TestConstructor(autowireMode = TestConstructor.AutowireMode.ALL)
 @Testcontainers(disabledWithoutDocker = true)
+@Import(TestContainersConfig.class)
 public class WebhookControllerTest {
 
 	private final ObjectMapper objectMapper;
 
 	private WebTestClient webClient;
 
-	@Container
-	@ServiceConnection
-	static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:14-alpine");
-
-	@MockBean
+	@MockitoBean
 	EntryFetcher entryFetcher;
 
-	@MockBean
+	@MockitoBean
 	EntryMapper entryRepository;
 
 	@Autowired

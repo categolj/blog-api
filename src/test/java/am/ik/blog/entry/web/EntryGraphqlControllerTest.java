@@ -2,13 +2,13 @@ package am.ik.blog.entry.web;
 
 import java.util.List;
 
+import am.ik.blog.TestContainersConfig;
 import am.ik.blog.entry.Entry;
 import am.ik.blog.util.FileLoader;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.testcontainers.containers.PostgreSQLContainer;
-import org.testcontainers.junit.jupiter.Container;
+import org.springframework.context.annotation.Import;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.zalando.logbook.Logbook;
 import org.zalando.logbook.spring.webflux.LogbookExchangeFilterFunction;
@@ -18,7 +18,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.json.AutoConfigureJsonTesters;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.json.JacksonTester;
-import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.graphql.execution.ErrorType;
 import org.springframework.graphql.test.tester.HttpGraphQlTester;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -32,6 +31,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @TestConstructor(autowireMode = TestConstructor.AutowireMode.ALL)
 @Testcontainers(disabledWithoutDocker = true)
 @AutoConfigureJsonTesters
+@Import(TestContainersConfig.class)
 class EntryGraphqlControllerTest {
 
 	HttpGraphQlTester tester;
@@ -44,10 +44,6 @@ class EntryGraphqlControllerTest {
 
 	@Autowired
 	Logbook logbook;
-
-	@Container
-	@ServiceConnection
-	static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:14-alpine");
 
 	int port;
 

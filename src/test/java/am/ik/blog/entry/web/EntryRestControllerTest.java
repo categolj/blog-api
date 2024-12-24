@@ -32,10 +32,10 @@ import org.mockito.ArgumentMatchers;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.reactive.server.WebTestClient;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -50,7 +50,7 @@ class EntryRestControllerTest {
 	@Autowired
 	WebTestClient webTestClient;
 
-	@MockBean
+	@MockitoBean
 	EntryMapper entryMapper;
 
 	Entry entry100 = new EntryBuilder().withEntryId(100L)

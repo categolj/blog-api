@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
+import am.ik.blog.TestContainersConfig;
 import am.ik.blog.category.Category;
 import am.ik.blog.entry.search.SearchCriteria;
 import am.ik.blog.github.Fixtures;
@@ -16,9 +17,7 @@ import am.ik.pagination.OffsetPageRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
-import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
-import org.testcontainers.containers.PostgreSQLContainer;
-import org.testcontainers.junit.jupiter.Container;
+import org.springframework.context.annotation.Import;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,6 +31,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @TestConstructor(autowireMode = TestConstructor.AutowireMode.ALL)
 @Testcontainers(disabledWithoutDocker = true)
+@Import(TestContainersConfig.class)
 class EntryMapperIntegrationTest {
 
 	@Autowired
@@ -39,10 +39,6 @@ class EntryMapperIntegrationTest {
 
 	@Autowired
 	JdbcTemplate jdbcTemplate;
-
-	@Container
-	@ServiceConnection
-	static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:14-alpine");
 
 	@BeforeEach
 	public void reset() {

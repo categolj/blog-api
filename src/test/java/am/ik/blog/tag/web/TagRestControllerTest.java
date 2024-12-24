@@ -9,16 +9,15 @@ import am.ik.blog.proto.TagsResponse;
 import am.ik.blog.tag.Tag;
 import am.ik.blog.tag.TagMapper;
 import am.ik.blog.tag.TagAndCount;
-import org.assertj.core.api.Assertions;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.reactive.server.WebTestClient;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -31,7 +30,7 @@ class TagRestControllerTest {
 	@Autowired
 	WebTestClient webTestClient;
 
-	@MockBean
+	@MockitoBean
 	TagMapper tagMapper;
 
 	@ParameterizedTest

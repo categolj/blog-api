@@ -2,12 +2,11 @@ package am.ik.blog.tag;
 
 import java.util.List;
 
+import am.ik.blog.TestContainersConfig;
 import am.ik.blog.util.FileLoader;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
-import org.testcontainers.containers.PostgreSQLContainer;
-import org.testcontainers.junit.jupiter.Container;
+import org.springframework.context.annotation.Import;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,6 +19,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @TestConstructor(autowireMode = TestConstructor.AutowireMode.ALL)
 @Testcontainers(disabledWithoutDocker = true)
+@Import(TestContainersConfig.class)
 class TagMapperIntegrationTest {
 
 	@Autowired
@@ -27,10 +27,6 @@ class TagMapperIntegrationTest {
 
 	@Autowired
 	JdbcTemplate jdbcTemplate;
-
-	@Container
-	@ServiceConnection
-	static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:14-alpine");
 
 	@BeforeEach
 	public void reset() {

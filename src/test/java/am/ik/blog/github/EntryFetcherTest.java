@@ -1,42 +1,24 @@
 package am.ik.blog.github;
 
 import am.ik.blog.category.Category;
-import am.ik.blog.config.GitHubConfig;
 import am.ik.blog.entry.Entry;
 import am.ik.blog.entry.FrontMatter;
 import am.ik.blog.tag.Tag;
-import am.ik.spring.logbook.AccessLoggerLogbookAutoConfiguration;
-import com.sun.net.httpserver.HttpExchange;
-import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
-import javassist.bytecode.analysis.Executor;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.zalando.logbook.autoconfigure.LogbookAutoConfiguration;
-
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
-import org.springframework.boot.autoconfigure.jackson.JacksonAutoConfiguration;
-import org.springframework.boot.test.autoconfigure.web.client.RestClientTest;
-import org.springframework.context.annotation.Import;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.io.ClassPathResource;
-import org.springframework.http.MediaType;
-import org.springframework.test.web.client.MockRestServiceServer;
-import org.springframework.test.web.client.match.MockRestRequestMatchers;
-import org.springframework.test.web.client.response.MockRestResponseCreators;
 
 import java.io.BufferedOutputStream;
-import java.io.IOException;
 import java.io.OutputStream;
-import java.io.PrintWriter;
 import java.net.InetSocketAddress;
 import java.time.OffsetDateTime;
 import java.util.Optional;
 import java.util.concurrent.Executors;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatReflectiveOperationException;
 
 @SpringBootTest(
 		properties = { "blog.github.retry-interval=5ms", "blog.github.retry-max-elapsed-time=40ms",
