@@ -30,7 +30,7 @@ jobs:
     with:
       image_name: jvm_aarch64
       image_file: jvm_aarch64.yaml
-      runs_on: ARM64
+      runs_on: ubuntu-24.04-arm
   push-multi-arch-image-jvm:
     needs:
     - build-oci-image-jvm-amd64
