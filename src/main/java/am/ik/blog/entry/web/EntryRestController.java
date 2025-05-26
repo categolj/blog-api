@@ -1,20 +1,5 @@
 package am.ik.blog.entry.web;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.UncheckedIOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.time.Clock;
-import java.time.Duration;
-import java.time.Instant;
-import java.time.OffsetDateTime;
-import java.time.ZoneId;
-import java.util.List;
-import java.util.Optional;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.function.Function;
-
 import am.ik.blog.category.Category;
 import am.ik.blog.entry.Author;
 import am.ik.blog.entry.Entry;
@@ -37,13 +22,27 @@ import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.media.Schema.RequiredMode;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.UncheckedIOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.time.Clock;
+import java.time.Duration;
+import java.time.Instant;
+import java.time.OffsetDateTime;
+import java.time.ZoneId;
+import java.util.List;
+import java.util.Optional;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Function;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import org.springframework.http.CacheControl;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
 import org.springframework.lang.Nullable;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -59,7 +58,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.context.request.NativeWebRequest;
-import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
@@ -97,57 +95,53 @@ public class EntryRestController {
 	@GetMapping(path = "/entries/{entryId:\\d+}")
 	@Parameters({ @Parameter(name = HttpHeaders.IF_MODIFIED_SINCE, in = ParameterIn.HEADER,
 			schema = @Schema(type = "string")) })
-	public ResponseEntity<Entry> getEntry(@PathVariable("entryId") Long entryId,
+	public ResponseEntity<?> getEntry(@PathVariable("entryId") Long entryId,
 			@RequestParam(defaultValue = "false") boolean excludeContent, NativeWebRequest webRequest) {
 		return this.getEntryForTenant(entryId, null, excludeContent, webRequest);
 	}
 
 	@GetMapping(path = "/tenants/{tenantId}/entries/{entryId:\\d+}")
-	public ResponseEntity<Entry> getEntryForTenant(@PathVariable("entryId") Long entryId,
+	public ResponseEntity<?> getEntryForTenant(@PathVariable("entryId") Long entryId,
 			@Nullable @PathVariable(name = "tenantId", required = false) String tenantId,
 			@RequestParam(defaultValue = "false") boolean excludeContent, NativeWebRequest webRequest) {
 		final Optional<Entry> entry = this.entryService.findOne(entryId, tenantId, excludeContent);
-		return checkNotModified(
-				entry.orElseThrow(() -> new ResponseStatusException(NOT_FOUND,
-						String.format("The requested entry is not found (entryId = %d)", entryId))),
-				webRequest, Function.identity());
+		return entry.<ResponseEntity<?>>map(e -> checkNotModified(e, webRequest, Function.identity()))
+			.orElseGet(() -> buildNotFoundEntry(entryId));
 	}
 
 	@GetMapping(path = "/entries/{entryId:\\d+}", produces = MediaType.APPLICATION_PROTOBUF_VALUE)
 	@Parameters({ @Parameter(name = HttpHeaders.IF_MODIFIED_SINCE, in = ParameterIn.HEADER,
 			schema = @Schema(type = "string")) })
-	public ResponseEntity<am.ik.blog.proto.Entry> getEntryAsProtobuf(@PathVariable("entryId") Long entryId,
+	public ResponseEntity<?> getEntryAsProtobuf(@PathVariable("entryId") Long entryId,
 			@RequestParam(defaultValue = "false") boolean excludeContent, NativeWebRequest webRequest) {
 		return this.getEntryAsProtobufForTenant(entryId, null, excludeContent, webRequest);
 	}
 
 	@GetMapping(path = "/tenants/{tenantId}/entries/{entryId:\\d+}", produces = MediaType.APPLICATION_PROTOBUF_VALUE)
-	public ResponseEntity<am.ik.blog.proto.Entry> getEntryAsProtobufForTenant(@PathVariable("entryId") Long entryId,
+	public ResponseEntity<?> getEntryAsProtobufForTenant(@PathVariable("entryId") Long entryId,
 			@Nullable @PathVariable(name = "tenantId", required = false) String tenantId,
 			@RequestParam(defaultValue = "false") boolean excludeContent, NativeWebRequest webRequest) {
 		final Optional<Entry> entry = this.entryService.findOne(entryId, tenantId, excludeContent);
-		return checkNotModified(
-				entry.orElseThrow(() -> new ResponseStatusException(NOT_FOUND,
-						String.format("The requested entry is not found (entryId = %d)", entryId))),
-				webRequest, ProtoUtils::toProto);
+		return entry.<ResponseEntity<?>>map(e -> checkNotModified(e, webRequest, ProtoUtils::toProto))
+			.orElseGet(() -> buildNotFoundEntry(entryId));
 	}
 
 	@GetMapping(path = "/entries/{entryId:\\d+}.md", produces = MediaType.TEXT_MARKDOWN_VALUE)
-	public ResponseEntity<String> getEntryAsMarkdown(@PathVariable("entryId") Long entryId,
+	public ResponseEntity<?> getEntryAsMarkdown(@PathVariable("entryId") Long entryId,
 			@RequestParam(defaultValue = "false") boolean excludeContent) {
 		return this.getEntryAsMarkdownForTenant(entryId, null, excludeContent);
 	}
 
 	@GetMapping(path = "/tenants/{tenantId}/entries/{entryId:\\d+}.md", produces = MediaType.TEXT_MARKDOWN_VALUE)
-	public ResponseEntity<String> getEntryAsMarkdownForTenant(@PathVariable("entryId") Long entryId,
+	public ResponseEntity<?> getEntryAsMarkdownForTenant(@PathVariable("entryId") Long entryId,
 			@Nullable @PathVariable(name = "tenantId", required = false) String tenantId,
 			@RequestParam(defaultValue = "false") boolean excludeContent) {
-		final Entry entry = this.entryService.findOne(entryId, tenantId, excludeContent)
-			.orElseThrow(() -> new ResponseStatusException(NOT_FOUND,
-					String.format("The requested entry is not found (entryId = %d)", entryId)));
-		return ResponseEntity.ok()
-			.header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=%s.md".formatted(entry.formatId()))
-			.body(entry.toMarkdown());
+		final Optional<Entry> entry = this.entryService.findOne(entryId, tenantId, excludeContent);
+		return entry
+			.<ResponseEntity<?>>map(e -> ResponseEntity.ok()
+				.header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=%s.md".formatted(e.formatId()))
+				.body(e.toMarkdown()))
+			.orElseGet(() -> buildNotFoundEntry(entryId));
 	}
 
 	@GetMapping(path = "/entries", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -342,8 +336,8 @@ public class EntryRestController {
 			this.entryService.save(entry, tenantId);
 			return entry;
 		})
-			.map(entry -> buildEntryResponse(entry, builder, false))
-			.orElseThrow(() -> new ResponseStatusException(BAD_REQUEST, "Can't parse the markdown file"));
+			.<ResponseEntity<?>>map(entry -> buildEntryResponse(entry, builder, false))
+			.orElseGet(EntryRestController::buildBadRequestMarkdown);
 	}
 
 	@PostMapping(path = "/entries", consumes = MediaType.APPLICATION_JSON_VALUE)
@@ -406,8 +400,8 @@ public class EntryRestController {
 			this.entryService.save(entry, tenantId);
 			return entry;
 		})
-			.map(entry -> buildEntryResponse(entry, builder, isUpdate.get()))
-			.orElseThrow(() -> new ResponseStatusException(BAD_REQUEST, "Can't parse the markdown file"));
+			.<ResponseEntity<?>>map(entry -> buildEntryResponse(entry, builder, isUpdate.get()))
+			.orElseGet(EntryRestController::buildBadRequestMarkdown);
 	}
 
 	@PutMapping(path = "/entries/{entryId:\\d+}", consumes = MediaType.APPLICATION_JSON_VALUE)
@@ -444,11 +438,6 @@ public class EntryRestController {
 			.build();
 		this.entryService.save(entry, tenantId);
 		return buildEntryResponse(entry, builder, isUpdate.get());
-	}
-
-	private static ResponseEntity<?> buildEntryResponse(Entry entry, UriComponentsBuilder builder, boolean isUpdate) {
-		return isUpdate ? ResponseEntity.ok(entry)
-				: ResponseEntity.created(builder.path("/entries/{entryId:\\d+}").build(entry.getEntryId())).body(entry);
 	}
 
 	@GetMapping(path = "/entries/template.md", produces = MediaType.TEXT_MARKDOWN_VALUE)
@@ -498,6 +487,22 @@ public class EntryRestController {
 				log.warn("Failed to delete file (" + zip + ")", e);
 			}
 		}
+	}
+
+	private static ResponseEntity<?> buildEntryResponse(Entry entry, UriComponentsBuilder builder, boolean isUpdate) {
+		return isUpdate ? ResponseEntity.ok(entry)
+				: ResponseEntity.created(builder.path("/entries/{entryId:\\d+}").build(entry.getEntryId())).body(entry);
+	}
+
+	private static ResponseEntity<ProblemDetail> buildNotFoundEntry(Long entryId) {
+		return ResponseEntity.status(HttpStatus.NOT_FOUND)
+			.body(ProblemDetail.forStatusAndDetail(NOT_FOUND,
+					String.format("The requested entry is not found (entryId = %d)", entryId)));
+	}
+
+	private static ResponseEntity<ProblemDetail> buildBadRequestMarkdown() {
+		return ResponseEntity.badRequest()
+			.body(ProblemDetail.forStatusAndDetail(BAD_REQUEST, "Can't parse the markdown file"));
 	}
 
 }
