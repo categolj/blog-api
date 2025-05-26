@@ -1,11 +1,5 @@
 package am.ik.blog.config;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Objects;
-import java.util.stream.Collectors;
-
 import am.ik.blog.github.Committer;
 import am.ik.blog.github.GitCommit;
 import am.ik.blog.github.GitCommitter;
@@ -18,8 +12,11 @@ import am.ik.blog.github.web.WebhookController;
 import am.ik.spring.http.client.RetryableClientHttpRequestInterceptor;
 import com.fasterxml.jackson.databind.JsonNode;
 import jakarta.annotation.Nullable;
-import org.zalando.logbook.spring.LogbookClientHttpRequestInterceptor;
-
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Objects;
+import java.util.stream.Collectors;
 import org.springframework.aot.hint.ExecutableMode;
 import org.springframework.aot.hint.RuntimeHintsRegistrar;
 import org.springframework.boot.web.client.RestTemplateBuilder;
@@ -33,6 +30,7 @@ import org.springframework.util.ReflectionUtils;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.client.support.RestTemplateAdapter;
 import org.springframework.web.service.invoker.HttpServiceProxyFactory;
+import org.zalando.logbook.spring.LogbookClientHttpRequestInterceptor;
 
 @Configuration(proxyBeanMethods = false)
 @ImportRuntimeHints(GitHubConfig.RuntimeHints.class)
@@ -51,9 +49,9 @@ public class GitHubConfig {
 	@Bean
 	public GitHubClient gitHubClient(GitHubProps props, RestTemplateBuilder restTemplateBuilder) {
 		final RestTemplate restTemplate = restTemplateBuilder //
-			.rootUri(props.getApiUrl()) //
-			.setConnectTimeout(props.getConnectTimeout()) //
-			.setReadTimeout(props.getReadTimeout()) //
+			.rootUri(props.getApiUrl())
+			.connectTimeout(props.getConnectTimeout())
+			.readTimeout(props.getReadTimeout()) //
 			.defaultHeader(HttpHeaders.AUTHORIZATION, "token %s".formatted(props.getAccessToken())) //
 			.build();
 		final RestTemplateAdapter adapter = RestTemplateAdapter.create(restTemplate);
@@ -66,9 +64,9 @@ public class GitHubConfig {
 		return props.getTenants().entrySet().stream().collect(Collectors.toUnmodifiableMap(Entry::getKey, e -> {
 			final GitHubProps tenantProps = e.getValue();
 			final RestTemplate restTemplate = restTemplateBuilder //
-				.rootUri(props.getApiUrl()) //
-				.setConnectTimeout(tenantProps.getConnectTimeout()) //
-				.setReadTimeout(tenantProps.getReadTimeout()) //
+				.rootUri(props.getApiUrl())
+				.connectTimeout(tenantProps.getConnectTimeout())
+				.readTimeout(tenantProps.getReadTimeout()) //
 				.defaultHeader(HttpHeaders.AUTHORIZATION, "token %s".formatted(tenantProps.getAccessToken())) //
 				.build();
 			final RestTemplateAdapter adapter = RestTemplateAdapter.create(restTemplate);
@@ -80,9 +78,9 @@ public class GitHubConfig {
 	@Bean
 	public GitHubUserContentClient gitHubUserContentClient(GitHubProps props, RestTemplateBuilder restTemplateBuilder) {
 		final RestTemplate restTemplate = restTemplateBuilder //
-			.rootUri("https://raw.githubusercontent.com") //
-			.setConnectTimeout(props.getConnectTimeout()) //
-			.setReadTimeout(props.getReadTimeout()) //
+			.rootUri("https://raw.githubusercontent.com")
+			.connectTimeout(props.getConnectTimeout())
+			.readTimeout(props.getReadTimeout()) //
 			.defaultHeader(HttpHeaders.AUTHORIZATION, "token %s".formatted(props.getAccessToken())) //
 			.build();
 		final RestTemplateAdapter adapter = RestTemplateAdapter.create(restTemplate);
