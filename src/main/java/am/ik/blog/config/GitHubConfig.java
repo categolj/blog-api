@@ -27,6 +27,7 @@ import org.springframework.context.annotation.ImportRuntimeHints;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.client.JdkClientHttpRequestFactory;
 import org.springframework.util.ReflectionUtils;
+import org.springframework.web.client.NoOpResponseErrorHandler;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.client.support.RestTemplateAdapter;
 import org.springframework.web.service.invoker.HttpServiceProxyFactory;
@@ -43,6 +44,7 @@ public class GitHubConfig {
 			restTemplate.setInterceptors(List.of(logbookClientHttpRequestInterceptor,
 					new RetryableClientHttpRequestInterceptor(props.getBackOff())));
 			restTemplate.setRequestFactory(new JdkClientHttpRequestFactory());
+			restTemplate.setErrorHandler(new NoOpResponseErrorHandler());
 		};
 	}
 

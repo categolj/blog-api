@@ -4,15 +4,14 @@ import am.ik.blog.entry.Author;
 import am.ik.blog.entry.Entry;
 import am.ik.blog.entry.EntryBuilder;
 import am.ik.blog.util.Tuple3;
-
-import org.springframework.lang.Nullable;
-import org.springframework.stereotype.Component;
-
 import java.nio.file.Paths;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import org.springframework.http.ResponseEntity;
+import org.springframework.lang.Nullable;
+import org.springframework.stereotype.Component;
 
 @Component
 public class EntryFetcher {
@@ -35,7 +34,11 @@ public class EntryFetcher {
 			gitHubClient = this.tenantsGitHubClient.getOrDefault(tenantId, this.gitHubClient);
 		}
 		Long entryId = Entry.parseId(Paths.get(path).getFileName().toString());
-		File file = gitHubClient.getFile(owner, repo, path);
+		ResponseEntity<File> fileResponse = gitHubClient.getFile(owner, repo, path);
+		if (!fileResponse.getStatusCode().is2xxSuccessful() || fileResponse.getBody() == null) {
+			return Optional.empty();
+		}
+		File file = fileResponse.getBody();
 		List<Commit> commits = gitHubClient.getCommits(owner, repo, new CommitParameter().path(path).queryParams());
 		Optional<Tuple3<EntryBuilder, Optional<OffsetDateTime>, Optional<OffsetDateTime>>> parsed = this.parse(entryId,
 				file);

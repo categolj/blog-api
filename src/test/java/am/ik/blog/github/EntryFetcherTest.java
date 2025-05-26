@@ -5,18 +5,17 @@ import am.ik.blog.entry.Entry;
 import am.ik.blog.entry.FrontMatter;
 import am.ik.blog.tag.Tag;
 import com.sun.net.httpserver.HttpServer;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.CsvSource;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.core.io.ClassPathResource;
-
 import java.io.BufferedOutputStream;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.time.OffsetDateTime;
 import java.util.Optional;
 import java.util.concurrent.Executors;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.core.io.ClassPathResource;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -30,6 +29,8 @@ public class EntryFetcherTest {
 	EntryFetcher entryFetcher;
 
 	String path = "content/00001.md";
+
+	String notFoundPath = "content/00002.md";
 
 	@ParameterizedTest
 	@CsvSource({ ",someone,my-blog", "demo,someone,my-blog", "xyz,foo,bar" })
@@ -60,15 +61,35 @@ public class EntryFetcherTest {
 		}
 	}
 
+	@ParameterizedTest
+	@CsvSource({ ",someone,my-blog", "demo,someone,my-blog", "xyz,foo,bar" })
+	void fetchNotFound(String tenantId, String owner, String repo) throws Exception {
+		final String basePath = "/repos/" + owner + "/" + repo;
+		HttpServer httpServer = mockServer(29998, basePath);
+		try {
+			Optional<Entry> entry = this.entryFetcher.fetch(tenantId, owner, repo, notFoundPath);
+			assertThat(entry).isEmpty();
+		}
+		finally {
+			httpServer.stop(0);
+		}
+	}
+
 	HttpServer mockServer(int port, String basePath) throws Exception {
 		HttpServer httpServer = HttpServer.create(new InetSocketAddress(port), 0);
 		httpServer.setExecutor(Executors.newSingleThreadExecutor());
-		httpServer.createContext(basePath + "/contents", exchange -> {
+		httpServer.createContext(basePath + "/contents/" + path, exchange -> {
 			try (final OutputStream stream = new BufferedOutputStream(exchange.getResponseBody())) {
 				byte[] body = new ClassPathResource("github/sample-content-response.json").getContentAsByteArray();
 				stream.write(body);
 				exchange.getResponseHeaders().set("Content-Type", "application/json");
 				exchange.sendResponseHeaders(200, body.length);
+				stream.flush();
+			}
+		});
+		httpServer.createContext(basePath + "/contents/" + notFoundPath, exchange -> {
+			try (final OutputStream stream = new BufferedOutputStream(exchange.getResponseBody())) {
+				exchange.sendResponseHeaders(404, 0);
 				stream.flush();
 			}
 		});
