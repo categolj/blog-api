@@ -32,3 +32,6 @@ build/
 secret-*
 /src/main/resources/application-default.properties
 template.md
+
+advisor*
+.advisor/
